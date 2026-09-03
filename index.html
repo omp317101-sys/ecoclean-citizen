@@ -171,20 +171,30 @@
                             </button>
                         </div>
 
-                        <!-- Map Container with Center Crosshair Pin -->
-                        <div class="h-60 w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-rose-950 relative shadow-inner">
+                        <!-- Map Container with Zoom Controls & Center Pin -->
+                        <div class="h-64 w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-rose-950 relative shadow-inner">
                             <div id="citizenReportMap" class="w-full h-full"></div>
                             
-                            <!-- Static Center Pin (Swiggy/Uber Style) -->
+                            <!-- Static Center Pin -->
                             <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full pointer-events-none z-[1000] flex flex-col items-center">
                                 <div class="bg-rose-600 text-white p-1.5 rounded-full shadow-2xl border-2 border-white pulsing-gps-pin">
                                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path></svg>
                                 </div>
                                 <div class="w-2 h-2 bg-black/60 rounded-full blur-[1px] mt-0.5"></div>
                             </div>
+
+                            <!-- Dedicated Touch Zoom In/Out Buttons -->
+                            <div class="absolute bottom-3 right-3 z-[1000] flex flex-col gap-1.5 shadow-xl">
+                                <button type="button" onclick="zoomInMap()" class="w-8 h-8 rounded-xl bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-white font-black text-base flex items-center justify-center border border-slate-200 dark:border-rose-950 active:scale-90 transition-transform">
+                                    +
+                                </button>
+                                <button type="button" onclick="zoomOutMap()" class="w-8 h-8 rounded-xl bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-white font-black text-base flex items-center justify-center border border-slate-200 dark:border-rose-950 active:scale-90 transition-transform">
+                                    −
+                                </button>
+                            </div>
                         </div>
 
-                        <!-- NEW FEATURE: Clickable Live Coordinates & Google Maps Link -->
+                        <!-- Clickable Live Coordinates & Google Maps Link -->
                         <div class="p-3 bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950/60 rounded-2xl text-center space-y-2">
                             <div id="gpsStatusContainer">
                                 <span class="text-[11px] font-extrabold text-[#9E1220] dark:text-rose-400 block" id="geoStatusLabel">
@@ -207,7 +217,7 @@
                             </div>
 
                             <p class="text-[10px] text-slate-500 dark:text-slate-400">
-                                📍 <strong>Move the map</strong> to place the center pin on the exact garbage spot. Tap the button above to check your coordinates on Google Maps.
+                                📍 <strong>Move or zoom the map</strong> (+ / −) to place the center pin on the exact garbage spot.
                             </p>
                         </div>
 
@@ -370,11 +380,19 @@
             document.getElementById('themeIcon').innerText = isDark ? "☀️" : "🌙";
         }
 
+        /* ------------------ ZOOM HANDLERS ------------------ */
+        function zoomInMap() {
+            if (mapInstance) mapInstance.zoomIn();
+        }
+
+        function zoomOutMap() {
+            if (mapInstance) mapInstance.zoomOut();
+        }
+
         /* ------------------ OPEN IN GOOGLE MAPS ------------------ */
         function openCurrentInGoogleMaps() {
             const lat = selectedCoords[0];
             const lng = selectedCoords[1];
-            // Format URL for Google Maps search / pinpoint
             const gmapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
             window.open(gmapsUrl, '_blank');
         }
@@ -421,15 +439,27 @@
             document.getElementById('authSection').classList.remove('hidden');
         }
 
-        /* ------------------ INTERACTIVE MAP & CROSSHAIR ------------------ */
+        /* ------------------ FULLY INTERACTIVE MAP INIT ------------------ */
         function initMap() {
             if (!mapInstance) {
-                mapInstance = L.map('citizenReportMap', { zoomControl: false }).setView(selectedCoords, 17);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapInstance);
+                // Explicitly enabled all zoom and interaction controls
+                mapInstance = L.map('citizenReportMap', {
+                    zoomControl: false, // Replaced with custom touch buttons
+                    scrollWheelZoom: true,
+                    touchZoom: true,
+                    doubleClickZoom: true,
+                    dragging: true,
+                    boxZoom: true
+                }).setView(selectedCoords, 17);
+
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    minZoom: 12
+                }).addTo(mapInstance);
 
                 updateCoordinatesDisplay(selectedCoords[0], selectedCoords[1]);
 
-                // Whenever user moves the map, update coordinates instantly
+                // Track center pin on drag and on zoom changes
                 mapInstance.on('move', () => {
                     const center = mapInstance.getCenter();
                     selectedCoords = [center.lat, center.lng];
@@ -451,14 +481,14 @@
             }
         }
 
-        /* ------------------ STRICT SATELLITE GPS LOCK ------------------ */
+        /* ------------------ SATELLITE TRACKING ------------------ */
         function startStrictSatelliteTracking() {
             if (!navigator.geolocation) {
                 updateGpsStatus("⚠️ Geolocation not supported by your browser.", true);
                 return;
             }
 
-            updateGpsStatus("🛰️ Contacting GPS satellite receiver... (waiting for <35m precision)", false);
+            updateGpsStatus("🛰️ Contacting GPS satellite receiver...", false);
             showToast("🛰️ Searching for satellite GPS lock...");
 
             if (satelliteWatchId !== null) {
@@ -477,7 +507,6 @@
                     const lng = pos.coords.longitude;
                     const accuracy = Math.round(pos.coords.accuracy);
 
-                    // Reject inaccurate cell towers (> 300 meters)
                     if (accuracy > 300) {
                         updateGpsStatus(`⚠️ Ignored cell tower estimate (±${accuracy}m). <br><span class="text-amber-400">Move map to your street or wait for GPS lock.</span>`);
                         return;
