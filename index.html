@@ -150,29 +150,29 @@
                 <!-- TAB 1: REPORT WASTE FORM -->
                 <div id="tabContentReport" class="space-y-4">
                     
-                    <!-- Step 1: Live Hardware GPS Location -->
+                    <!-- Step 1: Live Hardware GPS & Telemetry -->
                     <div class="bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-3xl p-4 shadow-sm space-y-3">
                         <div class="flex items-center justify-between">
                             <h3 class="text-xs font-black uppercase text-slate-800 dark:text-slate-200 flex items-center gap-2">
                                 <span class="w-5 h-5 rounded-lg bg-[#9E1220] text-white flex items-center justify-center text-[10px]">1</span>
-                                Pinpoint Garbage Spot
+                                Geotag Location
                             </h3>
                             <button type="button" onclick="startStrictSatelliteTracking()" class="text-[10px] bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-extrabold px-2.5 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1.5 shadow-sm active:scale-95 transition-all">
                                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                                <span>🛰️ Force Satellite GPS</span>
+                                <span>🛰️ Recalibrate GPS</span>
                             </button>
                         </div>
 
                         <!-- Kopargaon Specific Search -->
                         <div class="flex gap-2">
-                            <input type="text" id="landmarkSearchInput" placeholder="Type Kopargaon street or colony..." class="flex-1 px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 focus:outline-none focus:ring-1 focus:ring-rose-500">
+                            <input type="text" id="landmarkSearchInput" placeholder="Search Kopargaon street, colony, or landmark..." class="flex-1 px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 focus:outline-none focus:ring-1 focus:ring-rose-500">
                             <button type="button" onclick="searchKopargaonStreet()" class="px-3 py-2 bg-[#9E1220] text-white text-xs font-bold rounded-xl active:scale-95 transition-all">
                                 🔍 Find
                             </button>
                         </div>
 
                         <!-- Map Container with Center Crosshair Pin -->
-                        <div class="h-60 w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-rose-950 relative shadow-inner">
+                        <div class="h-56 w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-rose-950 relative shadow-inner">
                             <div id="citizenReportMap" class="w-full h-full"></div>
                             
                             <!-- Static Center Pin (Swiggy/Uber Style) -->
@@ -184,35 +184,71 @@
                             </div>
                         </div>
 
-                        <!-- Real-Time GPS Accuracy & Address Readout -->
-                        <div class="p-3 bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950/60 rounded-2xl text-center space-y-1">
-                            <div id="gpsStatusContainer">
-                                <span class="text-[11px] font-extrabold text-[#9E1220] dark:text-rose-400 block" id="geoStatusLabel">
+                        <!-- NEW: LIVE LOCATION & TELEMETRY DISPLAY PANEL -->
+                        <div class="bg-slate-900/90 dark:bg-[#100204] border border-slate-800 dark:border-rose-900/40 rounded-2xl p-3.5 space-y-2 text-white">
+                            <div class="flex items-center justify-between border-b border-slate-800 dark:border-rose-950/80 pb-2">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    <span class="text-[10px] font-black tracking-wider uppercase text-slate-300">Live Device Coordinates</span>
+                                </div>
+                                <span id="telemetrySensorBadge" class="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                                    Determining Fix...
+                                </span>
+                            </div>
+
+                            <!-- Real-Time Numeric Coordinates Grid -->
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="bg-black/40 p-2 rounded-xl border border-white/5">
+                                    <span class="text-[9px] font-bold text-slate-400 block uppercase">Latitude</span>
+                                    <span id="telemetryLatitude" class="text-xs font-mono font-black text-emerald-400">19.884100° N</span>
+                                </div>
+                                <div class="bg-black/40 p-2 rounded-xl border border-white/5">
+                                    <span class="text-[9px] font-bold text-slate-400 block uppercase">Longitude</span>
+                                    <span id="telemetryLongitude" class="text-xs font-mono font-black text-emerald-400">74.478800° E</span>
+                                </div>
+                            </div>
+
+                            <!-- Accuracy & Quick Actions -->
+                            <div class="flex items-center justify-between text-[10px] text-slate-400 pt-1">
+                                <span>Signal Accuracy: <strong id="telemetryAccuracy" class="text-white">Awaiting fix</strong></span>
+                                <div class="flex gap-2">
+                                    <button type="button" onclick="copyCurrentCoordinates()" class="px-2 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-slate-200 font-bold active:scale-95 transition-all">
+                                        📋 Copy
+                                    </button>
+                                    <button type="button" onclick="snapToActualDeviceFix()" class="px-2 py-1 bg-rose-600/80 hover:bg-rose-600 rounded-lg text-white font-bold active:scale-95 transition-all">
+                                        🎯 Center on Me
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Status Subtitle -->
+                            <div class="pt-1">
+                                <span class="text-[10px] font-bold text-rose-300 block leading-tight" id="geoStatusLabel">
                                     🛰️ Waiting for GPS satellite lock...
                                 </span>
                             </div>
-                            <p class="text-[10px] text-slate-500 dark:text-slate-400">
-                                📍 <strong>Move the map</strong> to place the center red pin directly on the garbage spot.
-                            </p>
                         </div>
 
                         <!-- Quick-Snap Landmarks for Kopargaon -->
-                        <div class="flex gap-1.5 overflow-x-auto py-1">
-                            <button type="button" onclick="snapMapTo([19.8841, 74.4788], 'Kopargaon Bus Stand')" class="text-[10px] bg-slate-100 dark:bg-rose-950/40 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-rose-900 px-2.5 py-1 rounded-lg whitespace-nowrap">
-                                🚌 Bus Stand
-                            </button>
-                            <button type="button" onclick="snapMapTo([19.901689, 74.494780], 'Station Road')" class="text-[10px] bg-slate-100 dark:bg-rose-950/40 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-rose-900 px-2.5 py-1 rounded-lg whitespace-nowrap">
-                                🚆 Station Road
-                            </button>
-                            <button type="button" onclick="snapMapTo([19.8820, 74.4690], 'Sanjivani College Gate')" class="text-[10px] bg-slate-100 dark:bg-rose-950/40 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-rose-900 px-2.5 py-1 rounded-lg whitespace-nowrap">
-                                🎓 Sanjivani Gate
-                            </button>
-                            <button type="button" onclick="snapMapTo([19.8912, 74.4768], 'Tilak Nagar')" class="text-[10px] bg-slate-100 dark:bg-rose-950/40 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-rose-900 px-2.5 py-1 rounded-lg whitespace-nowrap">
-                                🏪 Tilak Nagar
-                            </button>
-                            <button type="button" onclick="snapMapTo([19.8858, 74.4855], 'Godavari Ghat Bridge')" class="text-[10px] bg-slate-100 dark:bg-rose-950/40 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-rose-900 px-2.5 py-1 rounded-lg whitespace-nowrap">
-                                🌉 Godavari Bridge
-                            </button>
+                        <div class="space-y-1">
+                            <span class="text-[9px] font-black uppercase text-slate-400 block">Fast Landmark Presets:</span>
+                            <div class="flex gap-1.5 overflow-x-auto py-0.5">
+                                <button type="button" onclick="snapMapTo([19.8841, 74.4788], 'Kopargaon Bus Stand')" class="text-[10px] bg-slate-100 dark:bg-rose-950/40 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-rose-900 px-2.5 py-1 rounded-lg whitespace-nowrap">
+                                    🚌 Bus Stand
+                                </button>
+                                <button type="button" onclick="snapMapTo([19.901689, 74.494780], 'Station Road')" class="text-[10px] bg-slate-100 dark:bg-rose-950/40 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-rose-900 px-2.5 py-1 rounded-lg whitespace-nowrap">
+                                    🚆 Station Road
+                                </button>
+                                <button type="button" onclick="snapMapTo([19.8820, 74.4690], 'Sanjivani College Gate')" class="text-[10px] bg-slate-100 dark:bg-rose-950/40 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-rose-900 px-2.5 py-1 rounded-lg whitespace-nowrap">
+                                    🎓 Sanjivani Gate
+                                </button>
+                                <button type="button" onclick="snapMapTo([19.8912, 74.4768], 'Tilak Nagar')" class="text-[10px] bg-slate-100 dark:bg-rose-950/40 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-rose-900 px-2.5 py-1 rounded-lg whitespace-nowrap">
+                                    🏪 Tilak Nagar
+                                </button>
+                                <button type="button" onclick="snapMapTo([19.8858, 74.4855], 'Godavari Ghat Bridge')" class="text-[10px] bg-slate-100 dark:bg-rose-950/40 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-rose-900 px-2.5 py-1 rounded-lg whitespace-nowrap">
+                                    🌉 Godavari Bridge
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -309,7 +345,7 @@
 
     <!-- ================= JAVASCRIPT ENGINE ================= -->
     <script>
-        // Kopargaon Official Town Coordinates
+        // Kopargaon Reference Coordinates
         const KOPARGAON_DEFAULT = [19.8841, 74.4788];
 
         let currentCitizen = {
@@ -318,9 +354,10 @@
             city: "Kopargaon"
         };
 
-        // GPS & Map State
+        // GPS & Telemetry State
         let mapInstance = null;
         let selectedCoords = KOPARGAON_DEFAULT;
+        let actualDeviceLiveCoords = null;
         let satelliteWatchId = null;
 
         // Image & AI State
@@ -390,20 +427,64 @@
             document.getElementById('authSection').classList.remove('hidden');
         }
 
-        /* ------------------ INTERACTIVE MAP & CROSSHAIR ------------------ */
+        /* ------------------ MAP & TELEMETRY HUB ------------------ */
         function initMap() {
             if (!mapInstance) {
                 mapInstance = L.map('citizenReportMap', { zoomControl: false }).setView(selectedCoords, 17);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapInstance);
 
-                // Whenever the user drags or zooms the map, the center coordinates become the target
+                // When map is dragged or centered, sync the crosshair coordinates
                 mapInstance.on('move', () => {
                     const center = mapInstance.getCenter();
                     selectedCoords = [center.lat, center.lng];
-                    updateGpsStatus(`📍 Center Pin: (${center.lat.toFixed(6)}, ${center.lng.toFixed(6)})`);
+                    updateCoordinatesTelemetry(center.lat, center.lng, null, "Manual Crosshair");
                 });
+
+                updateCoordinatesTelemetry(selectedCoords[0], selectedCoords[1], null, "Default Position");
             } else {
                 mapInstance.invalidateSize();
+            }
+        }
+
+        function updateCoordinatesTelemetry(lat, lng, accuracy = null, source = "Satellite") {
+            document.getElementById('telemetryLatitude').innerText = `${lat.toFixed(6)}° N`;
+            document.getElementById('telemetryLongitude').innerText = `${lng.toFixed(6)}° E`;
+            
+            const badge = document.getElementById('telemetrySensorBadge');
+            const accuracyEl = document.getElementById('telemetryAccuracy');
+
+            if (accuracy !== null) {
+                accuracyEl.innerText = `±${accuracy} meters`;
+            }
+
+            if (source === "Hardware Satellite") {
+                badge.innerText = "🛰️ Satellite GNSS";
+                badge.className = "text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+            } else if (source === "Manual Crosshair") {
+                badge.innerText = "📍 Pin Positioned";
+                badge.className = "text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30";
+            } else {
+                badge.innerText = source;
+                badge.className = "text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700";
+            }
+        }
+
+        function copyCurrentCoordinates() {
+            const coordText = `${selectedCoords[0].toFixed(6)}, ${selectedCoords[1].toFixed(6)}`;
+            navigator.clipboard.writeText(coordText).then(() => {
+                showToast(`📋 Copied: ${coordText}`);
+            }).catch(() => {
+                showToast("Could not copy to clipboard", true);
+            });
+        }
+
+        function snapToActualDeviceFix() {
+            if (actualDeviceLiveCoords) {
+                snapMapTo(actualDeviceLiveCoords, "Your Actual Device Fix");
+                updateCoordinatesTelemetry(actualDeviceLiveCoords[0], actualDeviceLiveCoords[1], null, "Hardware Satellite");
+            } else {
+                showToast("Acquiring fresh device fix, please wait...", false);
+                startStrictSatelliteTracking();
             }
         }
 
@@ -411,27 +492,28 @@
             selectedCoords = coords;
             if (mapInstance) {
                 mapInstance.setView(coords, 18);
-                updateGpsStatus(`📍 Snapped to: ${name}`);
+                updateGpsStatus(`📍 Centered on: ${name}`);
+                updateCoordinatesTelemetry(coords[0], coords[1], null, name);
                 showToast(`Moved to ${name}`);
             }
         }
 
-        /* ------------------ STRICT HIGH-ACCURACY GPS LOCK ------------------ */
+        /* ------------------ HARDWARE GPS POSITIONING ------------------ */
         function startStrictSatelliteTracking() {
             if (!navigator.geolocation) {
-                updateGpsStatus("⚠️ Geolocation not supported by your browser.", true);
+                updateGpsStatus("⚠️ Geolocation not supported on this browser.", true);
                 return;
             }
 
-            updateGpsStatus("🛰️ Contacting GPS satellite receiver... (waiting for <35m precision)", false);
-            showToast("🛰️ Searching for satellite GPS lock...");
+            updateGpsStatus("🛰️ Polling device GPS sensors...", false);
+            showToast("🛰️ Searching for live GPS satellites...");
 
             if (satelliteWatchId !== null) {
                 navigator.geolocation.clearWatch(satelliteWatchId);
             }
 
             const geoOptions = {
-                enableHighAccuracy: true, // Forces satellite chip instead of WiFi / IP
+                enableHighAccuracy: true,
                 timeout: 30000,
                 maximumAge: 0
             };
@@ -442,27 +524,31 @@
                     const lng = pos.coords.longitude;
                     const accuracy = Math.round(pos.coords.accuracy);
 
-                    // REJECT cellular tower / Shirdi ISP hubs (> 300 meters)
-                    if (accuracy > 300) {
-                        updateGpsStatus(`⚠️ Ignored low-precision cell tower (${accuracy}m away in Shirdi/district). <br><span class="text-amber-400">Please move map to your Kopargaon street or wait for GPS lock.</span>`);
+                    actualDeviceLiveCoords = [lat, lng];
+
+                    // Display the raw coordinates determined by the app
+                    updateCoordinatesTelemetry(lat, lng, accuracy, "Hardware Satellite");
+
+                    // Filter out coarse regional cellular tower readings (>350m)
+                    if (accuracy > 350) {
+                        updateGpsStatus(`⚠️ Coarse Network Fix (±${accuracy}m). Move the center crosshair to fine-tune.`);
                         return;
                     }
 
-                    // Accept true satellite lock
                     selectedCoords = [lat, lng];
                     if (mapInstance) {
                         mapInstance.setView(selectedCoords, 18);
                     }
 
                     if (accuracy <= 35) {
-                        updateGpsStatus(`✅ <strong class="text-emerald-500">True Satellite GPS Pinpointed!</strong> (±${accuracy}m precision)<br><span class="text-[10px] text-slate-400 font-mono">${lat.toFixed(6)}, ${lng.toFixed(6)}</span>`);
-                        showToast(`🎯 Real GPS Locked (±${accuracy}m)`);
+                        updateGpsStatus(`✅ <strong class="text-emerald-400">High-Precision Satellite Lock (±${accuracy}m)</strong>`);
+                        showToast(`🎯 Real GPS Pinpointed (±${accuracy}m)`);
                     } else {
-                        updateGpsStatus(`🛰️ Refining satellite signal... (±${accuracy}m)<br><span class="text-[10px] text-amber-400 font-mono">${lat.toFixed(5)}, ${lng.toFixed(5)}</span>`);
+                        updateGpsStatus(`🛰️ Refining satellite lock... (±${accuracy}m)`);
                     }
                 },
                 (err) => {
-                    let msg = "Could not get satellite location. Drag the map to your street.";
+                    let msg = "Could not get hardware GPS. Drag map pin manually.";
                     if (err.code === 1) msg = "Location permission denied in browser settings.";
                     updateGpsStatus(`❌ ${msg}`, true);
                 },
@@ -474,7 +560,7 @@
             const label = document.getElementById('geoStatusLabel');
             if (label) {
                 label.innerHTML = htmlText;
-                label.className = `text-[11px] font-extrabold block ${isError ? 'text-rose-500' : 'text-[#9E1220] dark:text-rose-400'}`;
+                label.className = `text-[10px] font-bold block leading-tight ${isError ? 'text-rose-400' : 'text-slate-300'}`;
             }
         }
 
@@ -486,7 +572,7 @@
                 return;
             }
 
-            showToast("🔍 Searching Kopargaon map...");
+            showToast("🔍 Searching map...");
             try {
                 const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ', Kopargaon, Maharashtra')}`);
                 const data = await res.json();
@@ -494,18 +580,16 @@
                 if (data && data.length > 0) {
                     const lat = parseFloat(data[0].lat);
                     const lon = parseFloat(data[0].lon);
-                    selectedCoords = [lat, lon];
-                    mapInstance.setView([lat, lon], 18);
-                    showToast(`📍 Found: ${data[0].display_name.split(',')[0]}`);
+                    snapMapTo([lat, lon], data[0].display_name.split(',')[0]);
                 } else {
-                    showToast("Not found. Move the map directly to your street.", true);
+                    showToast("Not found. Pan the map manually.", true);
                 }
             } catch (e) {
-                showToast("Search unavailable. Drag the map to set spot.", true);
+                showToast("Search service busy. Please pan map.", true);
             }
         }
 
-        /* ------------------ PHOTO & AI VERIFICATION ------------------ */
+        /* ------------------ PHOTO & AI SCANNER ------------------ */
         function onPhotoSelected(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -597,7 +681,7 @@
             citizenComplaints.unshift(newReport);
             localStorage.setItem('ecoclean_citizen_reports', JSON.stringify(citizenComplaints));
 
-            showToast("✅ Grievance logged at the exact spot!");
+            showToast("✅ Grievance logged with exact GPS coordinates!");
 
             clearSelectedPhoto();
             document.getElementById('reportComments').value = "";
@@ -605,7 +689,7 @@
             switchCitizenTab('tracker');
         }
 
-        /* ------------------ MY COMPLAINTS ------------------ */
+        /* ------------------ GRIEVANCES TRACKER LIST ------------------ */
         function renderCitizenComplaints() {
             const list = document.getElementById('citizenGrievancesList');
             const badge = document.getElementById('trackerTotalBadge');
