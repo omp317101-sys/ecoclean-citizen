@@ -52,13 +52,13 @@
             border-radius: 18px;
             z-index: 1;
         }
-        @keyframes pulseGlow {
+        @keyframes pulseRing {
             0% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.7); }
-            70% { box-shadow: 0 0 0 16px rgba(225, 29, 72, 0); }
+            70% { box-shadow: 0 0 0 14px rgba(225, 29, 72, 0); }
             100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); }
         }
-        .fixed-pin-animation {
-            animation: pulseGlow 1.8s infinite ease-out;
+        .pulsing-gps-pin {
+            animation: pulseRing 1.8s infinite ease-out;
             border-radius: 9999px;
         }
         @keyframes laserScan {
@@ -159,13 +159,13 @@
                             </h3>
                             <button type="button" onclick="acquireRealSatelliteGps()" class="text-[10px] bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-extrabold px-3 py-1.5 rounded-full border border-emerald-500/30 flex items-center gap-1.5 shadow-sm active:scale-95 transition-all">
                                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                                <span id="gpsBtnText">🛰️ Trace & Fix Live GPS</span>
+                                <span id="gpsBtnText">🛰️ Lock Live Satellite GPS</span>
                             </button>
                         </div>
 
                         <!-- Kopargaon Specific Search -->
                         <div class="flex gap-2">
-                            <input type="text" id="landmarkSearchInput" placeholder="Search Kopargaon street or area..." class="flex-1 px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 focus:outline-none focus:ring-1 focus:ring-rose-500">
+                            <input type="text" id="landmarkSearchInput" placeholder="Search Kopargaon street or colony..." class="flex-1 px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 focus:outline-none focus:ring-1 focus:ring-rose-500">
                             <button type="button" onclick="searchKopargaonStreet()" class="px-3 py-2 bg-[#9E1220] text-white text-xs font-bold rounded-xl active:scale-95 transition-all">
                                 🔍 Find
                             </button>
@@ -175,7 +175,7 @@
                         <div class="h-64 w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-rose-950 relative shadow-inner">
                             <div id="citizenReportMap" class="w-full h-full"></div>
 
-                            <!-- Dedicated Touch Zoom Buttons -->
+                            <!-- Dedicated Touch Zoom In/Out Buttons -->
                             <div class="absolute bottom-3 right-3 z-[1000] flex flex-col gap-1.5 shadow-xl">
                                 <button type="button" onclick="zoomInMap()" class="w-8 h-8 rounded-xl bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-white font-black text-base flex items-center justify-center border border-slate-200 dark:border-rose-950 active:scale-90 transition-transform">
                                     +
@@ -190,14 +190,14 @@
                         <div class="p-3 bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950/60 rounded-2xl text-center space-y-2">
                             <div id="gpsStatusContainer">
                                 <span class="text-[11px] font-extrabold text-[#9E1220] dark:text-rose-400 block" id="geoStatusLabel">
-                                    📍 Ready. Tap map or press "Trace & Fix Live GPS".
+                                    📍 Ready. Move the map or tap "Lock Live Satellite GPS".
                                 </span>
                             </div>
 
                             <!-- Clickable Coordinates Card -->
                             <div class="p-2 bg-rose-50/50 dark:bg-rose-950/30 rounded-xl border border-rose-200 dark:border-rose-900/60 flex items-center justify-between gap-2">
                                 <div class="text-left">
-                                    <span class="text-[9px] font-black uppercase tracking-wider text-slate-400 block">Locked Pin Co-ordinates</span>
+                                    <span class="text-[9px] font-black uppercase tracking-wider text-slate-400 block">Selected Target Co-ordinates</span>
                                     <span id="currentCoordinatesText" class="text-xs font-mono font-black text-rose-700 dark:text-rose-300">
                                         19.884100, 74.478800
                                     </span>
@@ -209,7 +209,7 @@
                             </div>
 
                             <p class="text-[10px] text-slate-500 dark:text-slate-400">
-                                💡 <strong>Tip:</strong> You can tap anywhere on the map or drag the red pin to fix the spot manually.
+                                📍 <strong>Move or zoom the map</strong> to position the red pin exactly on the waste spot.
                             </p>
                         </div>
 
@@ -337,9 +337,9 @@
 
         // GPS & Map State
         let mapInstance = null;
+        let targetPinMarker = null;
         let selectedCoords = KOPARGAON_DEFAULT;
         let activeWatchId = null;
-        let fixedTargetMarker = null;
 
         // Image & AI State
         let currentUploadedPhotoUrl = "";
@@ -433,7 +433,7 @@
             document.getElementById('authSection').classList.remove('hidden');
         }
 
-        /* ------------------ MAP INIT & FIXED PIN SETUP ------------------ */
+        /* ------------------ LEAFLET MAP & PIN BINDING ------------------ */
         function initMap() {
             if (!mapInstance) {
                 mapInstance = L.map('citizenReportMap', {
@@ -449,58 +449,45 @@
                     minZoom: 12
                 }).addTo(mapInstance);
 
-                // Initialize Fixed Pin on initial location
-                renderFixedPinOnMap(selectedCoords);
+                // Create the physical anchor marker on the map
+                const pinIcon = L.divIcon({
+                    html: `<div class="bg-rose-600 text-white p-1.5 rounded-full shadow-2xl border-2 border-white pulsing-gps-pin flex items-center justify-center">
+                               <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path></svg>
+                           </div>`,
+                    className: '',
+                    iconSize: [34, 34],
+                    iconAnchor: [17, 34]
+                });
 
-                // Allow user to tap anywhere on the map to manually move the fixed pin
-                mapInstance.on('click', (e) => {
-                    renderFixedPinOnMap([e.latlng.lat, e.latlng.lng]);
-                    updateGpsStatus(`📍 Pin fixed manually: (${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)})`);
+                targetPinMarker = L.marker(selectedCoords, { icon: pinIcon }).addTo(mapInstance);
+
+                updateCoordinatesDisplay(selectedCoords[0], selectedCoords[1]);
+
+                // Track center pin as user scrolls or pans map
+                mapInstance.on('move', () => {
+                    const center = mapInstance.getCenter();
+                    selectedCoords = [center.lat, center.lng];
+                    if (targetPinMarker) {
+                        targetPinMarker.setLatLng(center);
+                    }
+                    updateCoordinatesDisplay(center.lat, center.lng);
                 });
             } else {
                 mapInstance.invalidateSize();
             }
         }
 
-        function renderFixedPinOnMap(coords) {
-            selectedCoords = coords;
-            updateCoordinatesDisplay(coords[0], coords[1]);
-
-            if (!mapInstance) return;
-
-            const pinHtml = `
-                <div class="relative flex items-center justify-center">
-                    <span class="absolute inline-flex h-8 w-8 rounded-full bg-rose-500 opacity-75 fixed-pin-animation"></span>
-                    <div class="w-8 h-8 rounded-full bg-rose-600 border-2 border-white flex items-center justify-center text-white text-xs font-black shadow-2xl">
-                        📍
-                    </div>
-                </div>
-            `;
-            const customIcon = L.divIcon({ html: pinHtml, className: '', iconSize: [32, 32], iconAnchor: [16, 30] });
-
-            if (!fixedTargetMarker) {
-                fixedTargetMarker = L.marker(coords, { icon: customIcon, draggable: true }).addTo(mapInstance);
-
-                fixedTargetMarker.on('dragend', (e) => {
-                    const pos = e.target.getLatLng();
-                    selectedCoords = [pos.lat, pos.lng];
-                    updateCoordinatesDisplay(pos.lat, pos.lng);
-                    updateGpsStatus(`📍 Pin dragged to: (${pos.lat.toFixed(5)}, ${pos.lng.toFixed(5)})`);
-                });
-            } else {
-                fixedTargetMarker.setLatLng(coords);
-            }
-        }
-
         function snapMapTo(coords, name) {
+            selectedCoords = coords;
             if (mapInstance) {
                 mapInstance.setView(coords, 18, { animate: true });
-                renderFixedPinOnMap(coords);
-                updateGpsStatus(`📍 Snapped & fixed to: ${name}`);
+                if (targetPinMarker) targetPinMarker.setLatLng(coords);
+                updateCoordinatesDisplay(coords[0], coords[1]);
+                updateGpsStatus(`📍 Snapped to: ${name}`);
             }
         }
 
-        /* ------------------ STRICT SATELLITE GPS & PIN FIXING ------------------ */
+        /* ------------------ SATELLITE GPS ACQUISITION & PIN FIX ------------------ */
         function acquireRealSatelliteGps() {
             if (!navigator.geolocation) {
                 updateGpsStatus("⚠️ Geolocation not supported on this browser.", true);
@@ -509,7 +496,7 @@
 
             const btnText = document.getElementById('gpsBtnText');
             if (btnText) btnText.innerText = "🛰️ Connecting to Satellites...";
-            updateGpsStatus("🛰️ Polling GPS satellites... Keep device location ON.", false);
+            updateGpsStatus("🛰️ Polling phone GPS satellites... Please make sure device Location is ON.", false);
 
             if (activeWatchId !== null) {
                 navigator.geolocation.clearWatch(activeWatchId);
@@ -527,24 +514,27 @@
                     const lng = pos.coords.longitude;
                     const accuracy = Math.round(pos.coords.accuracy);
 
-                    // Discard low-accuracy network/cell tower readings (> 150 meters)
+                    // Discard rough network/cell tower readings (> 150 meters)
                     if (accuracy > 150) {
-                        updateGpsStatus(`⚠️ Ignored approximate cell tower (±${accuracy}m).<br><span class="text-amber-400 font-semibold">Waiting for GPS satellites to lock on street (&le;100m)...</span>`);
+                        updateGpsStatus(`⚠️ Ignored cell tower estimate (±${accuracy}m).<br><span class="text-amber-400 font-semibold">Waiting for GPS satellites to lock on street (Need &le;100m). Or move map directly.</span>`);
                         return;
                     }
 
-                    // Physically fix pin to the traced coordinates
+                    // Satellite location locked: Programmatically fix pin and map position
                     selectedCoords = [lat, lng];
-                    renderFixedPinOnMap(selectedCoords);
+                    updateCoordinatesDisplay(lat, lng);
 
                     if (mapInstance) {
                         mapInstance.setView(selectedCoords, 18, { animate: true });
+                        if (targetPinMarker) {
+                            targetPinMarker.setLatLng(selectedCoords);
+                        }
                     }
 
-                    if (btnText) btnText.innerText = "✓ Satellite GPS Fixed";
-                    updateGpsStatus(`✅ <strong class="text-emerald-500">Satellite GPS Traced & Fixed!</strong> (Accuracy: ±${accuracy}m)`);
+                    if (btnText) btnText.innerText = "✓ Satellite GPS Locked";
+                    updateGpsStatus(`✅ <strong class="text-emerald-500">Live Satellite GPS Fixed!</strong> (Accuracy: ±${accuracy}m)`);
 
-                    // Stop polling once fine accuracy is obtained
+                    // Stop continuous polling once high accuracy is confirmed
                     if (accuracy <= 30) {
                         navigator.geolocation.clearWatch(activeWatchId);
                         activeWatchId = null;
@@ -558,7 +548,7 @@
                     } else if (err.code === 2) {
                         msg = "GPS hardware unavailable. Ensure phone GPS toggle is ON.";
                     } else if (err.code === 3) {
-                        msg = "Satellite request timed out. Please tap map to set your spot.";
+                        msg = "Satellite request timed out. Please drag map or search your street.";
                     }
                     updateGpsStatus(`❌ ${msg}`, true);
                 },
@@ -590,14 +580,16 @@
                 if (data && data.length > 0) {
                     const lat = parseFloat(data[0].lat);
                     const lon = parseFloat(data[0].lon);
-                    renderFixedPinOnMap([lat, lon]);
+                    selectedCoords = [lat, lon];
+                    updateCoordinatesDisplay(lat, lon);
                     mapInstance.setView([lat, lon], 18, { animate: true });
+                    if (targetPinMarker) targetPinMarker.setLatLng(selectedCoords);
                     updateGpsStatus(`📍 Found & Fixed: ${data[0].display_name.split(',')[0]}`);
                 } else {
-                    updateGpsStatus("⚠️ Area not found. Tap map directly to place pin.", true);
+                    updateGpsStatus("⚠️ Not found. Move map directly to your street.", true);
                 }
             } catch (e) {
-                updateGpsStatus("⚠️ Search unavailable. Tap map directly to place pin.", true);
+                updateGpsStatus("⚠️ Search unavailable. Move map directly to set spot.", true);
             }
         }
 
