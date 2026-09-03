@@ -73,7 +73,7 @@
 </head>
 <body class="h-full bg-[#0F0204] text-slate-800 dark:text-slate-100 antialiased selection:bg-rose-600 selection:text-white flex justify-center">
 
-    <!-- Toast Notification -->
+    <!-- Toast Notification (Non-location alerts only) -->
     <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 hidden max-w-xs w-full p-3.5 rounded-2xl shadow-2xl text-xs font-bold text-center border transition-all pointer-events-none"></div>
 
     <!-- Mobile Shell Container -->
@@ -175,7 +175,7 @@
                         <div class="h-64 w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-rose-950 relative shadow-inner">
                             <div id="citizenReportMap" class="w-full h-full"></div>
                             
-                            <!-- Static Center Pin -->
+                            <!-- Static Center Pin Indicator -->
                             <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-full pointer-events-none z-[1000] flex flex-col items-center">
                                 <div class="bg-rose-600 text-white p-1.5 rounded-full shadow-2xl border-2 border-white pulsing-gps-pin">
                                     <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path></svg>
@@ -347,6 +347,7 @@
         let mapInstance = null;
         let selectedCoords = KOPARGAON_DEFAULT;
         let activeWatchId = null;
+        let livePositionMarker = null;
 
         // Image & AI State
         let currentUploadedPhotoUrl = "";
@@ -365,6 +366,7 @@
             }
         ];
 
+        // Standard App Toast (for non-location events only)
         function showToast(message, isError = false) {
             const toast = document.getElementById('toast');
             toast.innerText = message;
@@ -473,11 +475,10 @@
                 mapInstance.setView(coords, 18);
                 updateCoordinatesDisplay(coords[0], coords[1]);
                 updateGpsStatus(`📍 Snapped to: ${name}`);
-                showToast(`Moved to ${name}`);
             }
         }
 
-        /* ------------------ STRICT HIGH-ACCURACY SATELLITE GPS ------------------ */
+        /* ------------------ STRICT SATELLITE GPS & MAP FIX ------------------ */
         function acquireRealSatelliteGps() {
             if (!navigator.geolocation) {
                 updateGpsStatus("⚠️ Geolocation not supported on this browser.", true);
@@ -487,48 +488,53 @@
             const btnText = document.getElementById('gpsBtnText');
             if (btnText) btnText.innerText = "🛰️ Connecting to Satellites...";
             updateGpsStatus("🛰️ Polling phone GPS satellites... Please make sure device Location is ON.", false);
-            showToast("🛰️ Polling satellite hardware...");
 
             if (activeWatchId !== null) {
                 navigator.geolocation.clearWatch(activeWatchId);
             }
 
-            // High accuracy options
             const options = {
                 enableHighAccuracy: true,
                 timeout: 25000,
                 maximumAge: 0
             };
 
-            let attempts = 0;
-
             activeWatchId = navigator.geolocation.watchPosition(
                 (pos) => {
-                    attempts++;
                     const lat = pos.coords.latitude;
                     const lng = pos.coords.longitude;
                     const accuracy = Math.round(pos.coords.accuracy);
 
-                    // REJECT ISP / Cell Tower fixes:
-                    // If accuracy is worse than 150 meters, it's a distant cell tower (like Shirdi or Aurangabad).
+                    // Discard low-accuracy network/cell tower readings (> 150 meters)
                     if (accuracy > 150) {
-                        updateGpsStatus(`⚠️ Ignored rough network/cell tower fix (±${accuracy}m).<br><span class="text-amber-400 font-semibold">Waiting for GPS satellites to lock on street (Need &le;100m). Or drag map to your spot.</span>`);
+                        updateGpsStatus(`⚠️ Ignored cell tower estimate (±${accuracy}m).<br><span class="text-amber-400 font-semibold">Waiting for GPS satellites to lock on street (Need &le;100m), or drag map to your spot.</span>`);
                         return;
                     }
 
-                    // Genuine satellite lock achieved
+                    // Fix accurately on the map
                     selectedCoords = [lat, lng];
                     updateCoordinatesDisplay(lat, lng);
 
                     if (mapInstance) {
-                        mapInstance.setView(selectedCoords, 18);
+                        mapInstance.setView(selectedCoords, 18, { animate: true });
+
+                        // Add or update anchored live marker
+                        if (!livePositionMarker) {
+                            const icon = L.divIcon({
+                                html: `<div class="w-4 h-4 bg-emerald-500 rounded-full border-2 border-white shadow-lg"></div>`,
+                                className: '',
+                                iconSize: [16, 16]
+                            });
+                            livePositionMarker = L.marker(selectedCoords, { icon }).addTo(mapInstance);
+                        } else {
+                            livePositionMarker.setLatLng(selectedCoords);
+                        }
                     }
 
                     if (btnText) btnText.innerText = "✓ Satellite GPS Locked";
-                    updateGpsStatus(`✅ <strong class="text-emerald-500">True Satellite GPS Locked!</strong> (Accuracy: ±${accuracy}m)`);
-                    showToast(`🎯 Real GPS Pinpointed (±${accuracy}m)`);
+                    updateGpsStatus(`✅ <strong class="text-emerald-500">True Satellite GPS Locked & Fixed!</strong> (Accuracy: ±${accuracy}m)`);
 
-                    // Once high precision is obtained, stop polling to preserve battery
+                    // Stop polling once fine accuracy is obtained to save power
                     if (accuracy <= 30) {
                         navigator.geolocation.clearWatch(activeWatchId);
                         activeWatchId = null;
@@ -538,14 +544,13 @@
                     if (btnText) btnText.innerText = "🛰️ Retry GPS";
                     let msg = "Could not get satellite location.";
                     if (err.code === 1) {
-                        msg = "Location permission blocked. Open Chrome/Safari site settings and allow 'Precise Location'.";
+                        msg = "Location permission blocked. Enable 'Precise Location' in browser site settings.";
                     } else if (err.code === 2) {
-                        msg = "GPS hardware unavailable. Ensure phone GPS/Location toggle is ON.";
+                        msg = "GPS hardware unavailable. Ensure phone GPS toggle is ON.";
                     } else if (err.code === 3) {
                         msg = "Satellite request timed out. Please drag map or search your street.";
                     }
                     updateGpsStatus(`❌ ${msg}`, true);
-                    showToast(msg, true);
                 },
                 options
             );
@@ -563,11 +568,11 @@
         async function searchKopargaonStreet() {
             const query = document.getElementById('landmarkSearchInput').value.trim();
             if (!query) {
-                showToast("Enter a street or area name", true);
+                updateGpsStatus("⚠️ Enter a street or area name to search.", true);
                 return;
             }
 
-            showToast("🔍 Searching Kopargaon map...");
+            updateGpsStatus("🔍 Searching Kopargaon map...", false);
             try {
                 const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ', Kopargaon, Maharashtra')}`);
                 const data = await res.json();
@@ -578,12 +583,12 @@
                     selectedCoords = [lat, lon];
                     updateCoordinatesDisplay(lat, lon);
                     mapInstance.setView([lat, lon], 18);
-                    showToast(`📍 Found: ${data[0].display_name.split(',')[0]}`);
+                    updateGpsStatus(`📍 Found & Fixed: ${data[0].display_name.split(',')[0]}`);
                 } else {
-                    showToast("Not found. Move map directly to your street.", true);
+                    updateGpsStatus("⚠️ Not found. Move map directly to your street.", true);
                 }
             } catch (e) {
-                showToast("Search unavailable. Move map to set spot.", true);
+                updateGpsStatus("⚠️ Search unavailable. Move map directly to set spot.", true);
             }
         }
 
