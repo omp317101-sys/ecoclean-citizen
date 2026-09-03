@@ -155,16 +155,24 @@
                         <div class="flex items-center justify-between">
                             <h3 class="text-xs font-black uppercase text-slate-800 dark:text-slate-200 flex items-center gap-2">
                                 <span class="w-5 h-5 rounded-lg bg-[#9E1220] text-white flex items-center justify-center text-[10px]">1</span>
-                                Live GPS Geotag
+                                Live Location Pin
                             </h3>
-                            <button type="button" onclick="startHardwareGpsTracking()" class="text-[10px] bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-extrabold px-2.5 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1.5 shadow-sm active:scale-95 transition-all">
+                            <button type="button" onclick="requestSatelliteLock(true)" class="text-[10px] bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-extrabold px-2.5 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1.5 shadow-sm active:scale-95 transition-all">
                                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                                <span>🛰️ Recalibrate GPS</span>
+                                <span>🛰️ Refresh Satellite</span>
+                            </button>
+                        </div>
+
+                        <!-- Landmark / Street Search Bar -->
+                        <div class="flex gap-2">
+                            <input type="text" id="landmarkSearchInput" placeholder="Search Kopargaon area (e.g. Bus Stand, Tilak Nagar)..." class="flex-1 px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 focus:outline-none focus:ring-1 focus:ring-rose-500">
+                            <button type="button" onclick="searchAreaAddress()" class="px-3 py-2 bg-[#9E1220] text-white text-xs font-bold rounded-xl active:scale-95 transition-all">
+                                🔍 Find
                             </button>
                         </div>
 
                         <!-- Leaflet Interactive Map -->
-                        <div class="h-52 w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-rose-950 relative shadow-inner">
+                        <div class="h-56 w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-rose-950 relative shadow-inner">
                             <div id="citizenReportMap" class="w-full h-full"></div>
                         </div>
 
@@ -172,11 +180,11 @@
                         <div class="p-3 bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950/60 rounded-2xl text-center space-y-1">
                             <div id="gpsStatusContainer">
                                 <span class="text-[11px] font-extrabold text-[#9E1220] dark:text-rose-400 block" id="geoStatusLabel">
-                                    🛰️ Acquiring satellite GPS lock...
+                                    🛰️ Waiting for GPS satellite lock...
                                 </span>
                             </div>
                             <p class="text-[10px] text-slate-500 dark:text-slate-400">
-                                💡 Tap anywhere on map or drag pin to fine-tune exact garbage location.
+                                💡 <strong>Using a Laptop or PC?</strong> Browsers show ISP IP locations by default. Drag the red pin or tap the map directly onto your street.
                             </p>
                         </div>
                     </div>
@@ -274,9 +282,8 @@
 
     <!-- ================= JAVASCRIPT ENGINE ================= -->
     <script>
-        const CONFIG = {
-            KOPARGAON_COORDS: [19.8841, 74.4788] // Default town center fallback
-        };
+        // Kopargaon Central Reference
+        const DEFAULT_KOPARGAON_COORDS = [19.8841, 74.4788];
 
         let currentCitizen = {
             name: "Saiom Resident",
@@ -284,20 +291,18 @@
             city: "Kopargaon"
         };
 
-        // GPS & Leaflet Map State
+        // GPS State
         let mapInstance = null;
         let userMarker = null;
-        let userAccuracyCircle = null;
-        let selectedCoords = CONFIG.KOPARGAON_COORDS;
-        let userLiveGPS = CONFIG.KOPARGAON_COORDS;
-        let gpsWatchId = null;
-        let hasAcquiredHighAccuracyGps = false;
+        let accuracyCircle = null;
+        let selectedCoords = DEFAULT_KOPARGAON_COORDS;
+        let activeWatchId = null;
+        let isSatelliteLocked = false;
 
-        // Image & Verification State
+        // Image & AI State
         let currentUploadedPhotoUrl = "";
         let currentAiVerification = null;
 
-        // Citizen Grievances Data Store
         let citizenComplaints = JSON.parse(localStorage.getItem('ecoclean_citizen_reports') || 'null') || [
             {
                 id: "KPG-8801",
@@ -326,7 +331,7 @@
             document.getElementById('themeIcon').innerText = isDark ? "☀️" : "🌙";
         }
 
-        /* ------------------ AUTH LOGIC ------------------ */
+        /* ------------------ AUTH FLOW ------------------ */
         function handleCitizenLogin(e) {
             e.preventDefault();
             const name = document.getElementById('citizenInputName').value.trim();
@@ -345,149 +350,181 @@
             document.getElementById('mainSection').classList.remove('hidden');
 
             setTimeout(() => {
-                initCitizenMap();
-                startHardwareGpsTracking();
+                initMap();
+                requestSatelliteLock(false);
             }, 200);
 
             renderCitizenComplaints();
         }
 
         function handleCitizenLogout() {
-            if (gpsWatchId !== null) {
-                navigator.geolocation.clearWatch(gpsWatchId);
-                gpsWatchId = null;
+            if (activeWatchId !== null) {
+                navigator.geolocation.clearWatch(activeWatchId);
+                activeWatchId = null;
             }
             document.getElementById('mainSection').classList.add('hidden');
             document.getElementById('authSection').classList.remove('hidden');
         }
 
-        /* ------------------ ACCURATE HARDWARE GPS TRACKING ------------------ */
-        function initCitizenMap() {
+        /* ------------------ HIGH-PRECISION SATELLITE GPS ------------------ */
+        function initMap() {
             if (!mapInstance) {
-                mapInstance = L.map('citizenReportMap', { zoomControl: false }).setView(selectedCoords, 17);
+                mapInstance = L.map('citizenReportMap', { zoomControl: false }).setView(selectedCoords, 16);
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapInstance);
 
-                // Allow user to tap anywhere to manually place pin if indoor / weak satellite signal
+                // Allow tapping anywhere on map to instantly place pin
                 mapInstance.on('click', (e) => {
-                    updateSelectedPinLocation([e.latlng.lat, e.latlng.lng], false);
-                    showToast("📍 Spot adjusted to tapped position");
+                    placeMarker([e.latlng.lat, e.latlng.lng], 0, true);
+                    showToast("📍 Pin placed at selected position");
                 });
             } else {
                 mapInstance.invalidateSize();
             }
         }
 
-        function startHardwareGpsTracking() {
+        function requestSatelliteLock(showNotifications = false) {
             if (!navigator.geolocation) {
-                updateGpsStatusUI(null, "⚠️ Geolocation not supported by your browser.", true);
+                updateGpsStatus("⚠️ Geolocation not supported by your browser.", true);
                 return;
             }
 
-            updateGpsStatusUI(null, "🛰️ Searching for satellite GPS signals...", false);
-
-            if (gpsWatchId !== null) {
-                navigator.geolocation.clearWatch(gpsWatchId);
+            if (showNotifications) {
+                showToast("🛰️ Contacting GPS satellites...");
             }
 
-            // High-Accuracy Satellite Configuration
-            const gpsOptions = {
-                enableHighAccuracy: true, // Forces device hardware GPS rather than IP/WiFi estimate
-                timeout: 20000,           // 20 seconds to establish hardware lock
-                maximumAge: 0             // Strictly NO cached ISP IP data
+            updateGpsStatus("🛰️ Contacting GPS hardware satellites...", false);
+
+            if (activeWatchId !== null) {
+                navigator.geolocation.clearWatch(activeWatchId);
+            }
+
+            const options = {
+                enableHighAccuracy: true, // Forces phone's GNSS/GPS chipset ON
+                timeout: 25000,           // 25s satellite acquisition window
+                maximumAge: 0             // Strictly NO cached ISP data
             };
 
-            gpsWatchId = navigator.geolocation.watchPosition(
-                (position) => {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    const accuracy = Math.round(position.coords.accuracy);
+            activeWatchId = navigator.geolocation.watchPosition(
+                (pos) => {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    const accuracy = Math.round(pos.coords.accuracy);
 
-                    userLiveGPS = [lat, lng];
-
-                    // Only automatically snap pin if user hasn't manually overridden, or if this is a much higher precision fix
-                    if (!hasAcquiredHighAccuracyGps || accuracy < 35) {
-                        updateSelectedPinLocation(userLiveGPS, true, accuracy);
-                    }
-
-                    if (accuracy <= 35) {
-                        hasAcquiredHighAccuracyGps = true;
-                        updateGpsStatusUI(accuracy, `✅ Accurate Satellite GPS Locked (±${accuracy}m)<br><span class="text-[10px] text-slate-400 font-mono">${lat.toFixed(6)}, ${lng.toFixed(6)}</span>`);
-                    } else if (accuracy <= 100) {
-                        updateGpsStatusUI(accuracy, `🛰️ Refining GPS Lock... (±${accuracy}m)<br><span class="text-[10px] text-slate-400 font-mono">${lat.toFixed(5)}, ${lng.toFixed(5)}</span>`);
+                    // IP-based locations typically have accuracy > 1000m (e.g. 5km-25km).
+                    // Satellite GPS typically has accuracy < 35m.
+                    if (accuracy <= 60) {
+                        isSatelliteLocked = true;
+                        placeMarker([lat, lng], accuracy, false);
+                        updateGpsStatus(`✅ <strong class="text-emerald-500">True Satellite GPS Locked</strong> (±${accuracy}m precision)<br><span class="text-[10px] text-slate-400 font-mono">${lat.toFixed(6)}, ${lng.toFixed(6)}</span>`);
+                    } else if (accuracy <= 200) {
+                        placeMarker([lat, lng], accuracy, false);
+                        updateGpsStatus(`🛰️ Refining satellite triangulation... (±${accuracy}m)<br><span class="text-[10px] text-amber-400 font-mono">${lat.toFixed(5)}, ${lng.toFixed(5)}</span>`);
                     } else {
-                        // Inaccurate IP/Cell Tower fallback
-                        updateGpsStatusUI(accuracy, `⚠️ Low-Precision IP / Tower estimate (±${accuracy}m).<br><span class="text-[10px] text-rose-400 font-semibold">Turn on Device Location/GPS outdoors, or drag pin to your spot.</span>`);
+                        // Inaccurate reading (likely laptop Wi-Fi or ISP gateway)
+                        if (!isSatelliteLocked) {
+                            placeMarker([lat, lng], accuracy, false);
+                            updateGpsStatus(`⚠️ <span class="text-rose-400">Low Accuracy (ISP/Tower estimate: ±${accuracy}m).</span><br><span class="text-[10px] text-slate-400">If on desktop, drag the pin or use the search bar above to set your spot.</span>`);
+                        }
                     }
                 },
                 (err) => {
-                    let msg = "Could not get live satellite location.";
-                    if (err.code === err.PERMISSION_DENIED) {
-                        msg = "Location permission denied. Please enable location permissions in browser settings.";
-                    } else if (err.code === err.POSITION_UNAVAILABLE) {
-                        msg = "GPS signal unavailable. Ensure device location is turned ON.";
-                    } else if (err.code === err.TIMEOUT) {
-                        msg = "GPS request timed out. Retrying satellite lock...";
-                    }
-                    updateGpsStatusUI(null, `❌ ${msg}`, true);
+                    let msg = "Could not get location. Ensure GPS is enabled.";
+                    if (err.code === 1) msg = "Location access denied. Please allow location permissions in browser settings.";
+                    if (err.code === 3) msg = "Satellite request timed out. You can tap the map or search your street.";
+                    updateGpsStatus(`❌ ${msg}`, true);
                 },
-                gpsOptions
+                options
             );
         }
 
-        function updateSelectedPinLocation(coords, isGpsAuto = false, accuracy = 20) {
+        function placeMarker(coords, accuracy = 0, isManual = false) {
             selectedCoords = coords;
-
             if (!mapInstance) return;
 
-            mapInstance.setView(coords, 18);
+            mapInstance.setView(coords, isManual ? mapInstance.getZoom() : 18);
 
-            // Accuracy halo circle
-            if (userAccuracyCircle) {
-                userAccuracyCircle.setLatLng(coords);
-                userAccuracyCircle.setRadius(accuracy);
-            } else {
-                userAccuracyCircle = L.circle(coords, {
-                    radius: accuracy,
-                    color: '#10B981',
-                    fillColor: '#10B981',
-                    fillOpacity: 0.15,
-                    weight: 1.5
-                }).addTo(mapInstance);
+            // Accuracy Halo
+            if (accuracy > 0 && !isManual) {
+                if (accuracyCircle) {
+                    accuracyCircle.setLatLng(coords);
+                    accuracyCircle.setRadius(accuracy);
+                } else {
+                    accuracyCircle = L.circle(coords, {
+                        radius: accuracy,
+                        color: '#10B981',
+                        fillColor: '#10B981',
+                        fillOpacity: 0.12,
+                        weight: 1.5
+                    }).addTo(mapInstance);
+                }
+            } else if (accuracyCircle) {
+                mapInstance.removeLayer(accuracyCircle);
+                accuracyCircle = null;
             }
 
             // Draggable Marker
             if (userMarker) {
                 userMarker.setLatLng(coords);
             } else {
-                const userPinHtml = `<div class="w-8 h-8 bg-emerald-600 rounded-full border-2 border-white flex items-center justify-center text-white text-xs font-black shadow-lg pulsing-gps-pin cursor-pointer">📍</div>`;
-                const icon = L.divIcon({ html: userPinHtml, className: '', iconSize: [32, 32] });
+                const pinHtml = `<div class="w-8 h-8 bg-emerald-600 rounded-full border-2 border-white flex items-center justify-center text-white text-xs font-black shadow-lg pulsing-gps-pin cursor-pointer">📍</div>`;
+                const customIcon = L.divIcon({ html: pinHtml, className: '', iconSize: [32, 32] });
 
-                userMarker = L.marker(coords, { icon: icon, draggable: true }).addTo(mapInstance);
+                userMarker = L.marker(coords, { icon: customIcon, draggable: true }).addTo(mapInstance);
 
-                // Allow dragging marker
-                userMarker.on('dragend', function(e) {
-                    const newPos = e.target.getLatLng();
-                    selectedCoords = [newPos.lat, newPos.lng];
-                    updateGpsStatusUI(null, `📍 Marker Adjusted (${newPos.lat.toFixed(5)}, ${newPos.lng.toFixed(5)})`);
+                userMarker.on('dragend', (e) => {
+                    const pos = e.target.getLatLng();
+                    selectedCoords = [pos.lat, pos.lng];
+                    updateGpsStatus(`📍 Pin Dragged to Position: (${pos.lat.toFixed(5)}, ${pos.lng.toFixed(5)})`);
                     showToast("Spot location updated");
                 });
             }
+
+            if (isManual) {
+                updateGpsStatus(`📍 Custom Spot Locked: (${coords[0].toFixed(5)}, ${coords[1].toFixed(5)})`);
+            }
         }
 
-        function updateGpsStatusUI(accuracy, messageHtml, isError = false) {
+        function updateGpsStatus(htmlText, isError = false) {
             const label = document.getElementById('geoStatusLabel');
             if (label) {
-                label.innerHTML = messageHtml;
+                label.innerHTML = htmlText;
                 label.className = `text-[11px] font-extrabold block ${isError ? 'text-rose-500' : 'text-[#9E1220] dark:text-rose-400'}`;
             }
         }
 
-        /* ------------------ ULTRA-FAST PHOTO & AI VERIFICATION ------------------ */
+        /* ------------------ SEARCH STREET OR LANDMARK ------------------ */
+        async function searchAreaAddress() {
+            const query = document.getElementById('landmarkSearchInput').value.trim();
+            if (!query) {
+                showToast("Please enter an area or landmark", true);
+                return;
+            }
+
+            showToast("🔍 Searching map...");
+            try {
+                // Search Kopargaon specific bounding via OpenStreetMap Nominatim
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ', Kopargaon')}`);
+                const data = await res.json();
+
+                if (data && data.length > 0) {
+                    const lat = parseFloat(data[0].lat);
+                    const lon = parseFloat(data[0].lon);
+                    placeMarker([lat, lon], 0, true);
+                    mapInstance.setView([lat, lon], 17);
+                    showToast(`📍 Found: ${data[0].display_name.split(',')[0]}`);
+                } else {
+                    showToast("Landmark not found. Try another landmark or tap the map.", true);
+                }
+            } catch (e) {
+                showToast("Search failed. Check your connection or tap directly on the map.", true);
+            }
+        }
+
+        /* ------------------ PHOTO & AI VERIFICATION ------------------ */
         function onPhotoSelected(e) {
             const file = e.target.files[0];
             if (!file) return;
 
-            // Instant zero-lag UI render using Object URL
             const localUrl = URL.createObjectURL(file);
             currentUploadedPhotoUrl = localUrl;
             runFastGeminiScan(localUrl, true);
@@ -547,7 +584,7 @@
             document.getElementById('aiVerdictCard').classList.add('hidden');
         }
 
-        /* ------------------ SUBMIT CITIZEN GRIEVANCE ------------------ */
+        /* ------------------ SUBMIT GRIEVANCE ------------------ */
         function submitCitizenReport() {
             if (!currentUploadedPhotoUrl) {
                 showToast("📸 Photo required!", true);
@@ -583,7 +620,7 @@
             switchCitizenTab('tracker');
         }
 
-        /* ------------------ GRIEVANCES TRACKER LIST ------------------ */
+        /* ------------------ MY COMPLAINTS ------------------ */
         function renderCitizenComplaints() {
             const list = document.getElementById('citizenGrievancesList');
             const badge = document.getElementById('trackerTotalBadge');
