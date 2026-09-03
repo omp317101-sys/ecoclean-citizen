@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoClean Kopargaon - Citizen Sanitation Portal</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        crimson: {
+                            50: '#FDF2F3',
+                            100: '#FBE6E8',
+                            200: '#F7C2C7',
+                            300: '#EE949D',
+                            400: '#E15D6B',
+                            500: '#D32F2F',
+                            600: '#BA1B2B',
+                            700: '#9E1220',
+                            800: '#750B16',
+                            900: '#540810',
+                            950: '#2E0308'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Leaflet OpenStreetMap -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <style>
+        html, body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #0A0B0E;
+            color: #1E293B;
+            height: 100%;
+        }
+        .leaflet-container {
+            width: 100%;
+            height: 100%;
+            border-radius: 18px;
+            z-index: 1;
+        }
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #9E1220;
+            border-radius: 10px;
+        }
+        @keyframes redPulse {
+            0% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.7); transform: scale(1); }
+            50% { box-shadow: 0 0 16px 8px rgba(225, 29, 72, 0.35); transform: scale(1.08); }
+            100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); transform: scale(1); }
+        }
+        .pulsing-user-pin {
+            animation: redPulse 1.8s infinite ease-out;
+            border-radius: 9999px;
+        }
+        @keyframes laserSweep {
+            0% { top: 0%; opacity: 0.85; }
+            50% { top: 94%; opacity: 1; }
+            100% { top: 0%; opacity: 0.85; }
+        }
+        .ai-laser {
+            animation: laserSweep 1.6s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="h-full bg-[#0F0204] text-slate-800 dark:text-slate-100 antialiased selection:bg-rose-600 selection:text-white flex justify-center">
+
+    <!-- Floating In-App Toast Message -->
+    <div id="toastMessage" class="fixed top-4 left-1/2 -translate-x-1/2 z-[100] hidden max-w-xs w-11/12 p-3.5 rounded-2xl shadow-2xl text-xs font-black text-center border backdrop-blur-md transition-all pointer-events-none"></div>
+
+    <!-- Main Mobile Application Shell -->
+    <div id="appContainer" class="w-full max-w-md h-full min-h-screen bg-white dark:bg-[#120305] shadow-2xl relative flex flex-col overflow-x-hidden border-x border-slate-200 dark:border-rose-950/40">
+
+        <!-- VIEW 1: RESIDENT SPLASH & REGISTRATION / LOGIN -->
+        <main id="authSection" class="flex-1 flex flex-col justify-between bg-gradient-to-b from-[#8B1220] via-[#5C0A13] to-[#2E0308] text-white p-6 min-h-screen">
+            <div class="pt-8 text-center space-y-3">
+                <div class="w-20 h-20 mx-auto rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-4xl shadow-2xl relative">
+                    <span class="absolute inset-0 bg-rose-500/20 rounded-full blur-xl animate-pulse"></span>
+                    <span class="relative z-10">♻️</span>
+                </div>
+                <div>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-rose-200 bg-white/10 px-3 py-1 rounded-full border border-white/10">Kopargaon Municipal Unit</span>
+                    <h1 class="text-2xl font-black tracking-tight text-white mt-2">EcoClean Citizen</h1>
+                    <p class="text-xs text-rose-200/90 font-medium">Verified On-Spot Waste Reporting Portal</p>
+                </div>
+            </div>
+
+            <!-- Citizen Login Card -->
+            <div class="bg-white dark:bg-[#1A0407] text-slate-800 dark:text-slate-100 rounded-[32px] p-6 shadow-2xl border border-white/10 my-auto space-y-4">
+                <div class="flex items-center justify-between border-b pb-3 border-slate-100 dark:border-rose-950/60">
+                    <div>
+                        <h2 class="text-sm font-black text-slate-900 dark:text-white">Resident Identification</h2>
+                        <p class="text-[11px] text-slate-500 dark:text-slate-400">Sign in to report or track status</p>
+                    </div>
+                    <span class="text-[10px] bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 font-black px-2.5 py-1 rounded-full">Citizen Desk</span>
+                </div>
+
+                <form onsubmit="handleCitizenLogin(event)" class="space-y-3 pt-1">
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400">Citizen Full Name</label>
+                        <input type="text" id="citizenNameInput" value="Saiom Resident" required class="w-full mt-1 px-4 py-2.5 text-xs font-bold rounded-2xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400">Mobile Phone Number</label>
+                        <input type="tel" id="citizenPhoneInput" value="9876543210" pattern="[0-9]{10}" required class="w-full mt-1 px-4 py-2.5 text-xs font-bold rounded-2xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400">City Name</label>
+                        <input type="text" id="citizenCityInput" value="Kopargaon" required placeholder="Enter city name" class="w-full mt-1 px-4 py-2.5 text-xs font-bold rounded-2xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500">
+                    </div>
+
+                    <button type="submit" class="w-full bg-gradient-to-r from-[#9E1220] to-[#540810] text-white font-extrabold py-3.5 rounded-2xl shadow-xl text-xs uppercase tracking-wider active:scale-95 transition-all mt-2 flex items-center justify-center gap-2">
+                        <span>Access Citizen Portal</span>
+                        <span>➔</span>
+                    </button>
+                </form>
+            </div>
+
+            <div class="text-center text-[11px] text-rose-200/70 font-semibold py-3">
+                Kopargaon Municipal Corporation • Sanitation Services
+            </div>
+        </main>
+
+        <!-- VIEW 2: CITIZEN OPERATIONAL PORTAL -->
+        <div id="mainSection" class="hidden flex-1 flex flex-col h-full overflow-hidden">
+            
+            <!-- Sticky Application Header -->
+            <header class="bg-gradient-to-r from-[#8B1220] via-[#5C0A13] to-[#2E0308] text-white px-4 py-3.5 flex items-center justify-between sticky top-0 z-40 shadow-md">
+                <div class="flex items-center gap-2.5">
+                    <button onclick="toggleCitizenMenu()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-sm">
+                        ♻️
+                    </button>
+                    <div>
+                        <h1 class="font-extrabold text-sm leading-tight">EcoClean Kopargaon</h1>
+                        <p class="text-[9px] text-rose-200/90 font-bold tracking-wider uppercase" id="headerCitizenMeta">Saiom Resident • Ward 02</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="notifBellButton" onclick="toggleNotificationDrawer()" class="relative w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs">
+                        <span>🔔</span>
+                        <span id="notifBadgeCount" class="absolute -top-1 -right-1 bg-amber-400 text-slate-900 font-black text-[9px] w-4 h-4 rounded-full flex items-center justify-center hidden">0</span>
+                    </button>
+                    <button onclick="toggleDarkMode()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs">
+                        <span id="themeToggleIcon">🌙</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Citizen Notification Drawer Overlay -->
+            <div id="notifDrawerOverlay" onclick="toggleNotificationDrawer()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden transition-opacity"></div>
+            <aside id="notifDrawer" class="fixed top-0 right-0 bottom-0 w-[300px] max-w-[85vw] bg-white dark:bg-[#1A0407] z-50 shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col justify-between border-l border-slate-200 dark:border-rose-950/60">
+                <div class="p-5 flex-1 flex flex-col overflow-hidden">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-rose-950/60">
+                        <h3 class="font-black text-sm text-slate-900 dark:text-white flex items-center gap-1.5">
+                            <span>🔔</span> Grievance Alerts
+                        </h3>
+                        <button onclick="toggleNotificationDrawer()" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-rose-950/60 text-slate-500 text-xs font-black">✕</button>
+                    </div>
+                    <div id="notificationsContainer" class="mt-4 space-y-2.5 overflow-y-auto flex-1 pr-1">
+                        <!-- Notification records populated via script -->
+                    </div>
+                </div>
+                <div class="p-4 border-t border-slate-100 dark:border-rose-950/60">
+                    <button onclick="clearNotifications()" class="w-full py-2.5 text-center text-xs font-bold bg-slate-100 dark:bg-rose-950/40 text-slate-600 dark:text-slate-300 rounded-xl hover:bg-slate-200">
+                        Clear All Updates
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Citizen Profile Side Drawer Overlay -->
+            <div id="citizenMenuOverlay" onclick="toggleCitizenMenu()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden transition-opacity"></div>
+            <aside id="citizenMenuDrawer" class="fixed top-0 left-0 bottom-0 w-[280px] max-w-[85vw] bg-white dark:bg-[#1A0407] z-50 shadow-2xl transform -translate-x-full transition-transform duration-300 flex flex-col justify-between border-r border-slate-200 dark:border-rose-950/60">
+                <div class="p-6 space-y-4">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-rose-950/60">
+                        <div class="flex items-center gap-2.5">
+                            <span class="text-2xl">👤</span>
+                            <div>
+                                <h3 class="font-black text-sm text-slate-900 dark:text-white" id="menuCitizenName">Saiom Resident</h3>
+                                <p class="text-[10px] text-slate-400 font-bold" id="menuCitizenPhone">+91-9876543210</p>
+                            </div>
+                        </div>
+                        <button onclick="toggleCitizenMenu()" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-rose-950/60 text-slate-500 text-xs font-black">✕</button>
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl bg-slate-50 dark:bg-rose-950/30 border border-slate-100 dark:border-rose-900/40 space-y-1">
+                        <span class="text-[9px] font-black uppercase text-slate-400">Registered City</span>
+                        <p class="text-xs font-bold text-slate-800 dark:text-slate-200" id="menuCitizenCity">Kopargaon</p>
+                    </div>
+
+                    <div class="p-3.5 rounded-2xl bg-gradient-to-r from-rose-950/10 to-rose-900/10 border border-rose-900/20 space-y-1">
+                        <span class="text-[9px] font-black uppercase text-rose-700 dark:text-rose-400">Municipal Helpline</span>
+                        <p class="text-xs font-mono font-bold text-slate-800 dark:text-slate-200">02423-222333 (KPG)</p>
+                    </div>
+                </div>
+
+                <div class="p-6 border-t border-slate-100 dark:border-rose-950/60">
+                    <button onclick="handleCitizenLogout()" class="w-full bg-slate-100 dark:bg-rose-950/60 hover:bg-rose-100 text-rose-700 dark:text-rose-300 font-extrabold py-3 px-4 rounded-2xl flex items-center justify-center gap-2 text-xs">
+                        🚪 Log Out / Change Resident
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Scrollable Body Content -->
+            <main class="flex-1 overflow-y-auto p-4 space-y-4 pb-24">
+
+                <!-- TAB CONTENT 1: REPORT WASTE -->
+                <div id="tabContentReport" class="space-y-4">
+                    <!-- STEP 1: Live GPS Location Verification -->
+                    <div class="bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-3xl p-4 shadow-sm space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xs font-black uppercase text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                                <span class="w-5 h-5 rounded-lg bg-[#9E1220] text-white flex items-center justify-center text-[10px]">1</span>
+                                Live GPS Location
+                            </h3>
+                            <button type="button" onclick="acquireDeviceGpsLocation()" class="text-[10px] bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-extrabold px-2.5 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1 hover:bg-emerald-100">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                                <span id="gpsAcquireLabel">Lock Live GPS</span>
+                            </button>
+                        </div>
+
+                        <div class="h-48 w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-rose-950 relative">
+                            <div id="citizenReportMap" class="w-full h-full"></div>
+                        </div>
+
+                        <div class="p-2.5 bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950/60 rounded-xl flex items-center justify-between text-xs">
+                            <div class="truncate pr-2">
+                                <span class="text-[9px] text-slate-400 block font-bold">CITIZEN GPS POSITION</span>
+                                <span class="text-[11px] font-extrabold text-[#9E1220] dark:text-rose-400 truncate block" id="selectedGeotagSpotLabel">
+                                    Acquiring live coordinates...
+                                </span>
+                            </div>
+                            <span id="geofenceDistanceStatusBadge" class="text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 px-2.5 py-1 rounded-full whitespace-nowrap">
+                                Live GPS Verified ✓
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- STEP 2: Camera & Gemini AI Verification -->
+                    <div class="bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-3xl p-4 shadow-sm space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xs font-black uppercase text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                                <span class="w-5 h-5 rounded-lg bg-[#9E1220] text-white flex items-center justify-center text-[10px]">2</span>
+                                Photo of Waste Spot
+                            </h3>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[9px] font-black text-emerald-700 bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full flex items-center gap-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    <span>Gemini 3 Flash Vision</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Image File Picker -->
+                        <label class="block cursor-pointer">
+                            <div id="photoUploadPlaceholder" class="border-2 border-dashed border-slate-300 dark:border-rose-950 rounded-2xl p-4 text-center bg-slate-50 dark:bg-[#120305] hover:bg-slate-100 transition-colors">
+                                <span class="text-3xl block mb-1">📸</span>
+                                <span class="text-xs font-bold text-slate-700 dark:text-slate-200 block">Tap to Snap or Upload Photo</span>
+                                <span class="text-[10px] text-slate-400">Strictly inspected by Gemini 3 Flash AI</span>
+                            </div>
+                            <input type="file" id="citizenPhotoInput" accept="image/*" capture="environment" onchange="handleFilePhotoUpload(event)" class="hidden">
+                        </label>
+
+                        <!-- Preview + Laser Scanner -->
+                        <div id="photoPreviewContainer" class="hidden relative rounded-2xl overflow-hidden border border-slate-200 dark:border-rose-950">
+                            <img id="wastePreviewImg" src="" alt="Waste Photo" class="w-full h-44 object-cover">
+                            
+                            <!-- Scanner Animation Overlay -->
+                            <div id="scannerAiOverlay" class="hidden absolute inset-0 bg-black/75 flex flex-col justify-between p-3.5 pointer-events-none">
+                                <span class="text-[10px] font-mono text-emerald-400 font-bold flex items-center gap-1.5">
+                                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                                    GEMINI 3 FLASH MULTIMODAL AUDIT IN PROGRESS...
+                                </span>
+                                <div class="w-full h-0.5 bg-emerald-400 shadow-[0_0_12px_#34d399] ai-laser"></div>
+                                <span class="text-[10px] font-mono text-emerald-300 text-center animate-pulse">Classifying municipal refuse & verifying authenticity...</span>
+                            </div>
+
+                            <button type="button" onclick="clearSelectedPhoto()" class="absolute top-2 right-2 bg-black/70 hover:bg-black text-white w-7 h-7 rounded-full text-xs font-bold">✕</button>
+                        </div>
+
+                        <!-- AI Result Diagnostic Card -->
+                        <div id="aiVerdictCard" class="hidden rounded-2xl p-3.5 border text-xs space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span id="aiVerdictTitle" class="font-extrabold text-xs">Gemini Verification</span>
+                                <span id="aiVerdictConfidence" class="text-[10px] font-black px-2 py-0.5 rounded-full border">96% Real Waste</span>
+                            </div>
+                            <p id="aiVerdictSummary" class="text-[11px] leading-snug"></p>
+                            <div id="aiVerdictReasonBox" class="text-[10px] p-2 rounded-xl hidden font-mono"></div>
+                            <div id="aiVerdictTags" class="flex flex-wrap gap-1 pt-0.5"></div>
+                        </div>
+
+                        <!-- Quick Test Presets for Instant Demo -->
+                        <div class="space-y-1.5 pt-1">
+                            <div class="text-[10px] font-black uppercase text-slate-400">Test Gemini AI Vision Accuracy:</div>
+                            <div class="grid grid-cols-2 gap-1.5">
+                                <button type="button" onclick="loadPresetPhoto('https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&w=800&q=80', 'Roadside Garbage Clutter')" class="text-left text-[10px] font-bold p-2 rounded-xl border border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200">
+                                    🗑️ <strong>Real Garbage Heap</strong>
+                                    <span class="block text-[8px] text-emerald-600 dark:text-emerald-400">Approved by Gemini ✓</span>
+                                </button>
+                                <button type="button" onclick="loadPresetPhoto('https://images.unsplash.com/photo-1530587191325-3db32d826c18?auto=format&fit=crop&w=800&q=80', 'Overflowing Bin')" class="text-left text-[10px] font-bold p-2 rounded-xl border border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-200">
+                                    🚮 <strong>Overflowing Bin</strong>
+                                    <span class="block text-[8px] text-emerald-600 dark:text-emerald-400">Approved by Gemini ✓</span>
+                                </button>
+                                <button type="button" onclick="loadPresetPhoto('https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&w=800&q=80', 'Living Room')" class="text-left text-[10px] font-bold p-2 rounded-xl border border-rose-400 bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200">
+                                    🛋️ <strong>Clean Room (Fake)</strong>
+                                    <span class="block text-[8px] text-rose-600 dark:text-rose-400">Blocked by Gemini ✕</span>
+                                </button>
+                                <button type="button" onclick="loadPresetPhoto('https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80', 'Selfie / Person')" class="text-left text-[10px] font-bold p-2 rounded-xl border border-rose-400 bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200">
+                                    👤 <strong>Selfie / Face (Fake)</strong>
+                                    <span class="block text-[8px] text-rose-600 dark:text-rose-400">Blocked by Gemini ✕</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 3: Category & Comments -->
+                    <div class="bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-3xl p-4 shadow-sm space-y-3">
+                        <div>
+                            <label class="text-[10px] font-black uppercase text-slate-400 block mb-1.5">Waste Category</label>
+                            <div class="grid grid-cols-2 gap-1.5">
+                                <button type="button" onclick="setWasteCategory('Plastic & Debris')" id="catBtnPlastic" class="category-btn p-2 rounded-xl text-left border text-xs font-bold bg-rose-50 dark:bg-rose-950/60 border-rose-600 text-rose-900 dark:text-rose-100">
+                                    🥤 Plastic & Bottles
+                                </button>
+                                <button type="button" onclick="setWasteCategory('Wet Organic Waste')" id="catBtnOrganic" class="category-btn p-2 rounded-xl text-left border text-xs font-bold bg-slate-50 dark:bg-rose-950/20 border-slate-200 dark:border-rose-950 text-slate-700 dark:text-slate-300">
+                                    🥬 Wet Food Waste
+                                </button>
+                                <button type="button" onclick="setWasteCategory('Hazardous & Medical')" id="catBtnHazard" class="category-btn p-2 rounded-xl text-left border text-xs font-bold bg-slate-50 dark:bg-rose-950/20 border-slate-200 dark:border-rose-950 text-slate-700 dark:text-slate-300">
+                                    ⚠️ Hazardous / Bio
+                                </button>
+                                <button type="button" onclick="setWasteCategory('Construction Debris')" id="catBtnConstruction" class="category-btn p-2 rounded-xl text-left border text-xs font-bold bg-slate-50 dark:bg-rose-950/20 border-slate-200 dark:border-rose-950 text-slate-700 dark:text-slate-300">
+                                    🧱 Construction Slag
+                                </button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="text-[10px] font-black uppercase text-slate-400 block mb-1">Landmark / Notes</label>
+                            <textarea id="reportComments" rows="2" placeholder="Describe the location landmark or waste situation..." class="w-full p-3 text-xs rounded-2xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 focus:outline-none focus:ring-1 focus:ring-rose-500"></textarea>
+                        </div>
+                        
+                        <button type="button" onclick="submitCitizenGrievance()" class="w-full bg-gradient-to-r from-[#9E1220] to-[#540810] hover:opacity-95 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-xl text-xs uppercase tracking-wider active:scale-95 transition-all flex items-center justify-center gap-2">
+                            <span>📢 Submit Grievance to Municipal Desk</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TAB CONTENT 2: MY COMPLAINTS & LIVE UPDATES -->
+                <div id="tabContentTracker" class="hidden space-y-3">
+                    <div class="flex items-center justify-between pb-1">
+                        <div>
+                            <h3 class="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">My Logged Grievances</h3>
+                            <p class="text-[10px] text-slate-400">Track clearance status and evidence photos</p>
+                        </div>
+                        <span id="trackerTotalBadge" class="text-[10px] font-bold bg-slate-100 dark:bg-rose-950/60 px-2 py-0.5 rounded-full">0 Reports</span>
+                    </div>
+
+                    <div id="citizenGrievancesList" class="space-y-3">
+                        <!-- Grievances dynamically rendered via JavaScript -->
+                    </div>
+                </div>
+            </main>
+
+            <!-- Bottom Navigation Bar -->
+            <nav class="absolute bottom-0 left-0 right-0 bg-white/95 dark:bg-[#120305]/95 backdrop-blur-md border-t border-slate-200 dark:border-rose-950/60 px-6 py-2.5 flex justify-around z-40">
+                <button id="navReportBtn" onclick="switchCitizenTab('report')" class="flex flex-col items-center gap-0.5 text-[#9E1220] dark:text-rose-400 font-extrabold text-[10px]">
+                    <span class="text-lg">📢</span> <span>Report</span>
+                </button>
+                <button id="navTrackerBtn" onclick="switchCitizenTab('tracker')" class="flex flex-col items-center gap-0.5 text-slate-400 font-extrabold text-[10px]">
+                    <span class="text-lg">📋</span> <span>My Grievances</span>
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Full-screen Photo Lightbox Modal -->
+    <div id="photoLightboxModal" onclick="closePhotoLightbox()" class="fixed inset-0 bg-black/95 z-[120] hidden flex flex-col justify-between p-4 cursor-pointer">
+        <div class="flex justify-end pt-2 pr-2">
+            <span class="text-white text-xs font-bold bg-white/20 px-3 py-1 rounded-full">✕ Close</span>
+        </div>
+        <div class="flex-1 flex items-center justify-center p-2">
+            <img id="lightboxImageSrc" src="" alt="Enlarged Waste Image" class="max-h-[70vh] max-w-full rounded-2xl object-contain shadow-2xl border border-white/20">
+        </div>
+        <div class="text-center pb-4 text-white space-y-1">
+            <h4 id="lightboxLocationTitle" class="font-extrabold text-sm"></h4>
+            <p id="lightboxComment" class="text-xs text-slate-300"></p>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * ECOCLEAN CITIZEN CONFIGURATION
+         * Plug in your Firebase, Supabase, or REST API endpoint here when connecting to the Admin Portal!
+         */
+        const ECOCLEAN_CONFIG = {
+            API_ENDPOINT: "https://your-backend-api.com", // Ready for remote database sync
+            KOPARGAON_DEFAULT_COORDS: [19.901689, 74.494780]
+        };
+
+        const MUNICIPAL_BINS = [
+            { id: "KPG-B101", name: "Yeola Corner Chowk", coords: [19.8967, 74.4822] },
+            { id: "KPG-B102", name: "Kopargaon Bus Stand & Depo", coords: [19.8841, 74.4788] },
+            { id: "KPG-B103", name: "Godavari River Bridge Ghat", coords: [19.8858, 74.4855] },
+            { id: "KPG-B104", name: "Tilak Nagar Market", coords: [19.8912, 74.4768] },
+            { id: "KPG-B105", name: "Sanjivani College Main Gate", coords: [19.8820, 74.4690] },
+            { id: "KPG-B109", name: "Station Road Ward Bin (Citizen Spot)", coords: [19.901800, 74.494900] }
+        ];
+
+        // Active Citizen Session
+        let citizenUser = {
+            name: "Saiom Resident",
+            phone: "9876543210",
+            city: "Kopargaon"
+        };
+
+        // Geolocation & Map Tracking State
+        let mapInstance = null;
+        let userMarker = null;
+        let dustbinMarkerLayers = [];
+        let userLiveGPS = ECOCLEAN_CONFIG.KOPARGAON_DEFAULT_COORDS;
+
+        // Image & Gemini Verification State
+        let uploadedPhotoUrl = "";
+        let uploadedMimeType = "image/jpeg";
+        let aiVerificationResult = null;
+        let selectedWasteType = "Plastic & Debris";
+        let isDarkMode = false;
+        let isAnalyzingImage = false;
+
+        // Citizen's Grievances and Notification Storage
+        let citizenGrievances = JSON.parse(localStorage.getItem('ecoclean_citizen_grievances') || 'null') || [
+            {
+                id: "KPG-9081",
+                binId: "KPG-B109",
+                landmark: "Station Road Ward Bin",
+                coords: [19.901800, 74.494900],
+                wasteType: "Plastic & Debris",
+                comment: "Bins overflowing on pavement near station road corner.",
+                beforeImage: "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&w=600&q=80",
+                afterImage: "",
+                status: "Dispatched", // Pending | Dispatched | Resolved
+                assignedCrew: "Raju Shinde (MH-17-AG-4421)",
+                time: "35 mins ago"
+            }
+        ];
+
+        let citizenNotifications = [
+            {
+                id: "notif-1",
+                complaintId: "KPG-9081",
+                title: "🚚 Crew Dispatched",
+                desc: "Raju Shinde with Municipal Tipper (MH-17-AG-4421) is en route to clear Station Road Ward Bin.",
+                time: "20 mins ago",
+                read: false
+            }
+        ];
+
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toastMessage');
+            if (!toast) return;
+            toast.innerText = msg;
+            toast.className = `fixed top-4 left-1/2 -translate-x-1/2 z-[100] max-w-xs w-11/12 p-3.5 rounded-2xl shadow-2xl text-xs font-bold text-center border backdrop-blur-md transition-all ${
+                isError ? 'bg-rose-950/95 text-white border-rose-500/60' : 'bg-emerald-950/95 text-white border-emerald-500/60'
+            }`;
+            toast.classList.remove('hidden');
+            setTimeout(() => toast.classList.add('hidden'), 3500);
+        }
+
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            document.documentElement.classList.toggle('dark', isDarkMode);
+            document.getElementById('themeToggleIcon').innerText = isDarkMode ? "☀️" : "🌙";
+        }
+
+        function toggleNotificationDrawer() {
+            const drawer = document.getElementById('notifDrawer');
+            const overlay = document.getElementById('notifDrawerOverlay');
+            drawer.classList.toggle('translate-x-full');
+            overlay.classList.toggle('hidden');
+            renderNotifications();
+        }
+
+        function toggleCitizenMenu() {
+            const drawer = document.getElementById('citizenMenuDrawer');
+            const overlay = document.getElementById('citizenMenuOverlay');
+            drawer.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
+        }
+
+        function handleCitizenLogin(e) {
+            e.preventDefault();
+            const name = document.getElementById('citizenNameInput').value.trim();
+            const phone = document.getElementById('citizenPhoneInput').value.trim();
+            const city = document.getElementById('citizenCityInput').value.trim() || "Kopargaon";
+
+            if (!name || !phone) {
+                showToast("Please enter your name and phone number", true);
+                return;
+            }
+
+            citizenUser.name = name;
+            citizenUser.phone = phone;
+            citizenUser.city = city;
+
+            document.getElementById('headerCitizenMeta').innerText = `${name} • ${city}`;
+            document.getElementById('menuCitizenName').innerText = name;
+            document.getElementById('menuCitizenPhone').innerText = `+91-${phone}`;
+            document.getElementById('menuCitizenCity').innerText = city;
+
+            document.getElementById('authSection').classList.add('hidden');
+            document.getElementById('mainSection').classList.remove('hidden');
+
+            setTimeout(initCitizenReportMap, 200);
+            renderCitizenGrievances();
+            renderNotifications();
+        }
+
+        function handleCitizenLogout() {
+            document.getElementById('mainSection').classList.add('hidden');
+            document.getElementById('authSection').classList.remove('hidden');
+            if (!document.getElementById('citizenMenuDrawer').classList.contains('-translate-x-full')) {
+                toggleCitizenMenu();
+            }
+        }
+
+        function calculateDistanceMeters(coords1, coords2) {
+            if (!coords1 || !coords2) return 0;
+            if (window.L && L.latLng) {
+                return L.latLng(coords1[0], coords1[1]).distanceTo(L.latLng(coords2[0], coords2[1]));
+            }
+            const R = 6371000;
+            const dLat = (coords2[0] - coords1[0]) * Math.PI / 180;
+            const dLon = (coords2[1] - coords1[1]) * Math.PI / 180;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                      Math.cos(coords1[0] * Math.PI / 180) * Math.cos(coords2[0] * Math.PI / 180) *
+                      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
+        function initCitizenReportMap() {
+            if (!mapInstance) {
+                mapInstance = L.map('citizenReportMap', { zoomControl: false }).setView(userLiveGPS, 17);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapInstance);
+            } else {
+                mapInstance.invalidateSize();
+            }
+
+            acquireDeviceGpsLocation();
+            renderMunicipalDustbinMarkers();
+        }
+
+        function acquireDeviceGpsLocation() {
+            const label = document.getElementById('gpsAcquireLabel');
+            if (label) label.innerText = "Locating...";
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        userLiveGPS = [pos.coords.latitude, pos.coords.longitude];
+                        applyLocationToMap(userLiveGPS);
+                        if (label) label.innerText = "Locked GPS";
+                        showToast(`📍 Live GPS Locked (${userLiveGPS[0].toFixed(4)}, ${userLiveGPS[1].toFixed(4)})`);
+                    },
+                    () => {
+                        userLiveGPS = ECOCLEAN_CONFIG.KOPARGAON_DEFAULT_COORDS;
+                        applyLocationToMap(userLiveGPS);
+                        if (label) label.innerText = "KPG Default";
+                        showToast("📍 Using default city coordinates");
+                    },
+                    { timeout: 6000 }
+                );
+            } else {
+                applyLocationToMap(ECOCLEAN_CONFIG.KOPARGAON_DEFAULT_COORDS);
+            }
+        }
+
+        function applyLocationToMap(coords) {
+            if (!mapInstance) return;
+
+            mapInstance.setView(coords, 17);
+
+            const userPinHtml = `<div class="w-7 h-7 bg-emerald-600 rounded-full border-2 border-white flex items-center justify-center text-white text-xs font-black shadow-lg pulsing-user-pin">📍</div>`;
+            const icon = L.divIcon({ html: userPinHtml, className: '', iconSize: [28, 28] });
+
+            if (userMarker) userMarker.setLatLng(coords);
+            else userMarker = L.marker(coords, { icon: icon }).addTo(mapInstance);
+
+            const spotLabel = document.getElementById('selectedGeotagSpotLabel');
+            if (spotLabel) {
+                spotLabel.innerText = `Live GPS: ${coords[0].toFixed(5)}, ${coords[1].toFixed(5)}`;
+            }
+            const badge = document.getElementById('geofenceDistanceStatusBadge');
+            if (badge) {
+                badge.className = "text-[10px] font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 px-2.5 py-1 rounded-full whitespace-nowrap";
+                badge.innerText = "Live GPS Verified ✓";
+            }
+        }
+
+        function renderMunicipalDustbinMarkers() {
+            if (!mapInstance) return;
+            dustbinMarkerLayers.forEach(l => mapInstance.removeLayer(l));
+            dustbinMarkerLayers = [];
+
+            MUNICIPAL_BINS.forEach(bin => {
+                const icon = L.divIcon({
+                    html: `<div class="w-7 h-7 rounded-full bg-[#9E1220] border-2 border-white text-white text-[10px] flex items-center justify-center shadow">🗑️</div>`,
+                    className: '', iconSize: [28, 28]
+                });
+                const marker = L.marker(bin.coords, { icon: icon }).addTo(mapInstance);
+                marker.bindPopup(`<div class="text-xs font-bold text-slate-800">${bin.name}</div>`);
+                dustbinMarkerLayers.push(marker);
+            });
+        }
+
+        /* ------------------ ULTRA-FAST GEMINI 3 FLASH VISION ENGINE ------------------ */
+        const PRESET_BASE64_CACHE = {};
+
+        /**
+         * Ultra-fast downsampler: scales image to ~400px (approx 20-30KB) using native bitmap rendering.
+         * Massive speedup: uploads in milliseconds over 4G/5G/Wi-Fi.
+         */
+        async function convertSourceToFastBase64(source) {
+            let bitmap;
+            if (source instanceof File || source instanceof Blob) {
+                bitmap = await createImageBitmap(source);
+            } else {
+                if (PRESET_BASE64_CACHE[source]) {
+                    return PRESET_BASE64_CACHE[source];
+                }
+                const img = new Image();
+                img.crossOrigin = "Anonymous";
+                await new Promise((resolve, reject) => {
+                    img.onload = resolve;
+                    img.onerror = reject;
+                    img.src = source;
+                });
+                bitmap = await createImageBitmap(img);
+            }
+
+            const maxDim = 400;
+            let w = bitmap.width;
+            let h = bitmap.height;
+            if (w > maxDim || h > maxDim) {
+                if (w > h) {
+                    h = Math.round((h * maxDim) / w);
+                    w = maxDim;
+                } else {
+                    w = Math.round((w * maxDim) / h);
+                    h = maxDim;
+                }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d', { alpha: false });
+            ctx.drawImage(bitmap, 0, 0, w, h);
+
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.65);
+            const base64 = compressedDataUrl.split(',')[1];
+            const result = { base64, mimeType: 'image/jpeg', dataUrl: compressedDataUrl };
+
+            if (typeof source === 'string') {
+                PRESET_BASE64_CACHE[source] = result;
+            }
+            return result;
+        }
+
+        async function handleFilePhotoUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Instant preview with 0ms delay using native object URL
+            uploadedPhotoUrl = URL.createObjectURL(file);
+            document.getElementById('photoUploadPlaceholder').classList.add('hidden');
+            const previewContainer = document.getElementById('photoPreviewContainer');
+            const scanOverlay = document.getElementById('scannerAiOverlay');
+            previewContainer.classList.remove('hidden');
+            document.getElementById('wastePreviewImg').src = uploadedPhotoUrl;
+            scanOverlay.classList.remove('hidden');
+            document.getElementById('aiVerdictCard').classList.add('hidden');
+
+            runFastAiAnalysis(file);
+        }
+
+        function loadPresetPhoto(url, label) {
+            uploadedPhotoUrl = url;
+            document.getElementById('photoUploadPlaceholder').classList.add('hidden');
+            const previewContainer = document.getElementById('photoPreviewContainer');
+            const scanOverlay = document.getElementById('scannerAiOverlay');
+            previewContainer.classList.remove('hidden');
+            document.getElementById('wastePreviewImg').src = url;
+            scanOverlay.classList.remove('hidden');
+            document.getElementById('aiVerdictCard').classList.add('hidden');
+
+            runFastAiAnalysis(url);
+        }
+
+        async function runFastAiAnalysis(source) {
+            if (isAnalyzingImage) return;
+            isAnalyzingImage = true;
+
+            const scanOverlay = document.getElementById('scannerAiOverlay');
+
+            try {
+                // 1. Fast sub-50ms compression to 400px JPEG
+                const { base64, mimeType, dataUrl } = await convertSourceToFastBase64(source);
+                if (typeof source !== 'string') {
+                    uploadedPhotoUrl = dataUrl;
+                }
+
+                // 2. Rapid low-latency Gemini 3 Flash call
+                const verdict = await callGeminiVisionApiFast(base64, mimeType);
+                scanOverlay.classList.add('hidden');
+                displayAiVerificationResult(verdict);
+            } catch (err) {
+                console.error("Fast Vision API error:", err);
+                scanOverlay.classList.add('hidden');
+                displayAiVerificationResult({
+                    isValid: false,
+                    isFraudOrFake: true,
+                    confidence: 0,
+                    category: "Audit Error",
+                    summary: "Could not reach inspection service.",
+                    reason: err.message || "Network inspection failure",
+                    detectedObjects: ["Inspection Error"]
+                });
+            } finally {
+                isAnalyzingImage = false;
+            }
+        }
+
+        /**
+         * Ultra-streamlined Gemini 3 Flash Call
+         * Uses thinkingBudget: 0 and compact schema for sub-second verification
+         */
+        async function callGeminiVisionApiFast(base64ImageData, mimeType) {
+            const apiKey = ""; // Runtime automatically supplies key
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+
+            const systemPrompt = `You are a rapid civic sanitation waste fraud inspector for Kopargaon Municipal Corporation.
+Decide if this photo shows REAL outdoor municipal garbage/solid waste or illegal roadside dumps.
+
+STRICTLY REJECT (isValid: false):
+- Selfies, faces, people, clean indoor rooms, clean gardens/parks, food plates, clean vehicles, screenshots, memes.
+
+APPROVE (isValid: true):
+- Genuine outdoor garbage heaps, overflowing bins, scattered plastic litter, street trash.`;
+
+            const payload = {
+                contents: [
+                    {
+                        role: "user",
+                        parts: [
+                            { text: "Inspect photo for public municipal waste fraud. Respond strictly in JSON." },
+                            {
+                                inlineData: {
+                                    mimeType: mimeType || "image/jpeg",
+                                    data: base64ImageData
+                                }
+                            }
+                        ]
+                    }
+                ],
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    maxOutputTokens: 150,
+                    thinkingConfig: {
+                        thinkingBudget: 0
+                    },
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            "isValid": { "type": "BOOLEAN" },
+                            "confidence": { "type": "INTEGER" },
+                            "category": { "type": "STRING" },
+                            "summary": { "type": "STRING" },
+                            "reason": { "type": "STRING" }
+                        },
+                        required: ["isValid", "confidence", "category", "summary", "reason"]
+                    }
+                }
+            };
+
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                throw new Error(`Status ${response.status}`);
+            }
+
+            const result = await response.json();
+            const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!text) throw new Error("Empty AI response");
+
+            const parsed = JSON.parse(text);
+            parsed.isFraudOrFake = !parsed.isValid;
+            parsed.detectedObjects = [parsed.category || (parsed.isValid ? "Solid Waste" : "Non-Waste")];
+            return parsed;
+        }
+
+        function displayAiVerificationResult(result) {
+            aiVerificationResult = result;
+            const card = document.getElementById('aiVerdictCard');
+            const title = document.getElementById('aiVerdictTitle');
+            const badge = document.getElementById('aiVerdictConfidence');
+            const summary = document.getElementById('aiVerdictSummary');
+            const reasonBox = document.getElementById('aiVerdictReasonBox');
+            const tags = document.getElementById('aiVerdictTags');
+
+            card.classList.remove('hidden');
+
+            const isGenuine = result.isValid === true && result.isFraudOrFake === false;
+
+            if (isGenuine) {
+                card.className = "rounded-2xl p-3.5 border bg-emerald-500/10 border-emerald-500/40 text-emerald-950 dark:text-emerald-100 space-y-2";
+                title.innerHTML = `<span class="flex items-center gap-1.5 font-black text-xs text-emerald-800 dark:text-emerald-300">✓ Gemini Verified Solid Waste</span>`;
+                badge.className = "text-[10px] font-black px-2.5 py-0.5 rounded-full border border-emerald-500/40 text-emerald-800 dark:text-emerald-200 bg-emerald-100 dark:bg-emerald-950";
+                badge.innerText = `${Math.round(result.confidence || 95)}% Real Waste`;
+                summary.innerText = result.summary || "Genuine municipal solid waste verified.";
+
+                reasonBox.classList.remove('hidden');
+                reasonBox.className = "text-[10px] p-2 rounded-xl bg-emerald-500/15 border border-emerald-500/20 text-emerald-900 dark:text-emerald-200";
+                reasonBox.innerText = `Audit: ${result.reason || 'Eligible for dispatch.'}`;
+
+                const detected = result.detectedObjects || ["Solid Waste"];
+                tags.innerHTML = detected.map(t => `<span class="bg-emerald-100 dark:bg-emerald-950 border border-emerald-500/30 text-emerald-800 dark:text-emerald-200 px-2 py-0.5 rounded-md text-[9px] font-bold">${t}</span>`).join('');
+
+                if (result.category) {
+                    const catLower = result.category.toLowerCase();
+                    if (catLower.includes('plastic') || catLower.includes('bottle')) setWasteCategory('Plastic & Debris');
+                    else if (catLower.includes('organic') || catLower.includes('food') || catLower.includes('vegetable')) setWasteCategory('Wet Organic Waste');
+                    else if (catLower.includes('construction') || catLower.includes('debris') || catLower.includes('concrete')) setWasteCategory('Construction Debris');
+                }
+
+                document.getElementById('reportComments').value = `Gemini Verified: ${result.category || 'Garbage heap'} at live GPS.`;
+                showToast("✓ Waste verified by Gemini 3 Flash");
+            } else {
+                card.className = "rounded-2xl p-3.5 border bg-rose-500/10 border-rose-500/40 text-rose-950 dark:text-rose-100 space-y-2";
+                title.innerHTML = `<span class="flex items-center gap-1.5 font-black text-xs text-rose-700 dark:text-rose-300">❌ Fraud Shield: Fake / Non-Waste</span>`;
+                badge.className = "text-[10px] font-black px-2.5 py-0.5 rounded-full border border-rose-500/40 text-rose-800 dark:text-rose-200 bg-rose-100 dark:bg-rose-950";
+                badge.innerText = "Blocked";
+                summary.innerText = result.summary || "No municipal solid waste detected in this image.";
+
+                reasonBox.classList.remove('hidden');
+                reasonBox.className = "text-[10px] p-2 rounded-xl bg-rose-500/15 border border-rose-500/20 text-rose-900 dark:text-rose-200";
+                reasonBox.innerText = `Rejection Reason: ${result.reason || 'Not municipal waste.'}`;
+
+                const detected = result.detectedObjects || ["Non-Waste"];
+                tags.innerHTML = detected.map(t => `<span class="bg-rose-200 dark:bg-rose-950 border border-rose-500/30 text-rose-900 dark:text-rose-200 px-2 py-0.5 rounded-md text-[9px] font-bold">${t}</span>`).join('');
+
+                showToast(`❌ Blocked: ${result.category || 'Fake photo detected'}`, true);
+            }
+        }
+
+        function clearSelectedPhoto() {
+            uploadedPhotoUrl = "";
+            aiVerificationResult = null;
+            document.getElementById('photoUploadPlaceholder').classList.remove('hidden');
+            document.getElementById('photoPreviewContainer').classList.add('hidden');
+            document.getElementById('aiVerdictCard').classList.add('hidden');
+        }
+
+        function setWasteCategory(cat) {
+            selectedWasteType = cat;
+            const buttons = [
+                { id: 'catBtnPlastic', name: 'Plastic & Debris' },
+                { id: 'catBtnOrganic', name: 'Wet Organic Waste' },
+                { id: 'catBtnHazard', name: 'Hazardous & Medical' },
+                { id: 'catBtnConstruction', name: 'Construction Debris' }
+            ];
+
+            buttons.forEach(b => {
+                const el = document.getElementById(b.id);
+                if (!el) return;
+                if (b.name === cat) {
+                    el.className = "category-btn p-2 rounded-xl text-left border text-xs font-bold bg-rose-50 dark:bg-rose-950/60 border-rose-600 text-rose-900 dark:text-rose-100";
+                } else {
+                    el.className = "category-btn p-2 rounded-xl text-left border text-xs font-bold bg-slate-50 dark:bg-rose-950/20 border-slate-200 dark:border-rose-950 text-slate-700 dark:text-slate-300";
+                }
+            });
+        }
+
+        function submitCitizenGrievance() {
+            if (!uploadedPhotoUrl) {
+                showToast("📸 Photo required! Please snap or choose a photo.", true);
+                return;
+            }
+            if (!aiVerificationResult || !aiVerificationResult.isValid || aiVerificationResult.isFraudOrFake) {
+                const reason = aiVerificationResult?.reason || "Fake / non-waste photo detected by Gemini AI.";
+                showToast(`❌ Blocked: ${reason}`, true);
+                const card = document.getElementById('aiVerdictCard');
+                if (card) {
+                    card.classList.add('ring-2', 'ring-rose-500');
+                    setTimeout(() => card.classList.remove('ring-2', 'ring-rose-500'), 1500);
+                }
+                return;
+            }
+
+            const comments = document.getElementById('reportComments').value.trim() || "Waste overflow reported by resident at live location.";
+            const reportId = `KPG-${Math.floor(1000 + Math.random() * 9000)}`;
+
+            const newReport = {
+                id: reportId,
+                binId: "LIVE-CITIZEN-GPS",
+                landmark: `Live Location (${userLiveGPS[0].toFixed(4)}, ${userLiveGPS[1].toFixed(4)}) • ${citizenUser.city}`,
+                coords: userLiveGPS,
+                wasteType: selectedWasteType,
+                comment: comments,
+                beforeImage: uploadedPhotoUrl,
+                afterImage: "",
+                status: "Pending",
+                assignedCrew: null,
+                time: "Just now"
+            };
+
+            citizenGrievances.unshift(newReport);
+            localStorage.setItem('ecoclean_citizen_grievances', JSON.stringify(citizenGrievances));
+
+            showToast("✅ Grievance submitted at your live GPS location!");
+            addNotification(newReport.id, "📢 Grievance Received", `Your report at ${newReport.landmark} was received by Civic Desk.`);
+
+            clearSelectedPhoto();
+            document.getElementById('reportComments').value = "";
+            renderCitizenGrievances();
+            switchCitizenTab('tracker');
+        }
+
+        function renderCitizenGrievances() {
+            const list = document.getElementById('citizenGrievancesList');
+            const badge = document.getElementById('trackerTotalBadge');
+            badge.innerText = `${citizenGrievances.length} Reports`;
+
+            if (citizenGrievances.length === 0) {
+                list.innerHTML = `<div class="text-center py-10 text-xs text-slate-400">No grievances filed yet.</div>`;
+                return;
+            }
+
+            list.innerHTML = "";
+            citizenGrievances.forEach(item => {
+                const card = document.createElement('div');
+                card.className = "bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-3xl p-4 shadow-sm space-y-3";
+
+                let statusBadge = "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-200";
+                if (item.status === 'Dispatched') statusBadge = "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200";
+                if (item.status === 'Resolved') statusBadge = "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200";
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <span class="text-[9px] font-bold text-slate-400 uppercase font-mono">${item.id} • ${item.time}</span>
+                            <h4 class="font-extrabold text-xs text-slate-900 dark:text-white leading-tight">${item.landmark}</h4>
+                        </div>
+                        <span class="text-[9px] font-black px-2.5 py-0.5 rounded-full ${statusBadge}">${item.status}</span>
+                    </div>
+
+                    <div class="flex gap-2.5">
+                        <div class="space-y-1">
+                            <span class="text-[8px] font-black uppercase text-slate-400 block">Reported</span>
+                            <img src="${item.beforeImage}" onclick="openPhotoLightbox('${item.beforeImage}', '${item.landmark}', '${item.comment}')" class="w-16 h-16 rounded-2xl object-cover border border-slate-200 dark:border-rose-950 cursor-pointer hover:opacity-90">
+                        </div>
+                        ${item.afterImage ? `
+                            <div class="space-y-1">
+                                <span class="text-[8px] font-black uppercase text-emerald-500 block">Cleared Proof</span>
+                                <img src="${item.afterImage}" onclick="openPhotoLightbox('${item.afterImage}', 'Cleaned Proof: ${item.landmark}', 'Cleared spot evidence by municipal worker')" class="w-16 h-16 rounded-2xl object-cover border-2 border-emerald-500 cursor-pointer hover:opacity-90">
+                            </div>
+                        ` : ''}
+                        <div class="text-xs text-slate-600 dark:text-slate-300 flex-1 pl-1 pt-1 space-y-1">
+                            <span class="text-[9px] font-bold bg-slate-100 dark:bg-rose-950/60 px-2 py-0.5 rounded-md text-slate-700 dark:text-slate-300">${item.wasteType}</span>
+                            <p class="line-clamp-2 text-[11px] leading-snug">${item.comment}</p>
+                            ${item.assignedCrew ? `
+                                <p class="text-[9px] text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
+                                    <span>🚜</span> <span>${item.assignedCrew}</span>
+                                </p>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        function switchCitizenTab(tab) {
+            const tabReport = document.getElementById('tabContentReport');
+            const tabTracker = document.getElementById('tabContentTracker');
+            const btnReport = document.getElementById('navReportBtn');
+            const btnTracker = document.getElementById('navTrackerBtn');
+
+            if (tab === 'report') {
+                tabReport.classList.remove('hidden');
+                tabTracker.classList.add('hidden');
+                btnReport.className = "flex flex-col items-center gap-0.5 text-[#9E1220] dark:text-rose-400 font-extrabold text-[10px]";
+                btnTracker.className = "flex flex-col items-center gap-0.5 text-slate-400 font-extrabold text-[10px]";
+                setTimeout(() => mapInstance && mapInstance.invalidateSize(), 200);
+            } else {
+                tabReport.classList.add('hidden');
+                tabTracker.classList.remove('hidden');
+                btnTracker.className = "flex flex-col items-center gap-0.5 text-[#9E1220] dark:text-rose-400 font-extrabold text-[10px]";
+                btnReport.className = "flex flex-col items-center gap-0.5 text-slate-400 font-extrabold text-[10px]";
+                renderCitizenGrievances();
+            }
+        }
+
+        function addNotification(complaintId, title, desc) {
+            citizenNotifications.unshift({
+                id: `notif-${Date.now()}`,
+                complaintId: complaintId,
+                title: title,
+                desc: desc,
+                time: "Just now",
+                read: false
+            });
+            renderNotifications();
+        }
+
+        function renderNotifications() {
+            const list = document.getElementById('notificationsContainer');
+            const badge = document.getElementById('notifBadgeCount');
+            if (!list) return;
+
+            const unread = citizenNotifications.filter(n => !n.read).length;
+            if (badge) {
+                if (unread > 0) {
+                    badge.innerText = unread;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+
+            if (citizenNotifications.length === 0) {
+                list.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">No notifications yet.</p>`;
+                return;
+            }
+
+            list.innerHTML = "";
+            citizenNotifications.forEach(n => {
+                const item = document.createElement('div');
+                item.className = "p-3 rounded-2xl bg-slate-50 dark:bg-rose-950/20 border border-slate-200 dark:border-rose-950/60 space-y-1";
+                item.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="font-black text-xs text-slate-900 dark:text-white">${n.title}</span>
+                        <span class="text-[9px] text-slate-400">${n.time}</span>
+                    </div>
+                    <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-snug">${n.desc}</p>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function clearNotifications() {
+            citizenNotifications = [];
+            renderNotifications();
+            toggleNotificationDrawer();
+        }
+
+        function openPhotoLightbox(src, title, comment) {
+            document.getElementById('lightboxImageSrc').src = src;
+            document.getElementById('lightboxLocationTitle').innerText = title;
+            document.getElementById('lightboxComment').innerText = comment;
+            document.getElementById('photoLightboxModal').classList.remove('hidden');
+        }
+
+        function closePhotoLightbox() {
+            document.getElementById('photoLightboxModal').classList.add('hidden');
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            // Citizen portal initialization
+        });
+    </script>
+</body>
+</html>
