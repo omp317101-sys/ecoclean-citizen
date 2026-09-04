@@ -77,13 +77,12 @@
 </head>
 <body class="h-full bg-[#0F0204] text-slate-800 dark:text-slate-100 antialiased selection:bg-rose-600 selection:text-white flex justify-center">
 
-    <!-- Non-Location Notification Toast -->
+    <!-- Toast Notification -->
     <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 hidden max-w-xs w-full p-3.5 rounded-2xl shadow-2xl text-xs font-bold text-center border transition-all pointer-events-none"></div>
 
-    <!-- Mobile Screen Shell -->
     <div id="appContainer" class="w-full max-w-md h-full min-h-screen bg-white dark:bg-[#140306] shadow-2xl relative flex flex-col overflow-x-hidden border-x border-slate-200 dark:border-rose-950/40">
 
-        <!-- ================= RESIDENT AUTH VIEW ================= -->
+        <!-- ================= AUTH VIEW ================= -->
         <main id="authSection" class="flex-1 flex flex-col justify-between bg-gradient-to-b from-[#8B1220] via-[#5C0A13] to-[#2E0308] text-white p-6">
             <div class="pt-8 text-center space-y-2">
                 <div class="w-16 h-16 mx-auto rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-3xl shadow-xl">
@@ -97,9 +96,9 @@
                 <div class="flex items-center justify-between border-b pb-3 border-slate-100 dark:border-rose-950/50">
                     <div>
                         <h2 class="text-sm font-black text-slate-900 dark:text-white">Resident Sign In</h2>
-                        <p class="text-[11px] text-slate-400">Report civic waste in real-time</p>
+                        <p class="text-[11px] text-slate-400">Report & track your personal grievances</p>
                     </div>
-                    <span class="text-[10px] bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 font-extrabold px-2.5 py-1 rounded-full">Cloud Active</span>
+                    <span class="text-[10px] bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 font-extrabold px-2.5 py-1 rounded-full">Live Cloud</span>
                 </div>
 
                 <form onsubmit="handleCitizenLogin(event)" class="space-y-3 pt-1">
@@ -108,7 +107,7 @@
                         <input type="text" id="citizenInputName" value="Saiom Resident" required class="w-full mt-1 px-4 py-2.5 text-xs font-bold rounded-2xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 focus:outline-none focus:ring-2 focus:ring-rose-500">
                     </div>
                     <div>
-                        <label class="text-[10px] font-black uppercase text-slate-400">Phone Number (10 Digits)</label>
+                        <label class="text-[10px] font-black uppercase text-slate-400">Phone Number (Used to identify your reports)</label>
                         <input type="tel" id="citizenInputPhone" value="9876543210" pattern="[0-9]{10}" required class="w-full mt-1 px-4 py-2.5 text-xs font-bold rounded-2xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 focus:outline-none focus:ring-2 focus:ring-rose-500">
                     </div>
                     <div>
@@ -126,7 +125,7 @@
             </div>
         </main>
 
-        <!-- ================= MAIN CITIZEN CONSOLE ================= -->
+        <!-- ================= MAIN APP VIEW ================= -->
         <div id="mainSection" class="hidden flex-1 flex flex-col h-full overflow-hidden">
             
             <header class="bg-gradient-to-r from-[#8B1220] via-[#5C0A13] to-[#2E0308] text-white px-5 py-3.5 flex items-center justify-between sticky top-0 z-40 shadow-md">
@@ -152,7 +151,7 @@
                 <!-- TAB 1: REPORT WASTE FORM -->
                 <div id="tabContentReport" class="space-y-4">
                     
-                    <!-- Step 1: Pinpoint Garbage Location -->
+                    <!-- Step 1: Location & Map -->
                     <div class="bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-3xl p-4 shadow-sm space-y-3">
                         <div class="flex items-center justify-between">
                             <h3 class="text-xs font-black uppercase text-slate-800 dark:text-slate-200 flex items-center gap-2">
@@ -175,7 +174,6 @@
                         <div class="h-60 w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-rose-950 relative shadow-inner">
                             <div id="citizenReportMap" class="w-full h-full"></div>
 
-                            <!-- Dedicated Touch Zoom Controls -->
                             <div class="absolute bottom-3 right-3 z-[1000] flex flex-col gap-1.5 shadow-xl">
                                 <button type="button" onclick="zoomInMap()" class="w-8 h-8 rounded-xl bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-white font-black text-base flex items-center justify-center border border-slate-200 dark:border-rose-950 active:scale-90 transition-transform">+</button>
                                 <button type="button" onclick="zoomOutMap()" class="w-8 h-8 rounded-xl bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-white font-black text-base flex items-center justify-center border border-slate-200 dark:border-rose-950 active:scale-90 transition-transform">−</button>
@@ -184,7 +182,7 @@
 
                         <div class="p-3 bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950/60 rounded-2xl text-center space-y-2">
                             <span class="text-[11px] font-extrabold text-[#9E1220] dark:text-rose-400 block" id="geoStatusLabel">
-                                📍 Move the map or tap "Lock Satellite GPS" to pinpoint.
+                                📍 Move map or tap "Lock Satellite GPS" to pinpoint.
                             </span>
 
                             <div class="p-2 bg-rose-50/50 dark:bg-rose-950/30 rounded-xl border border-rose-200 dark:border-rose-900/60 flex items-center justify-between gap-2">
@@ -202,41 +200,40 @@
                         </div>
                     </div>
 
-                    <!-- Step 2: Photo Evidence & Gemini AI Waste Inspection -->
+                    <!-- Step 2: Photo Evidence & AI Inspector -->
                     <div class="bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-3xl p-4 shadow-sm space-y-3">
                         <div class="flex items-center justify-between">
                             <h3 class="text-xs font-black uppercase text-slate-800 dark:text-slate-200 flex items-center gap-2">
                                 <span class="w-5 h-5 rounded-lg bg-[#9E1220] text-white flex items-center justify-center text-[10px]">2</span>
-                                Garbage Photo Evidence
+                                Photo Evidence of Garbage
                             </h3>
                             <span class="text-[9px] font-black text-emerald-700 bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300 px-2 py-0.5 rounded-full">
-                                ⚡ Gemini AI Vision Scanner
+                                ⚡ Gemini AI Vision Inspector
                             </span>
                         </div>
 
                         <label class="block cursor-pointer">
                             <div id="dropzoneEmpty" class="border-2 border-dashed border-slate-300 dark:border-rose-950 rounded-2xl p-4 text-center bg-slate-50 dark:bg-[#120305] hover:border-rose-600 transition-colors">
                                 <span class="text-3xl block mb-1">📸</span>
-                                <span class="text-xs font-bold text-slate-700 dark:text-slate-200 block">Tap to Open Camera or Upload Image</span>
-                                <span class="text-[10px] text-slate-400">AI verifies garbage before municipal submission</span>
+                                <span class="text-xs font-bold text-slate-700 dark:text-slate-200 block">Tap to Open Camera or Upload Spot Photo</span>
+                                <span class="text-[10px] text-slate-400">AI verifies garbage before allowing complaint</span>
                             </div>
                             <input type="file" id="photoFileInput" accept="image/*" capture="environment" onchange="onPhotoSelected(event)" class="hidden">
                         </label>
 
                         <div id="previewWrapper" class="hidden relative rounded-2xl overflow-hidden border border-slate-200 dark:border-rose-950 shadow-md">
-                            <img id="previewImg" src="" alt="Waste Evidence" class="w-full h-48 object-cover">
+                            <img id="previewImg" src="" alt="Spot Photo" class="w-full h-48 object-cover">
                             
-                            <!-- Scanner Animation Overlay -->
                             <div id="scannerOverlay" class="hidden absolute inset-0 bg-black/60 flex flex-col justify-between p-3 pointer-events-none">
-                                <span class="text-[9px] font-mono text-emerald-400 font-bold">[ GEMINI AI VISION AUDIT SCANNING ]</span>
+                                <span class="text-[9px] font-mono text-emerald-400 font-bold">[ GEMINI AI VISION AUDIT RUNNING ]</span>
                                 <div class="w-full h-0.5 bg-emerald-400 ai-laser"></div>
-                                <span class="text-[10px] font-mono text-emerald-300 text-center animate-pulse">Inspecting photo for solid municipal waste...</span>
+                                <span class="text-[10px] font-mono text-emerald-300 text-center animate-pulse">Inspecting photo for plastics & refuse...</span>
                             </div>
 
                             <button type="button" onclick="clearSelectedPhoto()" class="absolute top-2 right-2 bg-black/70 text-white w-7 h-7 rounded-full text-xs font-bold">✕</button>
                         </div>
 
-                        <!-- AI Verdict Feedback Box -->
+                        <!-- AI Verdict Card -->
                         <div id="aiVerdictCard" class="hidden rounded-2xl p-3 border text-xs space-y-1">
                             <div class="flex items-center justify-between">
                                 <span id="aiVerdictTitle" class="font-extrabold text-xs">Gemini Verification</span>
@@ -245,20 +242,20 @@
                             <p id="aiVerdictDescription" class="text-[11px]"></p>
                         </div>
 
-                        <!-- Real Sample Images for Instant Demonstration -->
+                        <!-- Realistic Test Presets -->
                         <div class="grid grid-cols-2 gap-2 pt-1">
-                            <button type="button" onclick="loadSamplePhoto(true)" class="py-2.5 px-2 text-[10px] font-bold rounded-xl border border-rose-500 bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-100 flex items-center justify-center gap-1">
-                                <span>🗑️</span> Real Waste Spot (Pass)
+                            <button type="button" onclick="loadSamplePhoto(true)" class="py-2.5 px-2 text-[10px] font-bold rounded-xl border border-rose-500 bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-100 flex items-center justify-center gap-1 active:scale-95 transition-all">
+                                <span>🏖️</span> Beach Trash (Pass AI)
                             </button>
-                            <button type="button" onclick="loadSamplePhoto(false)" class="py-2.5 px-2 text-[10px] font-bold rounded-xl border border-slate-200 dark:border-rose-950 text-slate-600 dark:text-slate-300 flex items-center justify-center gap-1">
-                                <span>✨</span> Clean Street (Block Test)
+                            <button type="button" onclick="loadSamplePhoto(false)" class="py-2.5 px-2 text-[10px] font-bold rounded-xl border border-slate-200 dark:border-rose-950 text-slate-600 dark:text-slate-300 flex items-center justify-center gap-1 active:scale-95 transition-all">
+                                <span>🌊</span> Clean Beach (Reject & Block)
                             </button>
                         </div>
                     </div>
 
-                    <!-- Step 3: Submission & Hard Rejection Block -->
+                    <!-- Step 3: Landmark Note & Submit Button -->
                     <div class="bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-3xl p-4 shadow-sm space-y-3">
-                        <textarea id="reportComments" rows="2" placeholder="Specific landmark, shop name, or waste notes..." class="w-full p-3 text-xs rounded-2xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 focus:outline-none focus:ring-1 focus:ring-rose-500"></textarea>
+                        <textarea id="reportComments" rows="2" placeholder="Specific landmark, beach spot, or garbage notes..." class="w-full p-3 text-xs rounded-2xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 focus:outline-none focus:ring-1 focus:ring-rose-500"></textarea>
                         
                         <button type="button" id="submitReportBtn" onclick="submitCitizenReport()" class="w-full bg-gradient-to-r from-[#9E1220] to-[#540810] text-white font-black py-3.5 px-4 rounded-full shadow-lg text-xs uppercase tracking-wider active:scale-95 transition-all">
                             Submit Grievance to Municipal Cloud
@@ -266,17 +263,41 @@
                     </div>
                 </div>
 
-                <!-- TAB 2: MY COMPLAINTS CLOUD STREAM -->
+                <!-- TAB 2: GRIEVANCES & TRACKER (WITH "MY COMPLAINTS ONLY" TOGGLE) -->
                 <div id="tabContentTracker" class="hidden space-y-3">
-                    <div class="flex items-center justify-between pb-1">
-                        <h3 class="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">Live Grievance Cloud Stream</h3>
-                        <span id="trackerTotalBadge" class="text-[10px] font-bold bg-slate-100 dark:bg-rose-950/60 px-2 py-0.5 rounded-full">0 Reports</span>
+                    
+                    <!-- Citizen Personal Stats Header -->
+                    <div class="bg-gradient-to-r from-rose-950/40 to-slate-900 p-3 rounded-2xl border border-rose-900/40 flex items-center justify-between">
+                        <div>
+                            <span class="text-[9px] font-bold text-slate-400 block uppercase">Resident Ledger</span>
+                            <h3 class="text-xs font-black text-white" id="trackerCitizenNameDisplay">Saiom Resident</h3>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span id="userPersonalResolvedBadge" class="text-[10px] font-extrabold bg-emerald-950 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full">
+                                0 Resolved
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Filter Bar: "My Reports Only" vs "All Kopargaon Reports" -->
+                    <div class="bg-slate-100 dark:bg-[#1A0407] p-1 rounded-2xl border border-slate-200 dark:border-rose-950/60 flex text-xs font-extrabold gap-1">
+                        <button id="filterMyReportsBtn" onclick="setComplaintFilter('mine')" class="flex-1 py-1.5 rounded-xl bg-[#9E1220] text-white shadow-sm transition-all flex items-center justify-center gap-1">
+                            <span>👤</span>
+                            <span>My Reports Only</span>
+                            <span id="myReportsCountBadge" class="text-[9px] bg-black/40 px-1.5 py-0.2 rounded-full">0</span>
+                        </button>
+                        <button id="filterAllReportsBtn" onclick="setComplaintFilter('all')" class="flex-1 py-1.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1">
+                            <span>🌐</span>
+                            <span>All City Reports</span>
+                            <span id="allReportsCountBadge" class="text-[9px] bg-black/20 px-1.5 py-0.2 rounded-full">0</span>
+                        </button>
                     </div>
 
                     <div id="citizenGrievancesList" class="space-y-3"></div>
                 </div>
             </main>
 
+            <!-- Bottom Navigation Bar -->
             <nav class="absolute bottom-0 left-0 right-0 bg-white/95 dark:bg-[#120305]/95 backdrop-blur-md border-t border-slate-200 dark:border-rose-950/60 px-6 py-2.5 flex justify-around z-40">
                 <button id="navReportBtn" onclick="switchCitizenTab('report')" class="flex flex-col items-center gap-0.5 text-[#9E1220] dark:text-rose-400 font-extrabold text-[10px]">
                     <span class="text-lg">📢</span> <span>Report</span>
@@ -288,7 +309,7 @@
         </div>
     </div>
 
-    <!-- JAVASCRIPT LOGIC & FIREBASE INTEGRATION -->
+    <!-- JAVASCRIPT ENGINE & FIREBASE -->
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyDm3z435fT5gnmbAj7Bj9Zz_UE5zWWDiEk",
@@ -303,12 +324,19 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Authentic Photographic References
-        const REAL_STREET_TRASH_IMAGE = "https://images.unsplash.com/photo-1528323273322-d81458248d40?auto=format&fit=crop&w=800&q=80"; // Street curb with plastic debris and overflowing waste
-        const REAL_CLEAN_STREET_IMAGE = "https://images.unsplash.com/photo-1517524008697-84bbe3c3fd98?auto=format&fit=crop&w=800&q=80"; // Clean paved urban sidewalk with no litter
+        // Realistic Beach Photos
+        const REAL_BEACH_TRASH_IMAGE = "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=800&q=80"; // Coastal shore with plastic refuse
+        const REAL_CLEAN_BEACH_IMAGE = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80"; // Clean sandy shoreline
 
         const KOPARGAON_DEFAULT = [19.8841, 74.4788];
-        let currentCitizen = { name: "Saiom Resident", phone: "9876543210", city: "Kopargaon" };
+        
+        // Restore citizen session from localStorage if present
+        let currentCitizen = JSON.parse(localStorage.getItem('ecoclean_logged_citizen') || 'null') || { 
+            name: "Saiom Resident", 
+            phone: "9876543210", 
+            city: "Kopargaon" 
+        };
+
         let mapInstance = null;
         let targetPinMarker = null;
         let selectedCoords = KOPARGAON_DEFAULT;
@@ -317,6 +345,7 @@
         let currentUploadedPhotoUrl = "";
         let currentAiVerification = null;
         let citizenComplaints = [];
+        let activeGrievanceFilter = 'mine'; // Default: shows ONLY complaints filed by this user
 
         function showToast(message, isError = false) {
             const toast = document.getElementById('toast');
@@ -353,7 +382,10 @@
 
             if (!name || !phone || !city) return;
             currentCitizen = { name, phone, city };
+            localStorage.setItem('ecoclean_logged_citizen', JSON.stringify(currentCitizen));
+
             document.getElementById('headerCitizenName').innerText = `${name} • ${city}`;
+            document.getElementById('trackerCitizenNameDisplay').innerText = `${name} (${phone})`;
 
             document.getElementById('authSection').classList.add('hidden');
             document.getElementById('mainSection').classList.remove('hidden');
@@ -363,7 +395,7 @@
                 acquireRealSatelliteGps();
             }, 200);
 
-            // Stream complaints in real-time from Firebase
+            // Bind real-time complaints stream from Firebase
             db.ref('complaints').on('value', (snapshot) => {
                 const data = snapshot.val();
                 citizenComplaints = data ? Object.values(data).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)) : [];
@@ -373,6 +405,7 @@
 
         function handleCitizenLogout() {
             if (activeWatchId !== null) navigator.geolocation.clearWatch(activeWatchId);
+            localStorage.removeItem('ecoclean_logged_citizen');
             document.getElementById('mainSection').classList.add('hidden');
             document.getElementById('authSection').classList.remove('hidden');
         }
@@ -408,7 +441,7 @@
             const btnText = document.getElementById('gpsBtnText');
             if (btnText) btnText.innerText = "🛰️ Connecting to Satellites...";
             const label = document.getElementById('geoStatusLabel');
-            if (label) label.innerText = "🛰️ Polling phone GPS satellites...";
+            if (label) label.innerText = "🛰️ Polling GPS satellite hardware...";
 
             if (activeWatchId !== null) navigator.geolocation.clearWatch(activeWatchId);
 
@@ -471,21 +504,21 @@
 
         function loadSamplePhoto(isWaste) {
             if (isWaste) {
-                currentUploadedPhotoUrl = REAL_STREET_TRASH_IMAGE;
-                runSimulatedAIScan(true, "Overflowing plastic bags, discarded packaging, and solid municipal waste detected.");
+                currentUploadedPhotoUrl = REAL_BEACH_TRASH_IMAGE;
+                runSimulatedAIScan(true, "Plastic bottles, marine debris, and discarded clutter detected on shore.");
             } else {
-                currentUploadedPhotoUrl = REAL_CLEAN_STREET_IMAGE;
-                runSimulatedAIScan(false, "Paved clean public sidewalk recognized. No litter or garbage found.");
+                currentUploadedPhotoUrl = REAL_CLEAN_BEACH_IMAGE;
+                runSimulatedAIScan(false, "Clean sandy beach detected! No municipal refuse or plastic litter found.");
             }
         }
 
-        function analyzeImageWithAI(photoSrc, fileNameHint = "") {
-            const isClean = fileNameHint.includes("clean") || fileNameHint.includes("road") || fileNameHint.includes("sidewalk") || fileNameHint.includes("flower");
-            const isTrash = !isClean;
-            const text = isTrash
-                ? "Municipal solid waste, street clutter, and discarded plastics identified."
-                : "Clean, paved road detected without refuse.";
-            runSimulatedAIScan(isTrash, text);
+        function analyzeImageWithAI(photoSrc, hint = "") {
+            const isCleanHint = hint.includes("clean") || hint.includes("sand") || hint.includes("sky") || hint.includes("water");
+            const isTrash = !isCleanHint;
+            const verdictMsg = isTrash 
+                ? "Discarded waste, plastic packaging, and refuse verified by vision inspector." 
+                : "Clean area detected with zero visible waste.";
+            runSimulatedAIScan(isTrash, verdictMsg);
         }
 
         function runSimulatedAIScan(isGenuineWaste, descriptionText) {
@@ -507,28 +540,27 @@
                 card.classList.remove('hidden');
 
                 if (isGenuineWaste) {
-                    currentAiVerification = { isValid: true, verdict: "96% Real Waste (Gemini AI)" };
+                    currentAiVerification = { isValid: true, verdict: "98% Verified Waste (Gemini AI)" };
                     card.className = "rounded-2xl p-3 border bg-emerald-500/10 border-emerald-500/30 text-emerald-950 dark:text-emerald-100 space-y-1";
-                    title.innerText = "✓ Gemini Verified: Solid Garbage Detected";
-                    badge.innerText = "96% Real Waste";
+                    title.innerText = "✓ Gemini Verified: Waste & Plastic Litter Detected";
+                    badge.innerText = "98% Real Waste";
                     badge.className = "text-[10px] font-black px-2 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200";
                     desc.innerText = descriptionText;
                     
                     submitBtn.disabled = false;
                     submitBtn.className = "w-full bg-gradient-to-r from-[#9E1220] to-[#540810] text-white font-black py-3.5 px-4 rounded-full shadow-lg text-xs uppercase tracking-wider active:scale-95 transition-all cursor-pointer";
-                    showToast("🤖 Verified: Solid Waste Confirmed");
+                    showToast("🤖 Verified: Solid Waste Detected");
                 } else {
                     currentAiVerification = { isValid: false, verdict: "Rejected (Clean Area)" };
                     card.className = "rounded-2xl p-3 border bg-rose-500/10 border-rose-500/30 text-rose-950 dark:text-rose-100 space-y-1";
                     title.innerText = "❌ AI Rejected: Clean Area (No Waste)";
-                    badge.innerText = "Blocked Submission";
+                    badge.innerText = "Submission Blocked";
                     badge.className = "text-[10px] font-black px-2 py-0.5 rounded-full border border-rose-500/30 bg-rose-100 dark:bg-rose-900 text-rose-800 dark:text-rose-200";
                     desc.innerText = descriptionText + " Complaints cannot be submitted for clean spots.";
                     
-                    // Enforce submission disable
                     submitBtn.disabled = true;
                     submitBtn.className = "w-full bg-slate-800 text-slate-500 font-bold py-3.5 px-4 rounded-full border border-slate-700 text-xs uppercase tracking-wider cursor-not-allowed opacity-60";
-                    showToast("❌ Blocked: Image contains no garbage", true);
+                    showToast("❌ Blocked: Clean area detected (No waste)", true);
                 }
             }, 850);
         }
@@ -546,17 +578,18 @@
             submitBtn.className = "w-full bg-gradient-to-r from-[#9E1220] to-[#540810] text-white font-black py-3.5 px-4 rounded-full shadow-lg text-xs uppercase tracking-wider active:scale-95 transition-all";
         }
 
+        // SUBMIT TO FIREBASE
         function submitCitizenReport() {
             if (!currentUploadedPhotoUrl) {
                 showToast("📸 Photo of garbage is required!", true);
                 return;
             }
             if (!currentAiVerification || !currentAiVerification.isValid) {
-                showToast("❌ Submission Blocked: Clean or non-waste area detected!", true);
+                showToast("❌ Submission Blocked: Clean area detected! Only garbage can be reported.", true);
                 return;
             }
 
-            const comments = document.getElementById('reportComments').value.trim() || "Waste overflow reported on street.";
+            const comments = document.getElementById('reportComments').value.trim() || "Waste overflow reported at spot.";
             const reportId = `KPG-${Math.floor(1000 + Math.random() * 9000)}`;
 
             const newReport = {
@@ -579,9 +612,10 @@
 
             db.ref('complaints/' + reportId).set(newReport)
                 .then(() => {
-                    showToast("✅ Grievance verified & broadcasted to Municipal Team!");
+                    showToast("✅ Grievance saved to your personal ledger!");
                     clearSelectedPhoto();
                     document.getElementById('reportComments').value = "";
+                    setComplaintFilter('mine'); // Automatically switch to "My Reports Only"
                     switchCitizenTab('tracker');
                 })
                 .catch((err) => {
@@ -589,18 +623,62 @@
                 });
         }
 
+        // FILTER CONTROLLER ("MY REPORTS ONLY" vs "ALL REPORTS")
+        function setComplaintFilter(mode) {
+            activeGrievanceFilter = mode;
+            const btnMine = document.getElementById('filterMyReportsBtn');
+            const btnAll = document.getElementById('filterAllReportsBtn');
+
+            if (mode === 'mine') {
+                btnMine.className = "flex-1 py-1.5 rounded-xl bg-[#9E1220] text-white shadow-sm transition-all flex items-center justify-center gap-1";
+                btnAll.className = "flex-1 py-1.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1";
+            } else {
+                btnAll.className = "flex-1 py-1.5 rounded-xl bg-[#9E1220] text-white shadow-sm transition-all flex items-center justify-center gap-1";
+                btnMine.className = "flex-1 py-1.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1";
+            }
+
+            renderCitizenComplaints();
+        }
+
+        // RENDER GRIEVANCES LIST
         function renderCitizenComplaints() {
             const list = document.getElementById('citizenGrievancesList');
-            const badge = document.getElementById('trackerTotalBadge');
-            badge.innerText = `${citizenComplaints.length} Reports`;
+            const myBadge = document.getElementById('myReportsCountBadge');
+            const allBadge = document.getElementById('allReportsCountBadge');
+            const resolvedBadge = document.getElementById('userPersonalResolvedBadge');
 
-            if (citizenComplaints.length === 0) {
-                list.innerHTML = `<div class="text-center py-10 text-xs text-slate-400">No complaints reported yet.</div>`;
+            // 1. Calculate strictly personal complaints
+            const myPersonalReports = citizenComplaints.filter(item => {
+                return (item.citizenPhone === currentCitizen.phone) || 
+                       (item.citizenName && item.citizenName.toLowerCase() === currentCitizen.name.toLowerCase());
+            });
+
+            const myResolvedCount = myPersonalReports.filter(item => item.status === 'Resolved').length;
+
+            if (myBadge) myBadge.innerText = myPersonalReports.length;
+            if (allBadge) allBadge.innerText = citizenComplaints.length;
+            if (resolvedBadge) resolvedBadge.innerText = `${myResolvedCount} Cleaned`;
+
+            // 2. Select dataset based on filter
+            const targetList = (activeGrievanceFilter === 'mine') ? myPersonalReports : citizenComplaints;
+
+            if (targetList.length === 0) {
+                if (activeGrievanceFilter === 'mine') {
+                    list.innerHTML = `
+                        <div class="bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-3xl p-8 text-center space-y-2">
+                            <span class="text-3xl block">📋</span>
+                            <h4 class="text-xs font-bold text-slate-200">You haven't filed any complaints yet!</h4>
+                            <p class="text-[10px] text-slate-500">Go to the Report tab to snap a photo and file your first grievance.</p>
+                        </div>
+                    `;
+                } else {
+                    list.innerHTML = `<div class="text-center py-10 text-xs text-slate-400">No grievances reported across Kopargaon yet.</div>`;
+                }
                 return;
             }
 
             list.innerHTML = "";
-            citizenComplaints.forEach(item => {
+            targetList.forEach(item => {
                 const card = document.createElement('div');
                 card.className = "bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-3xl p-4 shadow-sm space-y-2.5";
 
@@ -608,10 +686,15 @@
                 if (item.status === 'Dispatched') statusColor = "bg-amber-100 text-amber-800";
                 if (item.status === 'Resolved') statusColor = "bg-emerald-100 text-emerald-800 font-extrabold";
 
+                const isMyReport = (item.citizenPhone === currentCitizen.phone);
+
                 card.innerHTML = `
                     <div class="flex items-center justify-between">
                         <div>
-                            <span class="text-[9px] font-bold text-slate-400">${item.id} • ${item.time}</span>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[9px] font-bold text-slate-400">${item.id} • ${item.time}</span>
+                                ${isMyReport ? '<span class="text-[8px] font-black bg-rose-900/60 text-rose-200 px-1.5 py-0.2 rounded">Filed by You</span>' : ''}
+                            </div>
                             <h4 class="font-extrabold text-xs text-slate-900 dark:text-white">${item.landmark}</h4>
                         </div>
                         <span class="text-[9px] font-black px-2 py-0.5 rounded-full ${statusColor}">${item.status}</span>
@@ -659,6 +742,7 @@
                 tabTracker.classList.remove('hidden');
                 btnTracker.className = "flex flex-col items-center gap-0.5 text-[#9E1220] dark:text-rose-400 font-extrabold text-[10px]";
                 btnReport.className = "flex flex-col items-center gap-0.5 text-slate-400 font-extrabold text-[10px]";
+                renderCitizenComplaints();
             }
         }
     </script>
