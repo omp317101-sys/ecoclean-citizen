@@ -96,7 +96,7 @@
                 <div class="flex items-center justify-between border-b pb-3 border-slate-100 dark:border-rose-950/50">
                     <div>
                         <h2 class="text-sm font-black text-slate-900 dark:text-white">Resident Sign In</h2>
-                        <p class="text-[11px] text-slate-400">Report & track your personal grievances</p>
+                        <p class="text-[11px] text-slate-400">Report & manage your grievances history</p>
                     </div>
                     <span class="text-[10px] bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 font-extrabold px-2.5 py-1 rounded-full">Live Cloud</span>
                 </div>
@@ -107,7 +107,7 @@
                         <input type="text" id="citizenInputName" value="Saiom Resident" required class="w-full mt-1 px-4 py-2.5 text-xs font-bold rounded-2xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 focus:outline-none focus:ring-2 focus:ring-rose-500">
                     </div>
                     <div>
-                        <label class="text-[10px] font-black uppercase text-slate-400">Phone Number (Used to identify your reports)</label>
+                        <label class="text-[10px] font-black uppercase text-slate-400">Phone Number (Tracks your history)</label>
                         <input type="tel" id="citizenInputPhone" value="9876543210" pattern="[0-9]{10}" required class="w-full mt-1 px-4 py-2.5 text-xs font-bold rounded-2xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 focus:outline-none focus:ring-2 focus:ring-rose-500">
                     </div>
                     <div>
@@ -242,7 +242,7 @@
                             <p id="aiVerdictDescription" class="text-[11px]"></p>
                         </div>
 
-                        <!-- Realistic Test Presets -->
+                        <!-- Realistic Beach Test Presets -->
                         <div class="grid grid-cols-2 gap-2 pt-1">
                             <button type="button" onclick="loadSamplePhoto(true)" class="py-2.5 px-2 text-[10px] font-bold rounded-xl border border-rose-500 bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-100 flex items-center justify-center gap-1 active:scale-95 transition-all">
                                 <span>🏖️</span> Beach Trash (Pass AI)
@@ -263,13 +263,13 @@
                     </div>
                 </div>
 
-                <!-- TAB 2: GRIEVANCES & TRACKER (WITH "MY COMPLAINTS ONLY" TOGGLE) -->
+                <!-- TAB 2: GRIEVANCES & TRACKER -->
                 <div id="tabContentTracker" class="hidden space-y-3">
                     
                     <!-- Citizen Personal Stats Header -->
                     <div class="bg-gradient-to-r from-rose-950/40 to-slate-900 p-3 rounded-2xl border border-rose-900/40 flex items-center justify-between">
                         <div>
-                            <span class="text-[9px] font-bold text-slate-400 block uppercase">Resident Ledger</span>
+                            <span class="text-[9px] font-bold text-slate-400 block uppercase">Resident Complaint Ledger</span>
                             <h3 class="text-xs font-black text-white" id="trackerCitizenNameDisplay">Saiom Resident</h3>
                         </div>
                         <div class="flex items-center gap-2">
@@ -324,13 +324,12 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Realistic Beach Photos
-        const REAL_BEACH_TRASH_IMAGE = "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=800&q=80"; // Coastal shore with plastic refuse
-        const REAL_CLEAN_BEACH_IMAGE = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80"; // Clean sandy shoreline
+        // Authentic Beach Test Photos
+        const REAL_BEACH_TRASH_IMAGE = "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=800&q=80";
+        const REAL_CLEAN_BEACH_IMAGE = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80";
 
         const KOPARGAON_DEFAULT = [19.8841, 74.4788];
         
-        // Restore citizen session from localStorage if present
         let currentCitizen = JSON.parse(localStorage.getItem('ecoclean_logged_citizen') || 'null') || { 
             name: "Saiom Resident", 
             phone: "9876543210", 
@@ -345,7 +344,21 @@
         let currentUploadedPhotoUrl = "";
         let currentAiVerification = null;
         let citizenComplaints = [];
-        let activeGrievanceFilter = 'mine'; // Default: shows ONLY complaints filed by this user
+        let activeGrievanceFilter = 'mine'; // Default: view only reports filed by this resident
+
+        // Formats epoch timestamp into readable string with exact date and time
+        function formatDateTime(timestamp) {
+            if (!timestamp) return "Date unavailable";
+            const d = new Date(timestamp);
+            return d.toLocaleString('en-IN', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+            });
+        }
 
         function showToast(message, isError = false) {
             const toast = document.getElementById('toast');
@@ -578,7 +591,7 @@
             submitBtn.className = "w-full bg-gradient-to-r from-[#9E1220] to-[#540810] text-white font-black py-3.5 px-4 rounded-full shadow-lg text-xs uppercase tracking-wider active:scale-95 transition-all";
         }
 
-        // SUBMIT TO FIREBASE
+        // SUBMIT TO FIREBASE WITH TIMESTAMP
         function submitCitizenReport() {
             if (!currentUploadedPhotoUrl) {
                 showToast("📸 Photo of garbage is required!", true);
@@ -591,6 +604,7 @@
 
             const comments = document.getElementById('reportComments').value.trim() || "Waste overflow reported at spot.";
             const reportId = `KPG-${Math.floor(1000 + Math.random() * 9000)}`;
+            const now = Date.now();
 
             const newReport = {
                 id: reportId,
@@ -604,7 +618,8 @@
                 status: "Pending",
                 geminiVerdict: currentAiVerification.verdict,
                 assignedWorker: null,
-                timestamp: Date.now(),
+                timestamp: now,
+                filedAtFormatted: formatDateTime(now),
                 time: "Just now"
             };
 
@@ -612,15 +627,36 @@
 
             db.ref('complaints/' + reportId).set(newReport)
                 .then(() => {
-                    showToast("✅ Grievance saved to your personal ledger!");
+                    showToast("✅ Grievance saved to your personal history!");
                     clearSelectedPhoto();
                     document.getElementById('reportComments').value = "";
-                    setComplaintFilter('mine'); // Automatically switch to "My Reports Only"
+                    setComplaintFilter('mine');
                     switchCitizenTab('tracker');
                 })
                 .catch((err) => {
                     showToast("Sync Error: " + err.message, true);
                 });
+        }
+
+        // DELETE ACTION: Allowed ONLY for Resolved complaints
+        function deleteResolvedComplaint(complaintId) {
+            const target = citizenComplaints.find(c => c.id === complaintId);
+            if (!target) return;
+
+            if (target.status !== 'Resolved') {
+                showToast("⚠️ Only resolved complaints can be removed from history!", true);
+                return;
+            }
+
+            if (confirm(`Remove resolved ticket ${complaintId} from your history?`)) {
+                db.ref('complaints/' + complaintId).remove()
+                    .then(() => {
+                        showToast(`🗑️ Ticket ${complaintId} removed from history.`);
+                    })
+                    .catch((err) => {
+                        showToast("Failed to delete: " + err.message, true);
+                    });
+            }
         }
 
         // FILTER CONTROLLER ("MY REPORTS ONLY" vs "ALL REPORTS")
@@ -640,14 +676,13 @@
             renderCitizenComplaints();
         }
 
-        // RENDER GRIEVANCES LIST
+        // RENDER GRIEVANCES LIST WITH DYNAMIC CONDITIONAL DELETE BUTTON
         function renderCitizenComplaints() {
             const list = document.getElementById('citizenGrievancesList');
             const myBadge = document.getElementById('myReportsCountBadge');
             const allBadge = document.getElementById('allReportsCountBadge');
             const resolvedBadge = document.getElementById('userPersonalResolvedBadge');
 
-            // 1. Calculate strictly personal complaints
             const myPersonalReports = citizenComplaints.filter(item => {
                 return (item.citizenPhone === currentCitizen.phone) || 
                        (item.citizenName && item.citizenName.toLowerCase() === currentCitizen.name.toLowerCase());
@@ -659,7 +694,6 @@
             if (allBadge) allBadge.innerText = citizenComplaints.length;
             if (resolvedBadge) resolvedBadge.innerText = `${myResolvedCount} Cleaned`;
 
-            // 2. Select dataset based on filter
             const targetList = (activeGrievanceFilter === 'mine') ? myPersonalReports : citizenComplaints;
 
             if (targetList.length === 0) {
@@ -680,45 +714,75 @@
             list.innerHTML = "";
             targetList.forEach(item => {
                 const card = document.createElement('div');
-                card.className = "bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-3xl p-4 shadow-sm space-y-2.5";
+                card.className = "bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-3xl p-4 shadow-sm space-y-3";
 
-                let statusColor = "bg-rose-100 text-rose-800";
-                if (item.status === 'Dispatched') statusColor = "bg-amber-100 text-amber-800";
-                if (item.status === 'Resolved') statusColor = "bg-emerald-100 text-emerald-800 font-extrabold";
+                let statusColor = "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300";
+                if (item.status === 'Dispatched') statusColor = "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300";
+                if (item.status === 'Resolved') statusColor = "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-extrabold";
 
                 const isMyReport = (item.citizenPhone === currentCitizen.phone);
+                const isResolved = (item.status === 'Resolved');
+                const filedDateString = item.filedAtFormatted || (item.timestamp ? formatDateTime(item.timestamp) : item.time || "Recently");
+                const resolvedDateString = item.resolvedAt ? formatDateTime(item.resolvedAt) : null;
 
                 card.innerHTML = `
-                    <div class="flex items-center justify-between">
+                    <div class="flex items-start justify-between gap-2 border-b border-slate-100 dark:border-rose-950/40 pb-2">
                         <div>
                             <div class="flex items-center gap-1.5">
-                                <span class="text-[9px] font-bold text-slate-400">${item.id} • ${item.time}</span>
+                                <span class="text-[10px] font-black font-mono text-slate-400">${item.id}</span>
                                 ${isMyReport ? '<span class="text-[8px] font-black bg-rose-900/60 text-rose-200 px-1.5 py-0.2 rounded">Filed by You</span>' : ''}
                             </div>
-                            <h4 class="font-extrabold text-xs text-slate-900 dark:text-white">${item.landmark}</h4>
+                            <!-- Exact Filed Time -->
+                            <span class="text-[9px] font-bold text-rose-600 dark:text-rose-400 block mt-0.5">
+                                🕒 Filed: ${filedDateString}
+                            </span>
                         </div>
-                        <span class="text-[9px] font-black px-2 py-0.5 rounded-full ${statusColor}">${item.status}</span>
+                        <span class="text-[9px] font-black px-2.5 py-0.5 rounded-full border border-current ${statusColor}">${item.status}</span>
                     </div>
 
-                    <div class="flex gap-2">
+                    <h4 class="font-extrabold text-xs text-slate-900 dark:text-white">${item.landmark}</h4>
+
+                    <div class="flex gap-2.5">
                         <div class="space-y-1">
-                            <span class="text-[8px] font-bold uppercase text-slate-400">Before</span>
+                            <span class="text-[8px] font-bold uppercase text-slate-400 block">Before</span>
                             <img src="${item.beforeImage}" class="w-16 h-16 rounded-xl object-cover border border-slate-200 dark:border-rose-950">
                         </div>
                         ${item.afterImage ? `
                             <div class="space-y-1">
-                                <span class="text-[8px] font-bold uppercase text-emerald-500">Cleaned Proof</span>
+                                <span class="text-[8px] font-bold uppercase text-emerald-500 block">Cleaned Proof</span>
                                 <img src="${item.afterImage}" class="w-16 h-16 rounded-xl object-cover border-2 border-emerald-500">
                             </div>
                         ` : ''}
-                        <div class="text-xs text-slate-600 dark:text-slate-300 flex-1 pl-1 pt-1 space-y-1">
+                        <div class="text-xs text-slate-600 dark:text-slate-300 flex-1 pl-1 space-y-1">
                             <p class="line-clamp-2">${item.comment}</p>
-                            <span class="text-[9px] font-semibold text-emerald-500 block">${item.geminiVerdict || 'Verified Waste'}</span>
+                            <span class="text-[9px] font-semibold text-emerald-500 block">${item.geminiVerdict || 'Verified Solid Waste'}</span>
+                            
+                            ${resolvedDateString ? `
+                                <span class="text-[9px] font-bold text-emerald-400 block">
+                                    ✓ Cleared on: ${resolvedDateString}
+                                </span>
+                            ` : ''}
+
                             <div class="flex items-center justify-between gap-1 pt-1">
                                 <span class="text-[9px] font-mono text-slate-400 block">${item.coords[0].toFixed(4)}, ${item.coords[1].toFixed(4)}</span>
                                 <a href="https://www.google.com/maps?q=${item.coords[0]},${item.coords[1]}" target="_blank" class="text-[9px] font-bold text-rose-600 dark:text-rose-400 underline">Maps ↗</a>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Bottom Action: Conditional Delete Button -->
+                    <div class="pt-2 border-t border-slate-100 dark:border-rose-950/40 flex items-center justify-between">
+                        ${isResolved ? `
+                            <button onclick="deleteResolvedComplaint('${item.id}')" class="w-full py-2 bg-rose-950/40 hover:bg-rose-900 border border-rose-800 text-rose-300 font-extrabold text-[10px] rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-all">
+                                <span>🗑️</span>
+                                <span>Delete from History (Resolved)</span>
+                            </button>
+                        ` : `
+                            <div class="w-full py-1.5 bg-slate-100 dark:bg-slate-900/60 rounded-xl text-center text-[9px] font-bold text-slate-400 flex items-center justify-center gap-1">
+                                <span>🔒</span>
+                                <span>Grievance In Progress — Deletion locked until resolved</span>
+                            </div>
+                        `}
                     </div>
                 `;
                 list.appendChild(card);
