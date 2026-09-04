@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EcoClean Kopargaon - Citizen Sanitation Portal</title>
+    <title>EcoClean Kopargaon - Civic Sanitation Portal</title>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -19,7 +19,8 @@
                             500: '#D32F2F',
                             700: '#9E1220',
                             800: '#750B16',
-                            900: '#540810'
+                            900: '#540810',
+                            950: '#2E0308'
                         }
                     },
                     fontFamily: {
@@ -30,18 +31,14 @@
         }
     </script>
 
-    <!-- Google Fonts -->
+    <!-- Google Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Leaflet OpenStreetMap -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
     <style>
         html, body {
@@ -53,698 +50,1317 @@
         .leaflet-container {
             width: 100%;
             height: 100%;
-            border-radius: 18px;
+            border-radius: 20px;
             z-index: 1;
         }
-        @keyframes pulseRing {
-            0% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.7); }
-            70% { box-shadow: 0 0 0 14px rgba(225, 29, 72, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); }
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
         }
-        .pulsing-gps-pin {
-            animation: pulseRing 1.8s infinite ease-out;
+        ::-webkit-scrollbar-thumb {
+            background: #9E1220;
+            border-radius: 10px;
+        }
+        @keyframes redLightPulse {
+            0% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.8); transform: scale(1); }
+            50% { box-shadow: 0 0 20px 10px rgba(225, 29, 72, 0.4); transform: scale(1.15); }
+            100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); transform: scale(1); }
+        }
+        .pulsing-red-dustbin {
+            animation: redLightPulse 1.2s infinite ease-in-out;
+            background-color: #E11D48 !important;
+            border: 2px solid #FFFFFF !important;
             border-radius: 9999px;
         }
-        @keyframes laserScan {
+        @keyframes yellowLightPulse {
+            0% { box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.8); }
+            50% { box-shadow: 0 0 16px 8px rgba(234, 179, 8, 0.5); }
+            100% { box-shadow: 0 0 0 0 rgba(234, 179, 8, 0); }
+        }
+        .pulsing-yellow-selection {
+            animation: yellowLightPulse 1.4s infinite ease-in-out;
+            background-color: #EAB308 !important;
+            border: 2px solid #FFFFFF !important;
+            border-radius: 9999px;
+        }
+        @keyframes scanLineMove {
             0% { top: 0%; opacity: 0.8; }
             50% { top: 95%; opacity: 1; }
             100% { top: 0%; opacity: 0.8; }
         }
-        .ai-laser {
-            animation: laserScan 1.2s infinite ease-in-out;
+        .ai-scan-laser {
+            animation: scanLineMove 1.6s infinite ease-in-out;
         }
     </style>
 </head>
-<body class="h-full bg-[#0F0204] text-slate-800 dark:text-slate-100 antialiased selection:bg-rose-600 selection:text-white flex justify-center">
+<body class="h-full bg-[#0F0204] text-slate-800 dark:text-slate-100 antialiased selection:bg-rose-500 selection:text-white">
 
-    <!-- Toast Notification -->
-    <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 hidden max-w-xs w-full p-3.5 rounded-2xl shadow-2xl text-xs font-bold text-center border transition-all pointer-events-none"></div>
+    <!-- FLOATING TOAST -->
+    <div id="toastNotification" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 hidden max-w-xs w-full p-3.5 rounded-2xl shadow-2xl text-xs font-extrabold text-center border transition-all pointer-events-none"></div>
 
-    <div id="appContainer" class="w-full max-w-md h-full min-h-screen bg-white dark:bg-[#140306] shadow-2xl relative flex flex-col overflow-x-hidden border-x border-slate-200 dark:border-rose-950/40">
+    <!-- ROOT CONTAINER -->
+    <div id="appRoot" class="max-w-md mx-auto h-full min-h-screen bg-white dark:bg-[#120305] shadow-2xl relative flex flex-col overflow-x-hidden border-x border-slate-200 dark:border-rose-950/40">
 
-        <!-- ================= AUTH VIEW ================= -->
-        <main id="authSection" class="flex-1 flex flex-col justify-between bg-gradient-to-b from-[#8B1220] via-[#5C0A13] to-[#2E0308] text-white p-6">
-            <div class="pt-8 text-center space-y-2">
-                <div class="w-16 h-16 mx-auto rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-3xl shadow-xl">
-                    ♻️
+        <!-- VIEW 0: SPLASH SCREEN -->
+        <main id="splashView" class="flex-1 flex flex-col justify-between bg-gradient-to-b from-[#8B1220] via-[#5C0A13] to-[#2E0308] text-white p-6 relative overflow-hidden text-center z-50 min-h-screen">
+            <div class="my-auto space-y-6 relative z-10 py-8">
+                <div class="relative w-24 h-24 mx-auto flex items-center justify-center">
+                    <div class="absolute inset-0 bg-rose-500/30 rounded-full blur-xl animate-pulse"></div>
+                    <div class="w-24 h-24 rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-5xl shadow-2xl relative z-10">
+                        ♻️
+                    </div>
                 </div>
-                <h1 class="text-2xl font-black tracking-tight">EcoClean Kopargaon</h1>
-                <p class="text-xs text-rose-200/80 font-medium">Citizen Sanitation Portal (AI Verified)</p>
-            </div>
-
-            <div class="bg-white dark:bg-[#1A0407] text-slate-800 dark:text-slate-100 rounded-3xl p-6 shadow-2xl border border-white/10 my-auto space-y-4">
-                <div class="flex items-center justify-between border-b pb-3 border-slate-100 dark:border-rose-950/50">
-                    <div>
-                        <h2 class="text-sm font-black text-slate-900 dark:text-white">Resident Sign In</h2>
-                        <p class="text-[11px] text-slate-400">Report & track your personal grievances</p>
-                    </div>
-                    <span class="text-[10px] bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 font-extrabold px-2.5 py-1 rounded-full">Live Cloud</span>
+                <div class="space-y-2">
+                    <h1 class="text-3xl font-black tracking-tight text-white drop-shadow-md">EcoClean Kopargaon</h1>
+                    <p class="text-xs text-rose-200/90 font-semibold uppercase tracking-widest">Connected Municipal Sanitation Ecosystem</p>
                 </div>
-
-                <form onsubmit="handleCitizenLogin(event)" class="space-y-3 pt-1">
-                    <div>
-                        <label class="text-[10px] font-black uppercase text-slate-400">Full Name / Citizen ID</label>
-                        <input type="text" id="citizenInputName" value="Saiom Resident" required class="w-full mt-1 px-4 py-2.5 text-xs font-bold rounded-2xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 focus:outline-none focus:ring-2 focus:ring-rose-500">
+                <div class="pt-2 space-y-2 max-w-xs mx-auto text-left text-xs font-bold text-rose-100">
+                    <div class="flex items-center gap-2.5 p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15">
+                        <span class="text-base">📍</span> <span>100m Geofenced GPS Grievance Reporting</span>
                     </div>
-                    <div>
-                        <label class="text-[10px] font-black uppercase text-slate-400">Phone Number (Used to identify your reports)</label>
-                        <input type="tel" id="citizenInputPhone" value="9876543210" pattern="[0-9]{10}" required class="w-full mt-1 px-4 py-2.5 text-xs font-bold rounded-2xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 focus:outline-none focus:ring-2 focus:ring-rose-500">
+                    <div class="flex items-center gap-2.5 p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15">
+                        <span class="text-base">🤖</span> <span>Gemini 3 Flash Real Waste Verification</span>
                     </div>
-                    <div>
-                        <label class="text-[10px] font-black uppercase text-slate-400">City Name</label>
-                        <input type="text" id="citizenInputCity" value="Kopargaon" required class="w-full mt-1 px-4 py-2.5 text-xs font-bold rounded-2xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 focus:outline-none focus:ring-2 focus:ring-rose-500">
+                    <div class="flex items-center gap-2.5 p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15">
+                        <span class="text-base">🗑️</span> <span>Secure Deletion (Resolved Tickets Only)</span>
                     </div>
-                    <button type="submit" class="w-full bg-gradient-to-r from-[#9E1220] to-[#540810] text-white font-extrabold py-3.5 rounded-2xl shadow-lg text-xs uppercase tracking-wider active:scale-95 transition-all">
-                        Enter Citizen Desk
-                    </button>
-                </form>
+                </div>
             </div>
-
-            <div class="text-center text-[11px] text-rose-200/60 font-semibold py-3">
-                Kopargaon Municipal Corporation (KMC)
+            <div class="relative z-10 pb-6 pt-2">
+                <button onclick="startApp()" type="button" class="w-full bg-gradient-to-r from-rose-500 to-rose-700 hover:from-rose-600 hover:to-rose-800 text-white font-black py-4 px-6 rounded-2xl shadow-2xl flex items-center justify-center gap-3 text-sm uppercase tracking-wider transition-all active:scale-95 group border border-white/20">
+                    <span>Continue to Portal</span>
+                    <span class="text-lg transition-transform group-hover:translate-x-1.5">➔</span>
+                </button>
             </div>
         </main>
 
-        <!-- ================= MAIN APP VIEW ================= -->
-        <div id="mainSection" class="hidden flex-1 flex flex-col h-full overflow-hidden">
-            
-            <header class="bg-gradient-to-r from-[#8B1220] via-[#5C0A13] to-[#2E0308] text-white px-5 py-3.5 flex items-center justify-between sticky top-0 z-40 shadow-md">
-                <div class="flex items-center gap-2.5">
-                    <span class="text-xl">♻️</span>
+        <!-- HEADER BAR -->
+        <header id="mainHeader" class="hidden bg-gradient-to-r from-[#8B1220] via-[#5C0A13] to-[#2E0308] text-white px-5 py-3.5 flex items-center justify-between sticky top-0 z-40 shadow-lg">
+            <div class="flex items-center gap-3">
+                <button onclick="toggleSideDrawer()" type="button" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center transition-all border border-white/10">
+                    <span class="text-lg">♻️</span>
+                </button>
+                <div>
+                    <h1 class="font-extrabold text-sm tracking-wide leading-tight flex items-center gap-1.5">EcoClean Kopargaon</h1>
+                    <p class="text-[10px] text-rose-200/80 font-semibold tracking-wider uppercase" id="headerSubLabel">Civic Sanitation Desk</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <!-- Notifications Bell (Citizen View) -->
+                <button id="notificationBellBtn" onclick="toggleNotificationsDrawer()" type="button" class="relative w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs transition-all border border-white/10">
+                    <span>🔔</span>
+                    <span id="notifBadge" class="absolute -top-1 -right-1 bg-amber-400 text-black font-black text-[9px] w-4 h-4 rounded-full flex items-center justify-center hidden">0</span>
+                </button>
+                <button onclick="toggleDarkMode()" type="button" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs transition-all border border-white/10">
+                    <span id="themeBtnIcon">🌙</span>
+                </button>
+                <span id="headerRoleBadge" class="text-[10px] font-black bg-rose-500/30 text-rose-100 border border-rose-400/30 px-2.5 py-0.5 rounded-full">
+                    Citizen
+                </span>
+            </div>
+        </header>
+
+        <!-- CITIZEN NOTIFICATIONS DRAWER -->
+        <div id="notifOverlay" onclick="toggleNotificationsDrawer()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden transition-opacity"></div>
+        <aside id="notifDrawer" class="fixed top-0 right-0 bottom-0 w-[300px] bg-white dark:bg-[#1A0407] z-50 shadow-2xl transform translate-x-full transition-transform duration-300 flex flex-col justify-between border-l border-slate-200 dark:border-rose-950/60">
+            <div class="p-5 flex-1 flex flex-col overflow-hidden">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-rose-950/60">
+                    <h3 class="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                        <span>🔔</span> Updates & Alerts
+                    </h3>
+                    <button onclick="toggleNotificationsDrawer()" class="w-7 h-7 rounded-full bg-slate-100 dark:bg-rose-950/60 text-slate-500 text-xs font-black">✕</button>
+                </div>
+                <div id="notificationsList" class="mt-4 space-y-2.5 overflow-y-auto flex-1 pr-1"></div>
+            </div>
+            <div class="p-4 border-t border-slate-100 dark:border-rose-950/60">
+                <button onclick="clearAllNotifications()" class="w-full py-2.5 text-center text-xs font-bold bg-slate-100 dark:bg-rose-950/40 text-slate-600 dark:text-slate-300 rounded-xl hover:bg-slate-200">
+                    Clear Notifications
+                </button>
+            </div>
+        </aside>
+
+        <!-- SIDE MENU DRAWER -->
+        <div id="sideDrawerOverlay" onclick="toggleSideDrawer()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden transition-opacity"></div>
+        <aside id="sideDrawer" class="fixed top-0 left-0 bottom-0 w-[300px] bg-white dark:bg-[#1A0407] z-50 shadow-2xl transform -translate-x-full transition-transform duration-300 flex flex-col justify-between border-r border-slate-200 dark:border-rose-950/60">
+            <div class="p-6">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-rose-950/60">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-[#9E1220] to-[#540810] text-white flex items-center justify-center text-xl font-black shadow-md">♻️</div>
+                        <div>
+                            <h3 class="font-black text-sm text-slate-900 dark:text-white">EcoClean Menu</h3>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase">Kopargaon Desk</p>
+                        </div>
+                    </div>
+                    <button onclick="toggleSideDrawer()" class="w-8 h-8 rounded-full bg-slate-100 dark:bg-rose-950/60 text-slate-500 text-sm font-black">✕</button>
+                </div>
+
+                <div class="mt-6 p-4 rounded-2xl bg-gradient-to-r from-rose-950/10 to-rose-900/10 dark:from-rose-950/40 dark:to-rose-900/30 border border-rose-900/10 dark:border-rose-800/20">
+                    <span class="text-[9px] font-black uppercase text-rose-700 dark:text-rose-400">Active Account</span>
+                    <h4 id="drawerUserName" class="font-extrabold text-sm text-slate-900 dark:text-white mt-0.5">Resident User</h4>
+                    <p id="drawerUserId" class="text-xs font-mono font-bold text-rose-800 dark:text-rose-300 mt-0.5">ID: saiom</p>
+                </div>
+            </div>
+            <div class="p-6 border-t border-slate-100 dark:border-rose-950/60">
+                <button onclick="logout()" class="w-full bg-slate-100 dark:bg-rose-950/60 hover:bg-rose-100 text-rose-700 dark:text-rose-300 font-extrabold py-3 px-4 rounded-2xl flex items-center justify-center gap-2 text-xs">
+                    🚪 Log Out / Exit
+                </button>
+            </div>
+        </aside>
+
+        <!-- VIEW 1: AUTHENTICATION GATEWAY -->
+        <main id="authView" class="hidden flex-1 flex flex-col justify-between bg-gradient-to-b from-[#8B1220] via-[#5C0A13] to-[#2E0308] text-white p-6 relative overflow-hidden">
+            <div class="relative z-10 pt-4 text-center space-y-1">
+                <div class="w-14 h-14 mx-auto rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-2xl shadow-xl">♻️</div>
+                <h1 class="text-xl font-black">EcoClean Kopargaon</h1>
+                <p class="text-xs text-rose-200/80 font-medium">Select your portal to continue</p>
+            </div>
+
+            <!-- LOGIN CARD -->
+            <div id="loginCard" class="relative z-10 bg-white dark:bg-[#1A0407] text-slate-800 dark:text-slate-100 rounded-[32px] p-6 shadow-2xl border border-white/10 my-auto space-y-4">
+                <div class="flex items-center justify-between">
                     <div>
-                        <h1 class="font-extrabold text-sm leading-tight">EcoClean Citizen</h1>
-                        <p class="text-[9px] text-rose-200/80 uppercase font-bold tracking-wider" id="headerCitizenName">Saiom Resident • Kopargaon</p>
+                        <h2 class="text-base font-black text-slate-900 dark:text-white">Sign In</h2>
+                        <p class="text-[11px] text-slate-500 font-semibold">Switch role or use demo credentials</p>
+                    </div>
+                    <span class="text-[10px] bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 font-black px-2.5 py-1 rounded-full">KPG Portal</span>
+                </div>
+
+                <div class="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 dark:bg-rose-950/40 rounded-2xl border border-slate-200/60 dark:border-rose-900/30">
+                    <button type="button" id="roleBtnUser" onclick="selectRole('user')" class="py-2 px-1 text-center rounded-xl text-[10px] font-black transition-all bg-[#9E1220] text-white shadow-md">
+                        👤 Resident
+                    </button>
+                    <button type="button" id="roleBtnWorker" onclick="selectRole('worker')" class="py-2 px-1 text-center rounded-xl text-[10px] font-black text-slate-600 dark:text-slate-300">
+                        👷 Worker
+                    </button>
+                    <button type="button" id="roleBtnAdmin" onclick="selectRole('admin')" class="py-2 px-1 text-center rounded-xl text-[10px] font-black text-slate-600 dark:text-slate-300">
+                        🛡️ Admin
+                    </button>
+                </div>
+
+                <form onsubmit="handleLogin(event)" class="space-y-3 pt-1">
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400">User ID</label>
+                        <input type="text" id="loginUserId" required class="w-full mt-1 px-4 py-2.5 text-xs font-bold rounded-2xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-slate-400">Password</label>
+                        <input type="password" id="loginPassword" required class="w-full mt-1 px-4 py-2.5 text-xs font-bold rounded-2xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 focus:outline-none">
+                    </div>
+                    <button type="submit" class="w-full bg-gradient-to-r from-[#9E1220] to-[#540810] text-white font-extrabold py-3.5 rounded-2xl shadow-lg text-xs uppercase tracking-wider">
+                        Access Dashboard
+                    </button>
+                </form>
+
+                <div class="pt-2 border-t border-slate-100 dark:border-rose-950/60">
+                    <span class="text-[9px] font-black uppercase text-slate-400 block text-center mb-2">1-Click Demo Login</span>
+                    <div class="grid grid-cols-3 gap-1.5">
+                        <button type="button" onclick="quickAutoLogin('saiom', 'om@12', 'user')" class="py-2 text-[9px] font-bold bg-slate-100 dark:bg-rose-950/60 text-slate-700 dark:text-slate-200 rounded-xl">👤 Citizen</button>
+                        <button type="button" onclick="quickAutoLogin('kpgworker', 'work@12', 'worker')" class="py-2 text-[9px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 rounded-xl">👷 Worker</button>
+                        <button type="button" onclick="quickAutoLogin('sanjivani', 'sai@12', 'admin')" class="py-2 text-[9px] font-bold bg-rose-50 dark:bg-rose-900/40 text-rose-800 dark:text-rose-200 rounded-xl">🛡️ Admin</button>
                     </div>
                 </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="toggleDarkMode()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs">
-                        <span id="themeIcon">🌙</span>
-                    </button>
-                    <button onclick="handleCitizenLogout()" title="Logout" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs">
-                        🚪
-                    </button>
+            </div>
+            <div class="text-center text-[10px] text-rose-200/60 font-semibold py-2">
+                Municipal Corporation Kopargaon
+            </div>
+        </main>
+
+        <!-- VIEW 2: DASHBOARD & WORKFLOWS -->
+        <main id="dashboardView" class="hidden flex-1 flex flex-col bg-slate-50 dark:bg-[#0F0204] overflow-y-auto relative pb-20">
+
+            <!-- TAB CONTENT 1: REPORT BIN (CITIZEN PORTAL) -->
+            <section id="tabReport" class="p-4 space-y-4">
+                <div class="bg-gradient-to-r from-[#8B1220] to-[#5C0A13] text-white p-4 rounded-3xl shadow-lg flex items-center justify-between">
+                    <div>
+                        <span class="text-[10px] font-black uppercase tracking-wider text-rose-200">Environmental XP Score</span>
+                        <h3 id="userXpDisplay" class="text-2xl font-black">120 XP</h3>
+                        <p class="text-[10px] text-rose-100/80">Earn +50 XP per verified report</p>
+                    </div>
+                    <div class="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-2xl">🏅</div>
                 </div>
-            </header>
 
-            <main class="flex-1 overflow-y-auto p-4 space-y-4 pb-24">
-
-                <!-- TAB 1: REPORT WASTE FORM -->
-                <div id="tabContentReport" class="space-y-4">
-                    
-                    <!-- Step 1: Location & Map -->
-                    <div class="bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-3xl p-4 shadow-sm space-y-3">
+                <!-- CITIZEN REPORT FORM -->
+                <div class="space-y-4">
+                    <div class="bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-[28px] p-4 shadow-sm space-y-3">
                         <div class="flex items-center justify-between">
-                            <h3 class="text-xs font-black uppercase text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                            <h3 class="text-xs font-black uppercase text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                                 <span class="w-5 h-5 rounded-lg bg-[#9E1220] text-white flex items-center justify-center text-[10px]">1</span>
-                                Pinpoint Garbage Spot
+                                Geotagged Location (Max 100m)
                             </h3>
-                            <button type="button" onclick="acquireRealSatelliteGps()" class="text-[10px] bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-extrabold px-3 py-1.5 rounded-full border border-emerald-500/30 flex items-center gap-1.5 shadow-sm active:scale-95 transition-all">
-                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-                                <span id="gpsBtnText">🛰️ Lock Satellite GPS</span>
+                            <button type="button" onclick="useCurrentLiveLocation()" class="text-[10px] bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-black px-2.5 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                <span id="gpsBtnLabel">📍 Lock Live GPS</span>
                             </button>
                         </div>
-
-                        <div class="flex gap-2">
-                            <input type="text" id="landmarkSearchInput" placeholder="Search Kopargaon street or colony..." class="flex-1 px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 focus:outline-none focus:ring-1 focus:ring-rose-500">
-                            <button type="button" onclick="searchKopargaonStreet()" class="px-3 py-2 bg-[#9E1220] text-white text-xs font-bold rounded-xl active:scale-95 transition-all">
-                                🔍 Find
-                            </button>
+                        <div class="h-48 w-full rounded-2xl overflow-hidden relative border border-slate-200 dark:border-rose-950">
+                            <div id="reportMap" class="w-full h-full"></div>
                         </div>
-
-                        <div class="h-60 w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-rose-950 relative shadow-inner">
-                            <div id="citizenReportMap" class="w-full h-full"></div>
-
-                            <div class="absolute bottom-3 right-3 z-[1000] flex flex-col gap-1.5 shadow-xl">
-                                <button type="button" onclick="zoomInMap()" class="w-8 h-8 rounded-xl bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-white font-black text-base flex items-center justify-center border border-slate-200 dark:border-rose-950 active:scale-90 transition-transform">+</button>
-                                <button type="button" onclick="zoomOutMap()" class="w-8 h-8 rounded-xl bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-white font-black text-base flex items-center justify-center border border-slate-200 dark:border-rose-950 active:scale-90 transition-transform">−</button>
-                            </div>
-                        </div>
-
-                        <div class="p-3 bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950/60 rounded-2xl text-center space-y-2">
-                            <span class="text-[11px] font-extrabold text-[#9E1220] dark:text-rose-400 block" id="geoStatusLabel">
-                                📍 Move map or tap "Lock Satellite GPS" to pinpoint.
+                        <div class="p-2.5 bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950/60 rounded-2xl text-center">
+                            <span class="text-[11px] font-extrabold text-[#9E1220] dark:text-rose-400 block" id="selectedBinLabel">
+                                📍 Live GPS Locked (19.901689, 74.494780) — Tap dustbin or spot within 100m.
                             </span>
-
-                            <div class="p-2 bg-rose-50/50 dark:bg-rose-950/30 rounded-xl border border-rose-200 dark:border-rose-900/60 flex items-center justify-between gap-2">
-                                <div class="text-left">
-                                    <span class="text-[9px] font-black uppercase tracking-wider text-slate-400 block">Target Spot Coordinates</span>
-                                    <span id="currentCoordinatesText" class="text-xs font-mono font-black text-rose-700 dark:text-rose-300">
-                                        19.884100, 74.478800
-                                    </span>
-                                </div>
-                                <button type="button" onclick="openCurrentInGoogleMaps()" class="px-2.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[10px] font-extrabold shadow flex items-center gap-1 active:scale-95 transition-all whitespace-nowrap">
-                                    <span>🗺️ View Maps</span>
-                                    <span>↗</span>
-                                </button>
-                            </div>
                         </div>
                     </div>
 
-                    <!-- Step 2: Photo Evidence & AI Inspector -->
-                    <div class="bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-3xl p-4 shadow-sm space-y-3">
+                    <!-- PHOTO & GEMINI VERIFICATION -->
+                    <div id="photoStepCard" class="bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-[28px] p-4 shadow-sm space-y-3">
                         <div class="flex items-center justify-between">
-                            <h3 class="text-xs font-black uppercase text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                            <h3 class="text-xs font-black uppercase text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                                 <span class="w-5 h-5 rounded-lg bg-[#9E1220] text-white flex items-center justify-center text-[10px]">2</span>
-                                Photo Evidence of Garbage
+                                Snap Photo of Garbage Spot
                             </h3>
-                            <span class="text-[9px] font-black text-emerald-700 bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300 px-2 py-0.5 rounded-full">
-                                ⚡ Gemini AI Vision Inspector
+                            <span class="text-[9px] font-black text-emerald-800 bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300 px-2 py-0.5 rounded-full">
+                                🤖 Gemini 3 Flash
                             </span>
                         </div>
 
                         <label class="block cursor-pointer">
-                            <div id="dropzoneEmpty" class="border-2 border-dashed border-slate-300 dark:border-rose-950 rounded-2xl p-4 text-center bg-slate-50 dark:bg-[#120305] hover:border-rose-600 transition-colors">
-                                <span class="text-3xl block mb-1">📸</span>
-                                <span class="text-xs font-bold text-slate-700 dark:text-slate-200 block">Tap to Open Camera or Upload Spot Photo</span>
-                                <span class="text-[10px] text-slate-400">AI verifies garbage before allowing complaint</span>
+                            <div id="photoPlaceholder" class="border-2 border-dashed border-slate-300 dark:border-rose-950 rounded-2xl p-4 text-center bg-slate-50 dark:bg-[#120305]">
+                                <span class="text-2xl block mb-1">📸</span>
+                                <span class="text-xs font-bold text-slate-700 dark:text-slate-200 block">Tap to Snap or Select Photo</span>
                             </div>
-                            <input type="file" id="photoFileInput" accept="image/*" capture="environment" onchange="onPhotoSelected(event)" class="hidden">
+                            <input type="file" id="fileInput" accept="image/*" capture="environment" onchange="handleImageUpload(event)" class="hidden">
                         </label>
 
-                        <div id="previewWrapper" class="hidden relative rounded-2xl overflow-hidden border border-slate-200 dark:border-rose-950 shadow-md">
-                            <img id="previewImg" src="" alt="Spot Photo" class="w-full h-48 object-cover">
-                            
-                            <div id="scannerOverlay" class="hidden absolute inset-0 bg-black/60 flex flex-col justify-between p-3 pointer-events-none">
-                                <span class="text-[9px] font-mono text-emerald-400 font-bold">[ GEMINI AI VISION AUDIT RUNNING ]</span>
-                                <div class="w-full h-0.5 bg-emerald-400 ai-laser"></div>
-                                <span class="text-[10px] font-mono text-emerald-300 text-center animate-pulse">Inspecting photo for plastics & refuse...</span>
+                        <div id="photoPreviewContainer" class="hidden relative rounded-2xl overflow-hidden border border-slate-200 dark:border-rose-900 group">
+                            <img id="uploadedImagePreview" src="" alt="Waste Spot" class="w-full h-44 object-cover" onerror="handlePreviewImageError(this)">
+                            <div id="aiScanOverlay" class="absolute inset-0 bg-black/60 backdrop-blur-[1px] hidden flex flex-col justify-between p-3 pointer-events-none">
+                                <span class="text-[10px] font-mono font-black text-emerald-400">[ GEMINI 3 FLASH SCANNING ]</span>
+                                <div class="relative w-full h-0.5 bg-emerald-400 ai-scan-laser"></div>
+                                <p id="aiScanStatusText" class="text-[10px] font-mono font-bold text-emerald-300 text-center animate-pulse">Analyzing waste image...</p>
                             </div>
-
-                            <button type="button" onclick="clearSelectedPhoto()" class="absolute top-2 right-2 bg-black/70 text-white w-7 h-7 rounded-full text-xs font-bold">✕</button>
+                            <button type="button" onclick="resetPhoto()" class="absolute top-2 right-2 bg-black/70 text-white w-7 h-7 rounded-full text-xs font-bold z-10">✕</button>
                         </div>
 
-                        <!-- AI Verdict Card -->
-                        <div id="aiVerdictCard" class="hidden rounded-2xl p-3 border text-xs space-y-1">
+                        <!-- GEMINI RESULTS CARD -->
+                        <div id="aiAnalysisCard" class="hidden rounded-2xl p-3 border text-xs space-y-1.5">
                             <div class="flex items-center justify-between">
-                                <span id="aiVerdictTitle" class="font-extrabold text-xs">Gemini Verification</span>
-                                <span id="aiVerdictConfidence" class="text-[10px] font-black px-2 py-0.5 rounded-full border">Auditing...</span>
+                                <span id="aiAnalysisTitle" class="font-extrabold text-xs">Gemini AI Verification</span>
+                                <span id="aiConfidenceBadge" class="text-[10px] font-black px-2 py-0.5 rounded-full border">95%</span>
                             </div>
-                            <p id="aiVerdictDescription" class="text-[11px]"></p>
+                            <p id="aiAnalysisSummary" class="text-[11px]"></p>
+                            <div id="aiTagsContainer" class="flex flex-wrap gap-1 pt-0.5"></div>
                         </div>
 
-                        <!-- Realistic Test Presets -->
-                        <div class="grid grid-cols-2 gap-2 pt-1">
-                            <button type="button" onclick="loadSamplePhoto(true)" class="py-2.5 px-2 text-[10px] font-bold rounded-xl border border-rose-500 bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-100 flex items-center justify-center gap-1 active:scale-95 transition-all">
-                                <span>🏖️</span> Beach Trash (Pass AI)
+                        <!-- Sample Test Photos -->
+                        <div class="space-y-1.5">
+                            <button type="button" onclick="selectUploadedRoadsidePreset()" class="w-full text-[10px] font-bold p-2 rounded-xl border border-rose-500 bg-rose-50 dark:bg-rose-950/60 text-rose-900 dark:text-rose-100 flex items-center justify-between">
+                                <span>📸 <strong>Uploaded Roadside Dump (Featured Real Demo)</strong></span>
+                                <span class="text-[8px] bg-emerald-600 text-white font-black px-1.5 py-0.5 rounded">REAL SNAP</span>
                             </button>
-                            <button type="button" onclick="loadSamplePhoto(false)" class="py-2.5 px-2 text-[10px] font-bold rounded-xl border border-slate-200 dark:border-rose-950 text-slate-600 dark:text-slate-300 flex items-center justify-center gap-1 active:scale-95 transition-all">
-                                <span>🌊</span> Clean Beach (Reject & Block)
-                            </button>
+                            <div class="grid grid-cols-2 gap-1.5">
+                                <button type="button" onclick="selectPresetPhoto('https://images.unsplash.com/photo-1530587191325-3db32d826c18?auto=format&fit=crop&w=800&q=80', 'Street Dustbin')" class="text-[10px] font-bold p-2 rounded-xl border border-slate-200 dark:border-rose-950 bg-slate-50 dark:bg-rose-950/40 text-slate-700 dark:text-slate-300">🗑️ Overflow Bin</button>
+                                <button type="button" onclick="selectPresetPhoto('https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=800&q=80', 'Clean Garden')" class="text-[10px] font-bold p-2 rounded-xl border border-rose-200 dark:border-rose-900 bg-rose-50 text-rose-800">🌸 Clean Garden (Test)</button>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Step 3: Landmark Note & Submit Button -->
-                    <div class="bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-3xl p-4 shadow-sm space-y-3">
-                        <textarea id="reportComments" rows="2" placeholder="Specific landmark, beach spot, or garbage notes..." class="w-full p-3 text-xs rounded-2xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 focus:outline-none focus:ring-1 focus:ring-rose-500"></textarea>
-                        
-                        <button type="button" id="submitReportBtn" onclick="submitCitizenReport()" class="w-full bg-gradient-to-r from-[#9E1220] to-[#540810] text-white font-black py-3.5 px-4 rounded-full shadow-lg text-xs uppercase tracking-wider active:scale-95 transition-all">
-                            Submit Grievance to Municipal Cloud
+                    <!-- SUBMIT BUTTON -->
+                    <div class="bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-[28px] p-4 shadow-sm space-y-3">
+                        <textarea id="issueComments" rows="2" placeholder="Notes or auto-generated Gemini summary..." class="w-full p-3 text-xs rounded-2xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950"></textarea>
+                        <button id="submitReportBtn" onclick="submitReport()" class="w-full bg-gradient-to-r from-[#9E1220] to-[#540810] text-white font-black py-3.5 px-4 rounded-full shadow-lg text-xs uppercase tracking-wider">
+                            Send Alert to Sanitation Desk
                         </button>
+                    </div>
+
+                    <!-- CITIZEN MY COMPLAINTS & DELETION SECTION -->
+                    <div class="bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-[28px] p-4 shadow-sm space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
+                                My Grievance History
+                            </h3>
+                            <span class="text-[10px] font-bold text-slate-400">Can delete resolved only</span>
+                        </div>
+                        <div id="citizenComplaintsHistoryList" class="space-y-2.5"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB CONTENT 2: FIELD WORKER DESK -->
+            <section id="tabWorker" class="hidden p-4 space-y-4">
+                <div class="bg-gradient-to-r from-amber-600 via-amber-700 to-amber-900 text-white p-4 rounded-3xl shadow-lg space-y-2">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2.5">
+                            <span class="text-2xl">🚜</span>
+                            <div>
+                                <span class="text-[9px] font-black uppercase text-amber-200">Field Staff Active</span>
+                                <h3 class="text-sm font-black">Raju Shinde (Driver / Crew)</h3>
+                            </div>
+                        </div>
+                        <span class="text-[9px] font-bold bg-white/20 px-2 py-0.5 rounded-full">Truck: MH-17-AG-4421</span>
                     </div>
                 </div>
 
-                <!-- TAB 2: GRIEVANCES & TRACKER (WITH "MY COMPLAINTS ONLY" TOGGLE) -->
-                <div id="tabContentTracker" class="hidden space-y-3">
-                    
-                    <!-- Citizen Personal Stats Header -->
-                    <div class="bg-gradient-to-r from-rose-950/40 to-slate-900 p-3 rounded-2xl border border-rose-900/40 flex items-center justify-between">
-                        <div>
-                            <span class="text-[9px] font-bold text-slate-400 block uppercase">Resident Ledger</span>
-                            <h3 class="text-xs font-black text-white" id="trackerCitizenNameDisplay">Saiom Resident</h3>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span id="userPersonalResolvedBadge" class="text-[10px] font-extrabold bg-emerald-950 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full">
-                                0 Resolved
-                            </span>
-                        </div>
+                <!-- ASSIGNED / IN-PROGRESS TASKS -->
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">Assigned Waste Pickups</h3>
+                        <span class="text-[10px] font-bold text-slate-400">Active Cleaning Route</span>
                     </div>
-
-                    <!-- Filter Bar: "My Reports Only" vs "All Kopargaon Reports" -->
-                    <div class="bg-slate-100 dark:bg-[#1A0407] p-1 rounded-2xl border border-slate-200 dark:border-rose-950/60 flex text-xs font-extrabold gap-1">
-                        <button id="filterMyReportsBtn" onclick="setComplaintFilter('mine')" class="flex-1 py-1.5 rounded-xl bg-[#9E1220] text-white shadow-sm transition-all flex items-center justify-center gap-1">
-                            <span>👤</span>
-                            <span>My Reports Only</span>
-                            <span id="myReportsCountBadge" class="text-[9px] bg-black/40 px-1.5 py-0.2 rounded-full">0</span>
-                        </button>
-                        <button id="filterAllReportsBtn" onclick="setComplaintFilter('all')" class="flex-1 py-1.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1">
-                            <span>🌐</span>
-                            <span>All City Reports</span>
-                            <span id="allReportsCountBadge" class="text-[9px] bg-black/20 px-1.5 py-0.2 rounded-full">0</span>
-                        </button>
-                    </div>
-
-                    <div id="citizenGrievancesList" class="space-y-3"></div>
+                    <div id="workerTaskList" class="space-y-3"></div>
                 </div>
-            </main>
 
-            <!-- Bottom Navigation Bar -->
-            <nav class="absolute bottom-0 left-0 right-0 bg-white/95 dark:bg-[#120305]/95 backdrop-blur-md border-t border-slate-200 dark:border-rose-950/60 px-6 py-2.5 flex justify-around z-40">
-                <button id="navReportBtn" onclick="switchCitizenTab('report')" class="flex flex-col items-center gap-0.5 text-[#9E1220] dark:text-rose-400 font-extrabold text-[10px]">
-                    <span class="text-lg">📢</span> <span>Report</span>
-                </button>
-                <button id="navTrackerBtn" onclick="switchCitizenTab('tracker')" class="flex flex-col items-center gap-0.5 text-slate-400 font-extrabold text-[10px]">
-                    <span class="text-lg">📋</span> <span>My Grievances</span>
-                </button>
-            </nav>
+                <!-- WORKER RESOLVED HISTORY (CAN DELETE COMPLETED) -->
+                <div class="space-y-3 pt-2">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">Cleared Tasks History</h3>
+                        <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Resolved • Deletion Allowed</span>
+                    </div>
+                    <div id="workerClearedHistoryList" class="space-y-2.5"></div>
+                </div>
+            </section>
+
+            <!-- TAB CONTENT 3: LIVE MAP EXPLORER -->
+            <section id="tabMap" class="hidden p-4 space-y-3 h-full flex flex-col">
+                <div class="bg-white dark:bg-[#1A0407] p-3 rounded-2xl border border-slate-200 dark:border-rose-950 flex items-center justify-between shadow-sm">
+                    <div>
+                        <h3 class="text-xs font-black text-slate-900 dark:text-white">Kopargaon Live Sanitation Map</h3>
+                        <p class="text-[10px] text-slate-400 font-semibold">Tap markers to view complaint photos & clear proof</p>
+                    </div>
+                    <div class="flex gap-1.5 text-[9px] font-bold">
+                        <span class="text-rose-600">🔴 Unclean</span>
+                        <span class="text-amber-500">🟡 Truck</span>
+                        <span class="text-emerald-600">🟢 Clean</span>
+                    </div>
+                </div>
+
+                <div class="flex-1 min-h-[420px] rounded-3xl overflow-hidden border border-slate-200 dark:border-rose-950 relative shadow-inner">
+                    <div id="liveExploreMap" class="w-full h-full"></div>
+                </div>
+            </section>
+
+            <!-- TAB CONTENT 4: ADMIN SANITATION DESK -->
+            <section id="tabAdmin" class="hidden p-4 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="text-base font-black text-slate-900 dark:text-white">Command Center</h2>
+                        <p class="text-[10px] text-slate-500 font-bold uppercase">Kopargaon Municipal Corporation</p>
+                    </div>
+                    <span class="text-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-extrabold px-3 py-1 rounded-full">🟢 Online</span>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2">
+                    <div class="bg-white dark:bg-[#1A0407] p-3 rounded-2xl border border-slate-200 dark:border-rose-950 text-center shadow-sm">
+                        <span class="text-[9px] font-black uppercase text-slate-400 block">Total</span>
+                        <h4 id="statTotalComplaints" class="text-lg font-black text-slate-900 dark:text-white">0</h4>
+                    </div>
+                    <div class="bg-white dark:bg-[#1A0407] p-3 rounded-2xl border border-slate-200 dark:border-rose-950 text-center shadow-sm">
+                        <span class="text-[9px] font-black uppercase text-rose-500 block">Pending</span>
+                        <h4 id="statPendingComplaints" class="text-lg font-black text-rose-600">0</h4>
+                    </div>
+                    <div class="bg-white dark:bg-[#1A0407] p-3 rounded-2xl border border-slate-200 dark:border-rose-950 text-center shadow-sm">
+                        <span class="text-[9px] font-black uppercase text-emerald-500 block">Cleaned</span>
+                        <h4 id="statResolvedComplaints" class="text-lg font-black text-emerald-600">0</h4>
+                    </div>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center px-1">
+                        <h3 class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">All Municipal Grievances</h3>
+                        <span class="text-[10px] text-slate-400 font-bold">Only resolved can be purged</span>
+                    </div>
+                    <div id="adminComplaintsList" class="space-y-3"></div>
+                </div>
+            </section>
+        </main>
+
+        <!-- BOTTOM NAV BAR -->
+        <nav id="bottomNav" class="hidden fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 dark:bg-[#120305]/95 backdrop-blur-md border-t border-slate-200 dark:border-rose-950/60 z-40 px-3 py-2 flex justify-around">
+            <button id="navBtnReport" onclick="switchTab('report')" class="flex flex-col items-center gap-0.5 text-[#9E1220] dark:text-rose-400 font-black text-[10px]">
+                <span class="text-lg">📢</span> <span>Report</span>
+            </button>
+            <button id="navBtnWorker" onclick="switchTab('worker')" class="hidden flex-col items-center gap-0.5 text-amber-600 dark:text-amber-400 font-black text-[10px]">
+                <span class="text-lg">🚜</span> <span>Tasks</span>
+            </button>
+            <button id="navBtnMap" onclick="switchTab('map')" class="flex flex-col items-center gap-0.5 text-slate-400 font-bold text-[10px]">
+                <span class="text-lg">🗺️</span> <span>Live Map</span>
+            </button>
+            <button id="navBtnAdmin" onclick="switchTab('admin')" class="hidden flex-col items-center gap-0.5 text-slate-400 font-bold text-[10px]">
+                <span class="text-lg">🛡️</span> <span>Admin</span>
+            </button>
+        </nav>
+
+        <!-- WORKER CLEANUP PROOF MODAL -->
+        <div id="workerProofModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white dark:bg-[#1A0407] rounded-[32px] p-6 max-w-xs w-full space-y-4 shadow-2xl border border-rose-950/40">
+                <div class="text-center space-y-1">
+                    <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl mx-auto">📸</div>
+                    <h3 class="text-sm font-black text-slate-900 dark:text-white">Submit Cleanup Proof</h3>
+                    <p class="text-[11px] text-slate-500">Attach photo showing the spot has been cleared.</p>
+                </div>
+                <div class="space-y-2">
+                    <div id="workerProofImgPreviewContainer" class="hidden rounded-xl overflow-hidden border border-slate-200 relative">
+                        <img id="workerProofImgPreview" src="" alt="Cleaned Spot" class="w-full h-32 object-cover">
+                    </div>
+                    <button type="button" onclick="selectWorkerPresetCleanProof()" class="w-full py-2 px-2 rounded-xl bg-slate-100 dark:bg-rose-950/40 text-slate-700 dark:text-slate-300 text-xs font-bold hover:bg-slate-200">
+                        ✨ Attach Cleaned Spot Photo
+                    </button>
+                </div>
+                <div class="flex gap-2 pt-1">
+                    <button type="button" onclick="closeWorkerProofModal()" class="flex-1 py-2 rounded-xl bg-slate-100 text-slate-600 text-xs font-bold">Cancel</button>
+                    <button type="button" onclick="submitWorkerCleanResolution()" class="flex-1 py-2 rounded-xl bg-emerald-600 text-white text-xs font-black">✓ Complete</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- FULL PHOTO LIGHTBOX -->
+        <div id="photoLightboxModal" onclick="closePhotoLightbox()" class="fixed inset-0 bg-black/90 z-50 hidden flex flex-col justify-between p-4 cursor-pointer">
+            <div class="flex justify-end pt-2 pr-2">
+                <span class="text-white text-xs font-bold bg-white/20 px-3 py-1 rounded-full">✕ Close</span>
+            </div>
+            <div class="flex-1 flex items-center justify-center">
+                <img id="lightboxImageSrc" src="" alt="Enlarged Waste Image" class="max-h-[75vh] max-w-full rounded-2xl object-contain shadow-2xl">
+            </div>
+            <div class="text-center pb-4 text-white space-y-1">
+                <h4 id="lightboxLocationTitle" class="font-extrabold text-sm"></h4>
+                <p id="lightboxComment" class="text-xs text-slate-300"></p>
+            </div>
         </div>
     </div>
 
-    <!-- JAVASCRIPT ENGINE & FIREBASE -->
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyDm3z435fT5gnmbAj7Bj9Zz_UE5zWWDiEk",
-            authDomain: "ecoclean-35b65.firebaseapp.com",
-            databaseURL: "https://ecoclean-35b65-default-rtdb.firebaseio.com",
-            projectId: "ecoclean-35b65",
-            storageBucket: "ecoclean-35b65.firebasestorage.app",
-            messagingSenderId: "72983522187",
-            appId: "1:72983522187:web:fa3f1a8cafd3dc333b9d8e"
-        };
+        const KOPARGAON_COORDS = [19.8841, 74.4788];
+        const CITIZEN_DEFAULT_COORDS = [19.901689, 74.494780];
 
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+        let MUNICIPAL_BINS = [
+            { id: "KPG-B101", name: "Yeola Corner Chowk", coords: [19.8967, 74.4822] },
+            { id: "KPG-B102", name: "Kopargaon Bus Stand & Depo", coords: [19.8841, 74.4788] },
+            { id: "KPG-B103", name: "Godavari River Bridge Ghat", coords: [19.8858, 74.4855] },
+            { id: "KPG-B104", name: "Tilak Nagar Market", coords: [19.8912, 74.4768] },
+            { id: "KPG-B105", name: "Sanjivani College Main Gate", coords: [19.8820, 74.4690] },
+            { id: "KPG-B109", name: "Station Road Ward Bin (Citizen Spot)", coords: [19.901800, 74.494900] }
+        ];
 
-        // Realistic Beach Photos
-        const REAL_BEACH_TRASH_IMAGE = "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=800&q=80"; // Coastal shore with plastic refuse
-        const REAL_CLEAN_BEACH_IMAGE = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80"; // Clean sandy shoreline
+        const ADMIN_CREDENTIALS = { userId: "sanjivani", password: "sai@12", name: "Admin (Sanjivani)" };
+        const WORKER_CREDENTIALS = { userId: "kpgworker", password: "work@12", name: "Raju Shinde (Sanitation Crew)" };
+        let registeredUsers = [{ userId: "saiom", password: "om@12", fullName: "Saiom Resident" }];
 
-        const KOPARGAON_DEFAULT = [19.8841, 74.4788];
-        
-        // Restore citizen session from localStorage if present
-        let currentCitizen = JSON.parse(localStorage.getItem('ecoclean_logged_citizen') || 'null') || { 
-            name: "Saiom Resident", 
-            phone: "9876543210", 
-            city: "Kopargaon" 
-        };
+        let complaints = [
+            {
+                id: "kpg-901",
+                binId: "KPG-B102",
+                locName: "Kopargaon Bus Stand & Depo",
+                coords: [19.8841, 74.4788],
+                wasteType: "Plastic & Bottles",
+                severity: 3,
+                comment: "Bus stand main entrance waste overflowing.",
+                image: "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&w=600&q=80",
+                afterCleanImage: "",
+                status: "Pending",
+                time: "15 mins ago",
+                reportedBy: "saiom"
+            },
+            {
+                id: "kpg-902",
+                binId: "KPG-B103",
+                locName: "Godavari River Bridge Ghat",
+                coords: [19.8858, 74.4855],
+                wasteType: "Wet Organic Waste",
+                severity: 2,
+                comment: "Market sellers dumped organic market waste near bridge.",
+                image: "https://images.unsplash.com/photo-1611284446314-60a58ac0deb9?auto=format&fit=crop&w=600&q=80",
+                afterCleanImage: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=600&q=80",
+                status: "Resolved",
+                time: "1 hour ago",
+                reportedBy: "saiom"
+            }
+        ];
 
-        let mapInstance = null;
-        let targetPinMarker = null;
-        let selectedCoords = KOPARGAON_DEFAULT;
-        let activeWatchId = null;
+        let citizenNotifications = [
+            {
+                id: "notif-1",
+                complaintId: "kpg-902",
+                title: "✨ Waste Spot Cleared!",
+                desc: "Sanitation crew has cleared Godavari River Bridge Ghat. You may now delete this resolved report if desired.",
+                time: "50 mins ago",
+                read: false
+            }
+        ];
 
-        let currentUploadedPhotoUrl = "";
-        let currentAiVerification = null;
-        let citizenComplaints = [];
-        let activeGrievanceFilter = 'mine'; // Default: shows ONLY complaints filed by this user
+        let selectedRole = 'user';
+        let authenticatedSession = null;
+        let currentTab = 'report';
+        let isDarkMode = false;
+        let selectedWasteType = 'Plastic & Bottles';
+        let currentSeverity = 2;
+        let userXP = 120;
+        let attachedPhotoUrl = "";
+        let aiAnalysisResult = null;
+        let userLiveCoords = null;
+        let selectedTargetCoords = null;
+        let selectedBinObj = null;
 
-        function showToast(message, isError = false) {
-            const toast = document.getElementById('toast');
-            toast.innerText = message;
-            toast.className = `fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-xs w-full p-3.5 rounded-2xl shadow-2xl text-xs font-bold text-center border transition-all ${
-                isError ? 'bg-rose-900 text-white border-rose-500/50' : 'bg-emerald-900 text-white border-emerald-500/50'
+        let activeWorkerTaskTargetId = null;
+        let workerProofPhotoUrl = "";
+
+        let reportMapInstance = null;
+        let liveGpsMarker = null;
+        let complaintTargetMarker = null;
+        let userRadiusCircle = null;
+        let reportDustbinMarkers = [];
+        let liveExploreMapInstance = null;
+        let liveMarkersArray = [];
+
+        function startApp() {
+            document.getElementById('splashView').classList.add('hidden');
+            document.getElementById('authView').classList.remove('hidden');
+        }
+
+        function calculateDistanceMeters(coords1, coords2) {
+            if (!coords1 || !coords2) return 0;
+            if (window.L && L.latLng) {
+                return L.latLng(coords1[0], coords1[1]).distanceTo(L.latLng(coords2[0], coords2[1]));
+            }
+            return 0;
+        }
+
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toastNotification');
+            if (!toast) return;
+            toast.innerText = msg;
+            toast.className = `fixed top-4 left-1/2 -translate-x-1/2 z-50 max-w-xs w-full p-3.5 rounded-2xl shadow-2xl text-xs font-extrabold text-center border transition-all ${
+                isError ? 'bg-rose-900/90 text-white border-rose-500/50' : 'bg-emerald-900/90 text-white border-emerald-500/50'
             }`;
             toast.classList.remove('hidden');
             setTimeout(() => toast.classList.add('hidden'), 3500);
         }
 
         function toggleDarkMode() {
-            const isDark = document.documentElement.classList.toggle('dark');
-            document.getElementById('themeIcon').innerText = isDark ? "☀️" : "🌙";
+            isDarkMode = !isDarkMode;
+            document.documentElement.classList.toggle('dark', isDarkMode);
+            document.getElementById('themeBtnIcon').innerText = isDarkMode ? "☀️" : "🌙";
         }
 
-        function zoomInMap() { if (mapInstance) mapInstance.zoomIn(); }
-        function zoomOutMap() { if (mapInstance) mapInstance.zoomOut(); }
-
-        function openCurrentInGoogleMaps() {
-            window.open(`https://www.google.com/maps?q=${selectedCoords[0]},${selectedCoords[1]}`, '_blank');
+        function toggleSideDrawer() {
+            const drawer = document.getElementById('sideDrawer');
+            const overlay = document.getElementById('sideDrawerOverlay');
+            drawer.classList.toggle('-translate-x-full');
+            overlay.classList.toggle('hidden');
         }
 
-        function updateCoordinatesDisplay(lat, lng) {
-            const displayElem = document.getElementById('currentCoordinatesText');
-            if (displayElem) displayElem.innerText = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        function toggleNotificationsDrawer() {
+            const drawer = document.getElementById('notifDrawer');
+            const overlay = document.getElementById('notifOverlay');
+            drawer.classList.toggle('translate-x-full');
+            overlay.classList.toggle('hidden');
+            renderNotifications();
         }
 
-        function handleCitizenLogin(e) {
-            e.preventDefault();
-            const name = document.getElementById('citizenInputName').value.trim();
-            const phone = document.getElementById('citizenInputPhone').value.trim();
-            const city = document.getElementById('citizenInputCity').value.trim();
+        function selectRole(role) {
+            selectedRole = role;
+            const btnUser = document.getElementById('roleBtnUser');
+            const btnWorker = document.getElementById('roleBtnWorker');
+            const btnAdmin = document.getElementById('roleBtnAdmin');
+            const idInput = document.getElementById('loginUserId');
+            const pwdInput = document.getElementById('loginPassword');
 
-            if (!name || !phone || !city) return;
-            currentCitizen = { name, phone, city };
-            localStorage.setItem('ecoclean_logged_citizen', JSON.stringify(currentCitizen));
+            const activeClass = "py-2 px-1 text-center rounded-xl text-[10px] font-black transition-all bg-[#9E1220] text-white shadow-md";
+            const inactiveClass = "py-2 px-1 text-center rounded-xl text-[10px] font-black text-slate-600 dark:text-slate-300";
 
-            document.getElementById('headerCitizenName').innerText = `${name} • ${city}`;
-            document.getElementById('trackerCitizenNameDisplay').innerText = `${name} (${phone})`;
+            btnUser.className = inactiveClass;
+            btnWorker.className = inactiveClass;
+            btnAdmin.className = inactiveClass;
 
-            document.getElementById('authSection').classList.add('hidden');
-            document.getElementById('mainSection').classList.remove('hidden');
-
-            setTimeout(() => {
-                initMap();
-                acquireRealSatelliteGps();
-            }, 200);
-
-            // Bind real-time complaints stream from Firebase
-            db.ref('complaints').on('value', (snapshot) => {
-                const data = snapshot.val();
-                citizenComplaints = data ? Object.values(data).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)) : [];
-                renderCitizenComplaints();
-            });
-        }
-
-        function handleCitizenLogout() {
-            if (activeWatchId !== null) navigator.geolocation.clearWatch(activeWatchId);
-            localStorage.removeItem('ecoclean_logged_citizen');
-            document.getElementById('mainSection').classList.add('hidden');
-            document.getElementById('authSection').classList.remove('hidden');
-        }
-
-        function initMap() {
-            if (!mapInstance) {
-                mapInstance = L.map('citizenReportMap', { zoomControl: false, scrollWheelZoom: true, touchZoom: true, dragging: true }).setView(selectedCoords, 17);
-                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapInstance);
-
-                const pinIcon = L.divIcon({
-                    html: `<div class="bg-rose-600 text-white p-1.5 rounded-full shadow-2xl border-2 border-white pulsing-gps-pin flex items-center justify-center">
-                               <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path></svg>
-                           </div>`,
-                    className: '', iconSize: [34, 34], iconAnchor: [17, 34]
-                });
-
-                targetPinMarker = L.marker(selectedCoords, { icon: pinIcon }).addTo(mapInstance);
-                updateCoordinatesDisplay(selectedCoords[0], selectedCoords[1]);
-
-                mapInstance.on('move', () => {
-                    const center = mapInstance.getCenter();
-                    selectedCoords = [center.lat, center.lng];
-                    if (targetPinMarker) targetPinMarker.setLatLng(center);
-                    updateCoordinatesDisplay(center.lat, center.lng);
-                });
+            if (role === 'admin') {
+                btnAdmin.className = activeClass;
+                idInput.value = "sanjivani";
+                pwdInput.value = "sai@12";
+            } else if (role === 'worker') {
+                btnWorker.className = activeClass;
+                idInput.value = "kpgworker";
+                pwdInput.value = "work@12";
             } else {
-                mapInstance.invalidateSize();
+                btnUser.className = activeClass;
+                idInput.value = "saiom";
+                pwdInput.value = "om@12";
             }
         }
 
-        function acquireRealSatelliteGps() {
-            if (!navigator.geolocation) return;
-            const btnText = document.getElementById('gpsBtnText');
-            if (btnText) btnText.innerText = "🛰️ Connecting to Satellites...";
-            const label = document.getElementById('geoStatusLabel');
-            if (label) label.innerText = "🛰️ Polling GPS satellite hardware...";
-
-            if (activeWatchId !== null) navigator.geolocation.clearWatch(activeWatchId);
-
-            activeWatchId = navigator.geolocation.watchPosition(
-                (pos) => {
-                    const lat = pos.coords.latitude;
-                    const lng = pos.coords.longitude;
-                    const accuracy = Math.round(pos.coords.accuracy);
-
-                    if (accuracy > 150) return;
-
-                    selectedCoords = [lat, lng];
-                    updateCoordinatesDisplay(lat, lng);
-
-                    if (mapInstance) {
-                        mapInstance.setView(selectedCoords, 18, { animate: true });
-                        if (targetPinMarker) targetPinMarker.setLatLng(selectedCoords);
-                    }
-
-                    if (btnText) btnText.innerText = "✓ Satellite GPS Locked";
-                    if (label) label.innerHTML = `✅ <strong class="text-emerald-500">Satellite GPS Locked!</strong> (±${accuracy}m)`;
-
-                    if (accuracy <= 30) {
-                        navigator.geolocation.clearWatch(activeWatchId);
-                        activeWatchId = null;
-                    }
-                },
-                () => { if (btnText) btnText.innerText = "🛰️ Retry GPS"; },
-                { enableHighAccuracy: true, timeout: 25000, maximumAge: 0 }
-            );
+        function quickAutoLogin(uId, pwd, role) {
+            document.getElementById('loginUserId').value = uId;
+            document.getElementById('loginPassword').value = pwd;
+            selectRole(role);
+            handleLogin(new Event('submit'));
         }
 
-        async function searchKopargaonStreet() {
-            const query = document.getElementById('landmarkSearchInput').value.trim();
-            if (!query) return;
-            try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ', Kopargaon, Maharashtra')}`);
-                const data = await res.json();
-                if (data && data.length > 0) {
-                    const lat = parseFloat(data[0].lat);
-                    const lon = parseFloat(data[0].lon);
-                    selectedCoords = [lat, lon];
-                    updateCoordinatesDisplay(lat, lon);
-                    mapInstance.setView([lat, lon], 18, { animate: true });
-                    if (targetPinMarker) targetPinMarker.setLatLng(selectedCoords);
+        function handleLogin(e) {
+            if (e) e.preventDefault();
+            const uId = document.getElementById('loginUserId').value.trim();
+            const pwd = document.getElementById('loginPassword').value.trim();
+
+            if (selectedRole === 'admin' && uId === ADMIN_CREDENTIALS.userId && pwd === ADMIN_CREDENTIALS.password) {
+                authenticatedSession = { role: 'admin', userId: uId, name: ADMIN_CREDENTIALS.name };
+            } else if (selectedRole === 'worker' && uId === WORKER_CREDENTIALS.userId && pwd === WORKER_CREDENTIALS.password) {
+                authenticatedSession = { role: 'worker', userId: uId, name: WORKER_CREDENTIALS.name };
+            } else if (selectedRole === 'user') {
+                const matched = registeredUsers.find(u => u.userId === uId && u.password === pwd);
+                if (matched) {
+                    authenticatedSession = { role: 'user', userId: matched.userId, name: matched.fullName };
                 }
-            } catch (e) {}
-        }
-
-        function onPhotoSelected(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                currentUploadedPhotoUrl = ev.target.result;
-                analyzeImageWithAI(currentUploadedPhotoUrl, file.name.toLowerCase());
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function loadSamplePhoto(isWaste) {
-            if (isWaste) {
-                currentUploadedPhotoUrl = REAL_BEACH_TRASH_IMAGE;
-                runSimulatedAIScan(true, "Plastic bottles, marine debris, and discarded clutter detected on shore.");
-            } else {
-                currentUploadedPhotoUrl = REAL_CLEAN_BEACH_IMAGE;
-                runSimulatedAIScan(false, "Clean sandy beach detected! No municipal refuse or plastic litter found.");
             }
-        }
 
-        function analyzeImageWithAI(photoSrc, hint = "") {
-            const isCleanHint = hint.includes("clean") || hint.includes("sand") || hint.includes("sky") || hint.includes("water");
-            const isTrash = !isCleanHint;
-            const verdictMsg = isTrash 
-                ? "Discarded waste, plastic packaging, and refuse verified by vision inspector." 
-                : "Clean area detected with zero visible waste.";
-            runSimulatedAIScan(isTrash, verdictMsg);
-        }
-
-        function runSimulatedAIScan(isGenuineWaste, descriptionText) {
-            document.getElementById('dropzoneEmpty').classList.add('hidden');
-            const previewWrapper = document.getElementById('previewWrapper');
-            const scannerOverlay = document.getElementById('scannerOverlay');
-            previewWrapper.classList.remove('hidden');
-            document.getElementById('previewImg').src = currentUploadedPhotoUrl;
-            scannerOverlay.classList.remove('hidden');
-
-            const submitBtn = document.getElementById('submitReportBtn');
-
-            setTimeout(() => {
-                scannerOverlay.classList.add('hidden');
-                const card = document.getElementById('aiVerdictCard');
-                const title = document.getElementById('aiVerdictTitle');
-                const badge = document.getElementById('aiVerdictConfidence');
-                const desc = document.getElementById('aiVerdictDescription');
-                card.classList.remove('hidden');
-
-                if (isGenuineWaste) {
-                    currentAiVerification = { isValid: true, verdict: "98% Verified Waste (Gemini AI)" };
-                    card.className = "rounded-2xl p-3 border bg-emerald-500/10 border-emerald-500/30 text-emerald-950 dark:text-emerald-100 space-y-1";
-                    title.innerText = "✓ Gemini Verified: Waste & Plastic Litter Detected";
-                    badge.innerText = "98% Real Waste";
-                    badge.className = "text-[10px] font-black px-2 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200";
-                    desc.innerText = descriptionText;
-                    
-                    submitBtn.disabled = false;
-                    submitBtn.className = "w-full bg-gradient-to-r from-[#9E1220] to-[#540810] text-white font-black py-3.5 px-4 rounded-full shadow-lg text-xs uppercase tracking-wider active:scale-95 transition-all cursor-pointer";
-                    showToast("🤖 Verified: Solid Waste Detected");
-                } else {
-                    currentAiVerification = { isValid: false, verdict: "Rejected (Clean Area)" };
-                    card.className = "rounded-2xl p-3 border bg-rose-500/10 border-rose-500/30 text-rose-950 dark:text-rose-100 space-y-1";
-                    title.innerText = "❌ AI Rejected: Clean Area (No Waste)";
-                    badge.innerText = "Submission Blocked";
-                    badge.className = "text-[10px] font-black px-2 py-0.5 rounded-full border border-rose-500/30 bg-rose-100 dark:bg-rose-900 text-rose-800 dark:text-rose-200";
-                    desc.innerText = descriptionText + " Complaints cannot be submitted for clean spots.";
-                    
-                    submitBtn.disabled = true;
-                    submitBtn.className = "w-full bg-slate-800 text-slate-500 font-bold py-3.5 px-4 rounded-full border border-slate-700 text-xs uppercase tracking-wider cursor-not-allowed opacity-60";
-                    showToast("❌ Blocked: Clean area detected (No waste)", true);
-                }
-            }, 850);
-        }
-
-        function clearSelectedPhoto() {
-            currentUploadedPhotoUrl = "";
-            currentAiVerification = null;
-            document.getElementById('dropzoneEmpty').classList.remove('hidden');
-            document.getElementById('previewWrapper').classList.add('hidden');
-            document.getElementById('aiVerdictCard').classList.add('hidden');
-            document.getElementById('photoFileInput').value = "";
-            
-            const submitBtn = document.getElementById('submitReportBtn');
-            submitBtn.disabled = false;
-            submitBtn.className = "w-full bg-gradient-to-r from-[#9E1220] to-[#540810] text-white font-black py-3.5 px-4 rounded-full shadow-lg text-xs uppercase tracking-wider active:scale-95 transition-all";
-        }
-
-        // SUBMIT TO FIREBASE
-        function submitCitizenReport() {
-            if (!currentUploadedPhotoUrl) {
-                showToast("📸 Photo of garbage is required!", true);
-                return;
-            }
-            if (!currentAiVerification || !currentAiVerification.isValid) {
-                showToast("❌ Submission Blocked: Clean area detected! Only garbage can be reported.", true);
+            if (!authenticatedSession) {
+                showToast("Invalid credentials for this role!", true);
                 return;
             }
 
-            const comments = document.getElementById('reportComments').value.trim() || "Waste overflow reported at spot.";
-            const reportId = `KPG-${Math.floor(1000 + Math.random() * 9000)}`;
-
-            const newReport = {
-                id: reportId,
-                citizenName: currentCitizen.name,
-                citizenPhone: currentCitizen.phone,
-                landmark: `${currentCitizen.city} Spot (${selectedCoords[0].toFixed(4)}, ${selectedCoords[1].toFixed(4)})`,
-                coords: selectedCoords,
-                comment: comments,
-                beforeImage: currentUploadedPhotoUrl,
-                afterImage: "",
-                status: "Pending",
-                geminiVerdict: currentAiVerification.verdict,
-                assignedWorker: null,
-                timestamp: Date.now(),
-                time: "Just now"
-            };
-
-            showToast("🛰️ Broadcasting verified grievance to cloud...");
-
-            db.ref('complaints/' + reportId).set(newReport)
-                .then(() => {
-                    showToast("✅ Grievance saved to your personal ledger!");
-                    clearSelectedPhoto();
-                    document.getElementById('reportComments').value = "";
-                    setComplaintFilter('mine'); // Automatically switch to "My Reports Only"
-                    switchCitizenTab('tracker');
-                })
-                .catch((err) => {
-                    showToast("Sync Error: " + err.message, true);
-                });
+            launchDashboard();
         }
 
-        // FILTER CONTROLLER ("MY REPORTS ONLY" vs "ALL REPORTS")
-        function setComplaintFilter(mode) {
-            activeGrievanceFilter = mode;
-            const btnMine = document.getElementById('filterMyReportsBtn');
-            const btnAll = document.getElementById('filterAllReportsBtn');
+        function logout() {
+            authenticatedSession = null;
+            document.getElementById('mainHeader').classList.add('hidden');
+            document.getElementById('bottomNav').classList.add('hidden');
+            document.getElementById('dashboardView').classList.add('hidden');
+            document.getElementById('authView').classList.remove('hidden');
+        }
 
-            if (mode === 'mine') {
-                btnMine.className = "flex-1 py-1.5 rounded-xl bg-[#9E1220] text-white shadow-sm transition-all flex items-center justify-center gap-1";
-                btnAll.className = "flex-1 py-1.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1";
+        function launchDashboard() {
+            document.getElementById('authView').classList.add('hidden');
+            document.getElementById('mainHeader').classList.remove('hidden');
+            document.getElementById('bottomNav').classList.remove('hidden');
+            document.getElementById('dashboardView').classList.remove('hidden');
+
+            const roleBadge = document.getElementById('headerRoleBadge');
+            const notifBtn = document.getElementById('notificationBellBtn');
+
+            document.getElementById('navBtnReport').classList.add('hidden');
+            document.getElementById('navBtnWorker').classList.add('hidden');
+            document.getElementById('navBtnAdmin').classList.add('hidden');
+
+            if (authenticatedSession.role === 'admin') {
+                roleBadge.innerText = "🛡️ Admin";
+                notifBtn.classList.add('hidden');
+                document.getElementById('navBtnAdmin').classList.remove('hidden');
+                document.getElementById('navBtnAdmin').classList.add('flex');
+                switchTab('admin');
+            } else if (authenticatedSession.role === 'worker') {
+                roleBadge.innerText = "👷 Worker";
+                notifBtn.classList.add('hidden');
+                document.getElementById('navBtnWorker').classList.remove('hidden');
+                document.getElementById('navBtnWorker').classList.add('flex');
+                switchTab('worker');
             } else {
-                btnAll.className = "flex-1 py-1.5 rounded-xl bg-[#9E1220] text-white shadow-sm transition-all flex items-center justify-center gap-1";
-                btnMine.className = "flex-1 py-1.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1";
+                roleBadge.innerText = "👤 Resident";
+                notifBtn.classList.remove('hidden');
+                document.getElementById('navBtnReport').classList.remove('hidden');
+                document.getElementById('navBtnReport').classList.add('flex');
+                switchTab('report');
             }
 
-            renderCitizenComplaints();
+            document.getElementById('drawerUserName').innerText = authenticatedSession.name;
+            document.getElementById('drawerUserId').innerText = `ID: ${authenticatedSession.userId}`;
+
+            refreshComplaintsList();
+            renderWorkerTaskList();
+            renderCitizenHistory();
+            updateUINumbers();
+            renderNotifications();
         }
 
-        // RENDER GRIEVANCES LIST
-        function renderCitizenComplaints() {
-            const list = document.getElementById('citizenGrievancesList');
-            const myBadge = document.getElementById('myReportsCountBadge');
-            const allBadge = document.getElementById('allReportsCountBadge');
-            const resolvedBadge = document.getElementById('userPersonalResolvedBadge');
-
-            // 1. Calculate strictly personal complaints
-            const myPersonalReports = citizenComplaints.filter(item => {
-                return (item.citizenPhone === currentCitizen.phone) || 
-                       (item.citizenName && item.citizenName.toLowerCase() === currentCitizen.name.toLowerCase());
+        function switchTab(tab) {
+            currentTab = tab;
+            ['tabReport', 'tabWorker', 'tabMap', 'tabAdmin'].forEach(t => document.getElementById(t).classList.add('hidden'));
+            ['Report', 'Worker', 'Map', 'Admin'].forEach(b => {
+                const btn = document.getElementById(`navBtn${b}`);
+                if (btn) btn.classList.replace('text-[#9E1220]', 'text-slate-400');
             });
 
-            const myResolvedCount = myPersonalReports.filter(item => item.status === 'Resolved').length;
+            if (tab === 'report') {
+                document.getElementById('tabReport').classList.remove('hidden');
+                document.getElementById('navBtnReport').classList.replace('text-slate-400', 'text-[#9E1220]');
+                renderCitizenHistory();
+                setTimeout(initReportMap, 200);
+            } else if (tab === 'worker') {
+                document.getElementById('tabWorker').classList.remove('hidden');
+                document.getElementById('navBtnWorker').classList.replace('text-slate-400', 'text-amber-600');
+                renderWorkerTaskList();
+            } else if (tab === 'map') {
+                document.getElementById('tabMap').classList.remove('hidden');
+                document.getElementById('navBtnMap').classList.replace('text-slate-400', 'text-[#9E1220]');
+                setTimeout(initLiveExploreMap, 200);
+            } else if (tab === 'admin') {
+                document.getElementById('tabAdmin').classList.remove('hidden');
+                document.getElementById('navBtnAdmin').classList.replace('text-slate-400', 'text-[#9E1220]');
+                refreshComplaintsList();
+            }
+        }
 
-            if (myBadge) myBadge.innerText = myPersonalReports.length;
-            if (allBadge) allBadge.innerText = citizenComplaints.length;
-            if (resolvedBadge) resolvedBadge.innerText = `${myResolvedCount} Cleaned`;
+        /* STRICT DELETION POLICY: ONLY RESOLVED COMPLAINTS CAN BE DELETED */
+        function deleteResolvedComplaint(reportId, requesterRole) {
+            const item = complaints.find(c => c.id === reportId);
+            if (!item) return;
 
-            // 2. Select dataset based on filter
-            const targetList = (activeGrievanceFilter === 'mine') ? myPersonalReports : citizenComplaints;
+            if (item.status !== 'Resolved') {
+                showToast("⚠️ Deletion Restricted! You can only delete complaints that have been Cleaned/Resolved.", true);
+                return;
+            }
 
-            if (targetList.length === 0) {
-                if (activeGrievanceFilter === 'mine') {
-                    list.innerHTML = `
-                        <div class="bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-3xl p-8 text-center space-y-2">
-                            <span class="text-3xl block">📋</span>
-                            <h4 class="text-xs font-bold text-slate-200">You haven't filed any complaints yet!</h4>
-                            <p class="text-[10px] text-slate-500">Go to the Report tab to snap a photo and file your first grievance.</p>
-                        </div>
-                    `;
+            complaints = complaints.filter(c => c.id !== reportId);
+            showToast(`🗑️ Resolved complaint ${reportId} permanently deleted.`);
+
+            // Refresh all interconnected views
+            refreshComplaintsList();
+            renderWorkerTaskList();
+            renderCitizenHistory();
+            updateUINumbers();
+            updateLiveMarkers();
+            renderReportDustbinMarkers();
+        }
+
+        /* NOTIFICATIONS HUB */
+        function notifyCitizen(complaintId, title, desc) {
+            citizenNotifications.unshift({
+                id: `notif-${Date.now()}`,
+                complaintId: complaintId,
+                title: title,
+                desc: desc,
+                time: "Just now",
+                read: false
+            });
+            renderNotifications();
+        }
+
+        function renderNotifications() {
+            const list = document.getElementById('notificationsList');
+            const badge = document.getElementById('notifBadge');
+            if (!list) return;
+
+            const unreadCount = citizenNotifications.filter(n => !n.read).length;
+            if (badge) {
+                if (unreadCount > 0) {
+                    badge.innerText = unreadCount;
+                    badge.classList.remove('hidden');
                 } else {
-                    list.innerHTML = `<div class="text-center py-10 text-xs text-slate-400">No grievances reported across Kopargaon yet.</div>`;
+                    badge.classList.add('hidden');
                 }
+            }
+
+            if (citizenNotifications.length === 0) {
+                list.innerHTML = `<p class="text-xs text-slate-400 text-center py-6">No notifications yet.</p>`;
                 return;
             }
 
             list.innerHTML = "";
-            targetList.forEach(item => {
+            citizenNotifications.forEach(n => {
+                const item = document.createElement('div');
+                item.className = "p-3 rounded-2xl bg-slate-50 dark:bg-rose-950/20 border border-slate-200 dark:border-rose-950/60 space-y-1";
+                item.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="font-black text-xs text-slate-900 dark:text-white">${n.title}</span>
+                        <span class="text-[9px] text-slate-400">${n.time}</span>
+                    </div>
+                    <p class="text-[11px] text-slate-600 dark:text-slate-300 leading-snug">${n.desc}</p>
+                `;
+                list.appendChild(item);
+            });
+        }
+
+        function clearAllNotifications() {
+            citizenNotifications = [];
+            renderNotifications();
+            toggleNotificationsDrawer();
+        }
+
+        /* CITIZEN HISTORY & DELETION UI */
+        function renderCitizenHistory() {
+            const list = document.getElementById('citizenComplaintsHistoryList');
+            if (!list) return;
+            list.innerHTML = "";
+
+            const myComplaints = authenticatedSession && authenticatedSession.userId 
+                ? complaints.filter(c => c.reportedBy === authenticatedSession.userId)
+                : complaints;
+
+            if (myComplaints.length === 0) {
+                list.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">You have not submitted any complaints yet.</p>`;
+                return;
+            }
+
+            myComplaints.forEach(item => {
+                const isResolved = item.status === 'Resolved';
                 const card = document.createElement('div');
-                card.className = "bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-3xl p-4 shadow-sm space-y-2.5";
-
-                let statusColor = "bg-rose-100 text-rose-800";
-                if (item.status === 'Dispatched') statusColor = "bg-amber-100 text-amber-800";
-                if (item.status === 'Resolved') statusColor = "bg-emerald-100 text-emerald-800 font-extrabold";
-
-                const isMyReport = (item.citizenPhone === currentCitizen.phone);
-
+                card.className = "p-3 rounded-2xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950/60 space-y-2";
                 card.innerHTML = `
                     <div class="flex items-center justify-between">
                         <div>
-                            <div class="flex items-center gap-1.5">
-                                <span class="text-[9px] font-bold text-slate-400">${item.id} • ${item.time}</span>
-                                ${isMyReport ? '<span class="text-[8px] font-black bg-rose-900/60 text-rose-200 px-1.5 py-0.2 rounded">Filed by You</span>' : ''}
-                            </div>
-                            <h4 class="font-extrabold text-xs text-slate-900 dark:text-white">${item.landmark}</h4>
+                            <h4 class="font-extrabold text-xs text-slate-900 dark:text-white">${item.locName}</h4>
+                            <span class="text-[9px] text-slate-400">${item.time} • ${item.wasteType}</span>
                         </div>
-                        <span class="text-[9px] font-black px-2 py-0.5 rounded-full ${statusColor}">${item.status}</span>
+                        <span class="text-[9px] font-black px-2 py-0.5 rounded-full ${isResolved ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
+                            ${item.status}
+                        </span>
                     </div>
 
-                    <div class="flex gap-2">
-                        <div class="space-y-1">
-                            <span class="text-[8px] font-bold uppercase text-slate-400">Before</span>
-                            <img src="${item.beforeImage}" class="w-16 h-16 rounded-xl object-cover border border-slate-200 dark:border-rose-950">
-                        </div>
-                        ${item.afterImage ? `
-                            <div class="space-y-1">
-                                <span class="text-[8px] font-bold uppercase text-emerald-500">Cleaned Proof</span>
-                                <img src="${item.afterImage}" class="w-16 h-16 rounded-xl object-cover border-2 border-emerald-500">
-                            </div>
-                        ` : ''}
-                        <div class="text-xs text-slate-600 dark:text-slate-300 flex-1 pl-1 pt-1 space-y-1">
-                            <p class="line-clamp-2">${item.comment}</p>
-                            <span class="text-[9px] font-semibold text-emerald-500 block">${item.geminiVerdict || 'Verified Waste'}</span>
-                            <div class="flex items-center justify-between gap-1 pt-1">
-                                <span class="text-[9px] font-mono text-slate-400 block">${item.coords[0].toFixed(4)}, ${item.coords[1].toFixed(4)}</span>
-                                <a href="https://www.google.com/maps?q=${item.coords[0]},${item.coords[1]}" target="_blank" class="text-[9px] font-bold text-rose-600 dark:text-rose-400 underline">Maps ↗</a>
-                            </div>
-                        </div>
+                    <div class="flex gap-2 items-center">
+                        <img src="${item.image}" onclick="openPhotoLightbox('${item.image}', '${item.locName}', '${item.comment}')" class="w-12 h-12 rounded-xl object-cover border cursor-pointer">
+                        ${item.afterCleanImage ? `<img src="${item.afterCleanImage}" onclick="openPhotoLightbox('${item.afterCleanImage}', 'Cleaned Proof: ${item.locName}', 'Cleared Spot')" class="w-12 h-12 rounded-xl object-cover border border-emerald-500 cursor-pointer" title="Cleaned Spot">` : ''}
+                        <p class="text-[11px] text-slate-600 dark:text-slate-300 flex-1 line-clamp-2">${item.comment}</p>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-1 border-t border-slate-200/60 dark:border-rose-950/60">
+                        ${isResolved ? `
+                            <button onclick="deleteResolvedComplaint('${item.id}', 'citizen')" class="w-full py-1.5 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-extrabold rounded-xl border border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 flex items-center justify-center gap-1">
+                                <span>🗑️ Delete Resolved Complaint</span>
+                            </button>
+                        ` : `
+                            <span class="text-[10px] text-slate-400 font-bold flex items-center gap-1 w-full justify-center">
+                                <span>🔒 Deletion Locked (Can only delete after resolution)</span>
+                            </span>
+                        `}
                     </div>
                 `;
                 list.appendChild(card);
             });
         }
 
-        function switchCitizenTab(tab) {
-            const tabReport = document.getElementById('tabContentReport');
-            const tabTracker = document.getElementById('tabContentTracker');
-            const btnReport = document.getElementById('navReportBtn');
-            const btnTracker = document.getElementById('navTrackerBtn');
+        /* CITIZEN REPORTING & LIVE GPS */
+        function initReportMap() {
+            if (!reportMapInstance) {
+                reportMapInstance = L.map('reportMap', { zoomControl: false }).setView(CITIZEN_DEFAULT_COORDS, 17);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(reportMapInstance);
 
-            if (tab === 'report') {
-                tabReport.classList.remove('hidden');
-                tabTracker.classList.add('hidden');
-                btnReport.className = "flex flex-col items-center gap-0.5 text-[#9E1220] dark:text-rose-400 font-extrabold text-[10px]";
-                btnTracker.className = "flex flex-col items-center gap-0.5 text-slate-400 font-extrabold text-[10px]";
-                setTimeout(() => mapInstance && mapInstance.invalidateSize(), 200);
+                reportMapInstance.on('click', (e) => handleReportMapTap([e.latlng.lat, e.latlng.lng], null));
+                setLiveLocationFromCoords(CITIZEN_DEFAULT_COORDS);
             } else {
-                tabReport.classList.add('hidden');
-                tabTracker.classList.remove('hidden');
-                btnTracker.className = "flex flex-col items-center gap-0.5 text-[#9E1220] dark:text-rose-400 font-extrabold text-[10px]";
-                btnReport.className = "flex flex-col items-center gap-0.5 text-slate-400 font-extrabold text-[10px]";
-                renderCitizenComplaints();
+                reportMapInstance.invalidateSize();
+            }
+            renderReportDustbinMarkers();
+        }
+
+        function setLiveLocationFromCoords(coords) {
+            userLiveCoords = coords;
+            if (!selectedTargetCoords) selectedTargetCoords = coords;
+
+            if (reportMapInstance) {
+                reportMapInstance.setView(coords, 17);
+                if (userRadiusCircle) reportMapInstance.removeLayer(userRadiusCircle);
+                userRadiusCircle = L.circle(coords, {
+                    radius: 100,
+                    color: '#9E1220',
+                    fillColor: '#9E1220',
+                    fillOpacity: 0.15,
+                    weight: 2,
+                    dashArray: '4, 6'
+                }).addTo(reportMapInstance);
+
+                const customGpsIcon = L.divIcon({
+                    html: `<div class="relative flex items-center justify-center">
+                              <span class="absolute inline-flex h-7 w-7 rounded-full bg-emerald-500 opacity-75 animate-ping"></span>
+                              <div class="w-7 h-7 rounded-full bg-emerald-600 border-2 border-white flex items-center justify-center text-white text-[10px] font-black">📍</div>
+                           </div>`,
+                    className: '', iconSize: [28, 28]
+                });
+
+                if (liveGpsMarker) liveGpsMarker.setLatLng(coords);
+                else liveGpsMarker = L.marker(coords, { icon: customGpsIcon }).addTo(reportMapInstance);
             }
         }
+
+        function useCurrentLiveLocation() {
+            setLiveLocationFromCoords(CITIZEN_DEFAULT_COORDS);
+            showToast("📍 Live GPS locked to (19.901689, 74.494780)");
+        }
+
+        function handleReportMapTap(clickedCoords, binObj = null) {
+            const dist = calculateDistanceMeters(userLiveCoords, clickedCoords);
+            if (dist > 100) {
+                showToast(`⚠️ Location restricted! ${Math.round(dist)}m away (>100m limit).`, true);
+                return;
+            }
+            selectedTargetCoords = clickedCoords;
+            selectedBinObj = binObj;
+
+            const customTargetIcon = L.divIcon({
+                html: `<div class="w-7 h-7 rounded-full bg-amber-500 border-2 border-white flex items-center justify-center text-white text-[10px] font-black">🎯</div>`,
+                className: '', iconSize: [28, 28]
+            });
+
+            if (complaintTargetMarker) complaintTargetMarker.setLatLng(clickedCoords);
+            else complaintTargetMarker = L.marker(clickedCoords, { icon: customTargetIcon }).addTo(reportMapInstance);
+
+            const statusText = document.getElementById('selectedBinLabel');
+            if (statusText) statusText.innerText = `📍 Selected: ${binObj ? binObj.name : 'Spot'} (${Math.round(dist)}m away ✓)`;
+            showToast("Spot selected within 100m zone");
+        }
+
+        function renderReportDustbinMarkers() {
+            if (!reportMapInstance) return;
+            reportDustbinMarkers.forEach(m => reportMapInstance.removeLayer(m));
+            reportDustbinMarkers = [];
+
+            MUNICIPAL_BINS.forEach(bin => {
+                const active = complaints.find(c => (c.binId === bin.id || (c.coords[0] === bin.coords[0] && c.coords[1] === bin.coords[1])) && c.status !== 'Resolved');
+                const html = active 
+                    ? `<div class="w-8 h-8 pulsing-red-dustbin flex items-center justify-center text-white text-[11px]">🗑️</div>`
+                    : `<div class="w-7 h-7 rounded-full bg-emerald-600 border-2 border-white text-white text-[10px] flex items-center justify-center">🗑️</div>`;
+
+                const icon = L.divIcon({ html: html, className: '', iconSize: [32, 32] });
+                const marker = L.marker(bin.coords, { icon: icon }).addTo(reportMapInstance);
+                marker.on('click', (e) => {
+                    L.DomEvent.stopPropagation(e);
+                    handleReportMapTap(bin.coords, bin);
+                });
+                reportDustbinMarkers.push(marker);
+            });
+        }
+
+        /* GEMINI AI IMAGE HANDLING */
+        function selectUploadedRoadsidePreset() {
+            attachedPhotoUrl = "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&w=800&q=80";
+            setPhotoAndRunGemini(attachedPhotoUrl, false);
+        }
+
+        function selectPresetPhoto(url, label) {
+            attachedPhotoUrl = url;
+            const isNonWaste = label.includes('Clean Garden');
+            setPhotoAndRunGemini(url, isNonWaste);
+        }
+
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                attachedPhotoUrl = evt.target.result;
+                setPhotoAndRunGemini(attachedPhotoUrl, false);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function setPhotoAndRunGemini(src, isNonWaste) {
+            document.getElementById('photoPlaceholder').classList.add('hidden');
+            document.getElementById('photoPreviewContainer').classList.remove('hidden');
+            document.getElementById('uploadedImagePreview').src = src;
+
+            const overlay = document.getElementById('aiScanOverlay');
+            overlay.classList.remove('hidden');
+
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                const card = document.getElementById('aiAnalysisCard');
+                const title = document.getElementById('aiAnalysisTitle');
+                const badge = document.getElementById('aiConfidenceBadge');
+                const sum = document.getElementById('aiAnalysisSummary');
+
+                card.classList.remove('hidden');
+
+                if (isNonWaste) {
+                    aiAnalysisResult = { isValidWaste: false };
+                    card.className = "rounded-2xl p-3 border bg-rose-500/10 border-rose-500/30 text-rose-950 dark:text-rose-100 space-y-1.5";
+                    title.innerText = "❌ Non-Waste Detected";
+                    badge.innerText = "Clean Area";
+                    sum.innerText = "No real waste or civic overflow detected. Clean space.";
+                    showToast("❌ Image blocked: No garbage detected.", true);
+                } else {
+                    aiAnalysisResult = { isValidWaste: true };
+                    card.className = "rounded-2xl p-3 border bg-emerald-500/10 border-emerald-500/30 text-emerald-950 dark:text-emerald-100 space-y-1.5";
+                    title.innerText = "✓ Gemini Verified Real Waste";
+                    badge.innerText = "96% Real Waste";
+                    sum.innerText = "Roadside solid waste clutter, plastic debris, and overflow verified.";
+                    document.getElementById('issueComments').value = "Gemini verified roadside waste clutter.";
+                    showToast("🤖 Real Waste Verified by Gemini 3 Flash");
+                }
+            }, 1000);
+        }
+
+        function resetPhoto() {
+            attachedPhotoUrl = "";
+            aiAnalysisResult = null;
+            document.getElementById('photoPlaceholder').classList.remove('hidden');
+            document.getElementById('photoPreviewContainer').classList.add('hidden');
+            document.getElementById('aiAnalysisCard').classList.add('hidden');
+        }
+
+        function handlePreviewImageError(img) {
+            img.src = "https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?auto=format&fit=crop&w=800&q=80";
+        }
+
+        function submitReport() {
+            if (!attachedPhotoUrl) {
+                showToast("📸 Photo required!", true);
+                return;
+            }
+            if (aiAnalysisResult && !aiAnalysisResult.isValidWaste) {
+                showToast("❌ Real garbage required! Complaint rejected.", true);
+                return;
+            }
+
+            const targetCoords = selectedTargetCoords || userLiveCoords;
+            const newComplaint = {
+                id: `kpg-${Date.now().toString().slice(-4)}`,
+                binId: selectedBinObj ? selectedBinObj.id : "KPG-SPOT",
+                locName: selectedBinObj ? selectedBinObj.name : `Reported Spot (${targetCoords[0].toFixed(4)}, ${targetCoords[1].toFixed(4)})`,
+                coords: targetCoords,
+                wasteType: selectedWasteType,
+                severity: currentSeverity,
+                comment: document.getElementById('issueComments').value.trim() || "Waste overflow reported.",
+                image: attachedPhotoUrl,
+                afterCleanImage: "",
+                status: "Pending",
+                time: "Just now",
+                reportedBy: authenticatedSession ? authenticatedSession.userId : "saiom"
+            };
+
+            complaints.unshift(newComplaint);
+            userXP += 50;
+            document.getElementById('userXpDisplay').innerText = `${userXP} XP`;
+
+            showToast("✅ Complaint submitted to Municipal Desk! +50 XP");
+            notifyCitizen(newComplaint.id, "📢 Complaint Logged", `Your grievance at ${newComplaint.locName} was received.`);
+
+            resetPhoto();
+            refreshComplaintsList();
+            renderWorkerTaskList();
+            renderCitizenHistory();
+            updateUINumbers();
+            updateLiveMarkers();
+            renderReportDustbinMarkers();
+        }
+
+        /* LIVE MAP WITH PHOTO & PLACE CLEAR VERIFICATION */
+        function initLiveExploreMap() {
+            if (!liveExploreMapInstance) {
+                liveExploreMapInstance = L.map('liveExploreMap', { zoomControl: true }).setView(KOPARGAON_COORDS, 14);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(liveExploreMapInstance);
+            } else {
+                liveExploreMapInstance.invalidateSize();
+            }
+            updateLiveMarkers();
+        }
+
+        function updateLiveMarkers() {
+            if (!liveExploreMapInstance) return;
+            liveMarkersArray.forEach(m => liveExploreMapInstance.removeLayer(m));
+            liveMarkersArray = [];
+
+            complaints.forEach(item => {
+                let pinColor = item.status === 'Resolved' ? 'bg-emerald-600' : (item.status === 'Dispatched' ? 'bg-amber-500' : 'bg-rose-600');
+                let iconChar = item.status === 'Resolved' ? '✓' : '🗑️';
+
+                const icon = L.divIcon({
+                    html: `<div class="w-8 h-8 rounded-full ${pinColor} border-2 border-white text-white flex items-center justify-center text-xs font-black shadow-lg">${iconChar}</div>`,
+                    className: '', iconSize: [32, 32]
+                });
+
+                const marker = L.marker(item.coords, { icon: icon }).addTo(liveExploreMapInstance);
+
+                const popupHtml = `
+                    <div class="p-2 text-slate-900 font-sans max-w-[210px] space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[9px] font-black uppercase text-slate-400">${item.id}</span>
+                            <span class="text-[9px] font-black px-1.5 py-0.5 rounded ${item.status === 'Resolved' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${item.status}</span>
+                        </div>
+                        <h4 class="font-extrabold text-xs leading-tight">${item.locName}</h4>
+                        <img src="${item.status === 'Resolved' && item.afterCleanImage ? item.afterCleanImage : item.image}" class="w-full h-20 object-cover rounded-lg border">
+                        <p class="text-[10px] text-slate-600 leading-tight">${item.comment}</p>
+                        ${item.status === 'Resolved' ? '<div class="text-[10px] font-black text-emerald-700">✨ Verified Place Cleared</div>' : ''}
+                    </div>
+                `;
+                marker.bindPopup(popupHtml);
+                liveMarkersArray.push(marker);
+            });
+        }
+
+        /* WORKER ROUTE ACTIONS */
+        function renderWorkerTaskList() {
+            const container = document.getElementById('workerTaskList');
+            const historyCont = document.getElementById('workerClearedHistoryList');
+            if (!container) return;
+            container.innerHTML = "";
+
+            const pending = complaints.filter(c => c.status !== 'Resolved');
+            const cleared = complaints.filter(c => c.status === 'Resolved');
+
+            if (pending.length === 0) {
+                container.innerHTML = `<div class="text-center py-6 text-xs text-slate-400">🎉 All assigned routes are clean!</div>`;
+            } else {
+                pending.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = "bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-3xl p-4 shadow-sm space-y-3";
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="text-[9px] font-bold text-amber-600">WARD ASSIGNED</span>
+                                <h4 class="font-extrabold text-xs text-slate-900 dark:text-white">${item.locName}</h4>
+                            </div>
+                            <span class="text-[9px] font-black px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">${item.status}</span>
+                        </div>
+                        <div class="flex gap-2.5 items-center">
+                            <img src="${item.image}" class="w-14 h-14 rounded-xl object-cover border">
+                            <div class="text-xs text-slate-600 dark:text-slate-300">
+                                <p class="line-clamp-2">${item.comment}</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 pt-1 border-t border-slate-100 dark:border-rose-950/60">
+                            <a href="https://www.google.com/maps/dir/?api=1&destination=${item.coords[0]},${item.coords[1]}" target="_blank" class="flex-1 py-2 text-center bg-slate-100 dark:bg-rose-950/40 text-xs font-bold rounded-xl">
+                                🧭 Navigate
+                            </a>
+                            <button onclick="openWorkerProofModal('${item.id}')" class="flex-1 py-2 bg-emerald-600 text-white font-black text-xs rounded-xl shadow">
+                                📸 Submit Cleaned Proof
+                            </button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+
+            if (historyCont) {
+                historyCont.innerHTML = "";
+                if (cleared.length === 0) {
+                    historyCont.innerHTML = `<p class="text-xs text-slate-400 text-center py-3">No cleared tasks recorded yet.</p>`;
+                } else {
+                    cleared.forEach(item => {
+                        const itemCard = document.createElement('div');
+                        itemCard.className = "p-3 rounded-2xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950/60 flex items-center justify-between";
+                        itemCard.innerHTML = `
+                            <div>
+                                <h4 class="font-bold text-xs text-slate-900 dark:text-white">${item.locName}</h4>
+                                <span class="text-[9px] text-emerald-600 font-bold">✓ Cleaned & Resolved</span>
+                            </div>
+                            <button onclick="deleteResolvedComplaint('${item.id}', 'worker')" class="p-2 text-xs font-extrabold text-rose-600 hover:bg-rose-100 rounded-xl transition" title="Delete Resolved Record">
+                                🗑️ Delete
+                            </button>
+                        `;
+                        historyCont.appendChild(itemCard);
+                    });
+                }
+            }
+        }
+
+        function openWorkerProofModal(id) {
+            activeWorkerTaskTargetId = id;
+            document.getElementById('workerProofModal').classList.remove('hidden');
+        }
+
+        function closeWorkerProofModal() {
+            document.getElementById('workerProofModal').classList.add('hidden');
+        }
+
+        function selectWorkerPresetCleanProof() {
+            workerProofPhotoUrl = "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=600&q=80";
+            document.getElementById('workerProofImgPreviewContainer').classList.remove('hidden');
+            document.getElementById('workerProofImgPreview').src = workerProofPhotoUrl;
+            showToast("Cleaned spot proof photo attached");
+        }
+
+        function submitWorkerCleanResolution() {
+            const task = complaints.find(c => c.id === activeWorkerTaskTargetId);
+            if (task) {
+                task.status = 'Resolved';
+                task.afterCleanImage = workerProofPhotoUrl || "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=600&q=80";
+                showToast(`✅ ${task.locName} marked as Cleaned!`);
+                notifyCitizen(task.id, "✨ Waste Spot Cleared!", `Sanitation crew has cleared the garbage at ${task.locName}. You can now delete this record if desired.`);
+            }
+            closeWorkerProofModal();
+            renderWorkerTaskList();
+            renderCitizenHistory();
+            refreshComplaintsList();
+            updateUINumbers();
+            updateLiveMarkers();
+            renderReportDustbinMarkers();
+        }
+
+        /* ADMIN DASHBOARD WITH RESOLVED-ONLY DELETION */
+        function refreshComplaintsList() {
+            const list = document.getElementById('adminComplaintsList');
+            if (!list) return;
+            list.innerHTML = "";
+
+            complaints.forEach(c => {
+                const isResolved = c.status === 'Resolved';
+                const card = document.createElement('div');
+                card.className = "bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-3xl p-4 shadow-sm space-y-3";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="text-[9px] font-bold text-slate-400">${c.id}</span>
+                            <h4 class="font-extrabold text-xs text-slate-900 dark:text-white">${c.locName}</h4>
+                        </div>
+                        <span class="text-[10px] font-black px-2 py-0.5 rounded-full ${isResolved ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">${c.status}</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <img src="${c.image}" onclick="openPhotoLightbox('${c.image}', '${c.locName}', '${c.comment}')" class="w-14 h-14 rounded-xl object-cover border cursor-pointer">
+                        ${c.afterCleanImage ? `<img src="${c.afterCleanImage}" onclick="openPhotoLightbox('${c.afterCleanImage}', 'Cleaned Proof: ${c.locName}', 'Spot Verified Cleared')" class="w-14 h-14 rounded-xl object-cover border-2 border-emerald-500 cursor-pointer" title="Cleaned Proof">` : ''}
+                        <div class="text-xs text-slate-600 dark:text-slate-300 flex-1">
+                            <p class="line-clamp-2">${c.comment}</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-2 pt-1 border-t border-slate-100 dark:border-rose-950/60">
+                        ${c.status === 'Pending' ? `
+                            <button onclick="dispatchTruck('${c.id}')" class="flex-1 py-1.5 bg-amber-500 text-white font-black text-[10px] rounded-xl">
+                                🚚 Dispatch Truck
+                            </button>
+                        ` : ''}
+                        ${!isResolved ? `
+                            <button onclick="markAdminCleaned('${c.id}')" class="flex-1 py-1.5 bg-emerald-600 text-white font-black text-[10px] rounded-xl">
+                                ✓ Mark Cleaned
+                            </button>
+                        ` : ''}
+                        ${isResolved ? `
+                            <button onclick="deleteResolvedComplaint('${c.id}', 'admin')" class="flex-1 py-1.5 bg-rose-100 hover:bg-rose-200 text-rose-800 dark:bg-rose-950 dark:text-rose-200 font-extrabold text-[10px] rounded-xl border border-rose-300">
+                                🗑️ Purge Resolved Record
+                            </button>
+                        ` : `
+                            <button disabled title="Only resolved complaints can be deleted" class="px-3 py-1.5 bg-slate-100 dark:bg-rose-950/40 text-slate-400 text-[10px] font-bold rounded-xl cursor-not-allowed">
+                                🔒 Locked
+                            </button>
+                        `}
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+
+        function dispatchTruck(id) {
+            const item = complaints.find(c => c.id === id);
+            if (item) {
+                item.status = 'Dispatched';
+                showToast(`Truck dispatched to ${item.locName}`);
+                notifyCitizen(item.id, "🚚 Sanitation Truck Dispatched", `A municipal team is en route to clean ${item.locName}.`);
+                refreshComplaintsList();
+                renderWorkerTaskList();
+                renderCitizenHistory();
+                updateUINumbers();
+                updateLiveMarkers();
+            }
+        }
+
+        function markAdminCleaned(id) {
+            const item = complaints.find(c => c.id === id);
+            if (item) {
+                item.status = 'Resolved';
+                item.afterCleanImage = "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=600&q=80";
+                showToast(`Alert marked as Cleaned`);
+                notifyCitizen(item.id, "✨ Waste Spot Cleared!", `Your report at ${item.locName} has been resolved.`);
+                refreshComplaintsList();
+                renderWorkerTaskList();
+                renderCitizenHistory();
+                updateUINumbers();
+                updateLiveMarkers();
+                renderReportDustbinMarkers();
+            }
+        }
+
+        function updateUINumbers() {
+            document.getElementById('statTotalComplaints').innerText = complaints.length;
+            document.getElementById('statPendingComplaints').innerText = complaints.filter(c => c.status === 'Pending').length;
+            document.getElementById('statResolvedComplaints').innerText = complaints.filter(c => c.status === 'Resolved').length;
+        }
+
+        function openPhotoLightbox(src, title, comment) {
+            document.getElementById('lightboxImageSrc').src = src;
+            document.getElementById('lightboxLocationTitle').innerText = title;
+            document.getElementById('lightboxComment').innerText = comment;
+            document.getElementById('photoLightboxModal').classList.remove('hidden');
+        }
+
+        function closePhotoLightbox() {
+            document.getElementById('photoLightboxModal').classList.add('hidden');
+        }
+
+        window.onload = () => selectRole('user');
     </script>
 </body>
 </html>
