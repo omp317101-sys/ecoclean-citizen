@@ -31,7 +31,7 @@
         }
     </script>
 
-    <!-- Google Font -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -95,7 +95,7 @@
 </head>
 <body class="h-full bg-[#0F0204] text-slate-800 dark:text-slate-100 antialiased selection:bg-rose-500 selection:text-white">
 
-    <!-- FLOATING TOAST -->
+    <!-- FLOATING TOAST NOTIFICATION -->
     <div id="toastNotification" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 hidden max-w-xs w-full p-3.5 rounded-2xl shadow-2xl text-xs font-extrabold text-center border transition-all pointer-events-none"></div>
 
     <!-- ROOT CONTAINER -->
@@ -122,7 +122,7 @@
                         <span class="text-base">🤖</span> <span>Gemini 3 Flash Real Waste Verification</span>
                     </div>
                     <div class="flex items-center gap-2.5 p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/15">
-                        <span class="text-base">🗑️</span> <span>Secure Deletion (Resolved Tickets Only)</span>
+                        <span class="text-base">🗑️</span> <span>Unified Resolved-Only Ticket Deletion</span>
                     </div>
                 </div>
             </div>
@@ -203,7 +203,7 @@
             </div>
             <div class="p-6 border-t border-slate-100 dark:border-rose-950/60">
                 <button onclick="logout()" class="w-full bg-slate-100 dark:bg-rose-950/60 hover:bg-rose-100 text-rose-700 dark:text-rose-300 font-extrabold py-3 px-4 rounded-2xl flex items-center justify-center gap-2 text-xs">
-                    🚪 Log Out / Exit
+                    🚪 Log Out / Exit Session
                 </button>
             </div>
         </aside>
@@ -266,10 +266,10 @@
             </div>
         </main>
 
-        <!-- VIEW 2: DASHBOARD & WORKFLOWS -->
+        <!-- VIEW 2: DASHBOARDS -->
         <main id="dashboardView" class="hidden flex-1 flex flex-col bg-slate-50 dark:bg-[#0F0204] overflow-y-auto relative pb-20">
 
-            <!-- TAB CONTENT 1: REPORT BIN (CITIZEN PORTAL) -->
+            <!-- TAB 1: CITIZEN PORTAL -->
             <section id="tabReport" class="p-4 space-y-4">
                 <div class="bg-gradient-to-r from-[#8B1220] to-[#5C0A13] text-white p-4 rounded-3xl shadow-lg flex items-center justify-between">
                     <div>
@@ -280,7 +280,6 @@
                     <div class="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-2xl">🏅</div>
                 </div>
 
-                <!-- CITIZEN REPORT FORM -->
                 <div class="space-y-4">
                     <div class="bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-[28px] p-4 shadow-sm space-y-3">
                         <div class="flex items-center justify-between">
@@ -377,7 +376,7 @@
                 </div>
             </section>
 
-            <!-- TAB CONTENT 2: FIELD WORKER DESK -->
+            <!-- TAB 2: WORKER DESK -->
             <section id="tabWorker" class="hidden p-4 space-y-4">
                 <div class="bg-gradient-to-r from-amber-600 via-amber-700 to-amber-900 text-white p-4 rounded-3xl shadow-lg space-y-2">
                     <div class="flex items-center justify-between">
@@ -401,7 +400,7 @@
                     <div id="workerTaskList" class="space-y-3"></div>
                 </div>
 
-                <!-- WORKER RESOLVED HISTORY (CAN DELETE COMPLETED) -->
+                <!-- WORKER RESOLVED HISTORY (CAN DELETE COMPLETED ONLY) -->
                 <div class="space-y-3 pt-2">
                     <div class="flex items-center justify-between">
                         <h3 class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">Cleared Tasks History</h3>
@@ -411,7 +410,7 @@
                 </div>
             </section>
 
-            <!-- TAB CONTENT 3: LIVE MAP EXPLORER -->
+            <!-- TAB 3: LIVE MAP EXPLORER -->
             <section id="tabMap" class="hidden p-4 space-y-3 h-full flex flex-col">
                 <div class="bg-white dark:bg-[#1A0407] p-3 rounded-2xl border border-slate-200 dark:border-rose-950 flex items-center justify-between shadow-sm">
                     <div>
@@ -430,7 +429,7 @@
                 </div>
             </section>
 
-            <!-- TAB CONTENT 4: ADMIN SANITATION DESK -->
+            <!-- TAB 4: ADMIN COMMAND DESK -->
             <section id="tabAdmin" class="hidden p-4 space-y-4">
                 <div class="flex items-center justify-between">
                     <div>
@@ -800,7 +799,6 @@
             complaints = complaints.filter(c => c.id !== reportId);
             showToast(`🗑️ Resolved complaint ${reportId} permanently deleted.`);
 
-            // Refresh all interconnected views
             refreshComplaintsList();
             renderWorkerTaskList();
             renderCitizenHistory();
