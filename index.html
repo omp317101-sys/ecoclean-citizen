@@ -263,7 +263,7 @@
                     </div>
                 </div>
 
-                <!-- TAB 2: GRIEVANCES & TRACKER (WITH "MY COMPLAINTS ONLY" TOGGLE) -->
+                <!-- TAB 2: GRIEVANCES & TRACKER (WITH RESOLVED-ONLY DELETION) -->
                 <div id="tabContentTracker" class="hidden space-y-3">
                     
                     <!-- Citizen Personal Stats Header -->
@@ -279,7 +279,7 @@
                         </div>
                     </div>
 
-                    <!-- Filter Bar: "My Reports Only" vs "All Kopargaon Reports" -->
+                    <!-- Filter Bar -->
                     <div class="bg-slate-100 dark:bg-[#1A0407] p-1 rounded-2xl border border-slate-200 dark:border-rose-950/60 flex text-xs font-extrabold gap-1">
                         <button id="filterMyReportsBtn" onclick="setComplaintFilter('mine')" class="flex-1 py-1.5 rounded-xl bg-[#9E1220] text-white shadow-sm transition-all flex items-center justify-center gap-1">
                             <span>👤</span>
@@ -293,6 +293,7 @@
                         </button>
                     </div>
 
+                    <!-- Dynamic Grievances List -->
                     <div id="citizenGrievancesList" class="space-y-3"></div>
                 </div>
             </main>
@@ -324,13 +325,11 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Realistic Beach Photos
-        const REAL_BEACH_TRASH_IMAGE = "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=800&q=80"; // Coastal shore with plastic refuse
-        const REAL_CLEAN_BEACH_IMAGE = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80"; // Clean sandy shoreline
+        const REAL_BEACH_TRASH_IMAGE = "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=800&q=80";
+        const REAL_CLEAN_BEACH_IMAGE = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80";
 
         const KOPARGAON_DEFAULT = [19.8841, 74.4788];
         
-        // Restore citizen session from localStorage if present
         let currentCitizen = JSON.parse(localStorage.getItem('ecoclean_logged_citizen') || 'null') || { 
             name: "Saiom Resident", 
             phone: "9876543210", 
@@ -345,7 +344,7 @@
         let currentUploadedPhotoUrl = "";
         let currentAiVerification = null;
         let citizenComplaints = [];
-        let activeGrievanceFilter = 'mine'; // Default: shows ONLY complaints filed by this user
+        let activeGrievanceFilter = 'mine';
 
         function showToast(message, isError = false) {
             const toast = document.getElementById('toast');
@@ -395,7 +394,7 @@
                 acquireRealSatelliteGps();
             }, 200);
 
-            // Bind real-time complaints stream from Firebase
+            // Bind real-time complaints stream from Firebase Realtime Database
             db.ref('complaints').on('value', (snapshot) => {
                 const data = snapshot.val();
                 citizenComplaints = data ? Object.values(data).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)) : [];
@@ -578,7 +577,6 @@
             submitBtn.className = "w-full bg-gradient-to-r from-[#9E1220] to-[#540810] text-white font-black py-3.5 px-4 rounded-full shadow-lg text-xs uppercase tracking-wider active:scale-95 transition-all";
         }
 
-        // SUBMIT TO FIREBASE
         function submitCitizenReport() {
             if (!currentUploadedPhotoUrl) {
                 showToast("📸 Photo of garbage is required!", true);
@@ -615,7 +613,7 @@
                     showToast("✅ Grievance saved to your personal ledger!");
                     clearSelectedPhoto();
                     document.getElementById('reportComments').value = "";
-                    setComplaintFilter('mine'); // Automatically switch to "My Reports Only"
+                    setComplaintFilter('mine');
                     switchCitizenTab('tracker');
                 })
                 .catch((err) => {
@@ -623,7 +621,6 @@
                 });
         }
 
-        // FILTER CONTROLLER ("MY REPORTS ONLY" vs "ALL REPORTS")
         function setComplaintFilter(mode) {
             activeGrievanceFilter = mode;
             const btnMine = document.getElementById('filterMyReportsBtn');
@@ -640,6 +637,47 @@
             renderCitizenComplaints();
         }
 
+        /* ============================================================= */
+        /* CITIZEN RESOLVED-ONLY DELETION LOGIC (FIREBASE SYNCED)        */
+        /* ============================================================= */
+        function deleteCitizenResolvedComplaint(reportId) {
+            const target = citizenComplaints.find(c => c.id === reportId);
+            
+            if (!target) {
+                showToast("Complaint not found.", true);
+                return;
+            }
+
+            // Security Check: Ensure only the creator can delete it
+            const isOwner = (target.citizenPhone === currentCitizen.phone) || 
+                            (target.citizenName && target.citizenName.toLowerCase() === currentCitizen.name.toLowerCase());
+
+            if (!isOwner) {
+                showToast("⚠️ Permission Denied: You can only remove your own reports.", true);
+                return;
+            }
+
+            // Strict Validation: Only delete if Resolved
+            if (target.status !== "Resolved") {
+                showToast("🔒 Deletion Locked: Complaints can only be deleted once verified and Cleaned.", true);
+                return;
+            }
+
+            const confirmed = confirm(`Are you sure you want to permanently remove resolved complaint ${reportId}?`);
+            if (!confirmed) return;
+
+            showToast("🗑️ Removing resolved grievance from cloud...");
+
+            // Delete from Firebase Realtime Database
+            db.ref('complaints/' + reportId).remove()
+                .then(() => {
+                    showToast(`✅ Grievance ${reportId} removed from your ledger.`);
+                })
+                .catch((err) => {
+                    showToast("Error deleting: " + err.message, true);
+                });
+        }
+
         // RENDER GRIEVANCES LIST
         function renderCitizenComplaints() {
             const list = document.getElementById('citizenGrievancesList');
@@ -647,7 +685,6 @@
             const allBadge = document.getElementById('allReportsCountBadge');
             const resolvedBadge = document.getElementById('userPersonalResolvedBadge');
 
-            // 1. Calculate strictly personal complaints
             const myPersonalReports = citizenComplaints.filter(item => {
                 return (item.citizenPhone === currentCitizen.phone) || 
                        (item.citizenName && item.citizenName.toLowerCase() === currentCitizen.name.toLowerCase());
@@ -659,7 +696,6 @@
             if (allBadge) allBadge.innerText = citizenComplaints.length;
             if (resolvedBadge) resolvedBadge.innerText = `${myResolvedCount} Cleaned`;
 
-            // 2. Select dataset based on filter
             const targetList = (activeGrievanceFilter === 'mine') ? myPersonalReports : citizenComplaints;
 
             if (targetList.length === 0) {
@@ -682,17 +718,19 @@
                 const card = document.createElement('div');
                 card.className = "bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-3xl p-4 shadow-sm space-y-2.5";
 
-                let statusColor = "bg-rose-100 text-rose-800";
-                if (item.status === 'Dispatched') statusColor = "bg-amber-100 text-amber-800";
-                if (item.status === 'Resolved') statusColor = "bg-emerald-100 text-emerald-800 font-extrabold";
+                let statusColor = "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-200";
+                if (item.status === 'Dispatched') statusColor = "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-200";
+                if (item.status === 'Resolved') statusColor = "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200 font-extrabold";
 
-                const isMyReport = (item.citizenPhone === currentCitizen.phone);
+                const isMyReport = (item.citizenPhone === currentCitizen.phone) ||
+                                   (item.citizenName && item.citizenName.toLowerCase() === currentCitizen.name.toLowerCase());
+                const isResolved = (item.status === 'Resolved');
 
                 card.innerHTML = `
                     <div class="flex items-center justify-between">
                         <div>
                             <div class="flex items-center gap-1.5">
-                                <span class="text-[9px] font-bold text-slate-400">${item.id} • ${item.time}</span>
+                                <span class="text-[9px] font-bold text-slate-400">${item.id} • ${item.time || 'Today'}</span>
                                 ${isMyReport ? '<span class="text-[8px] font-black bg-rose-900/60 text-rose-200 px-1.5 py-0.2 rounded">Filed by You</span>' : ''}
                             </div>
                             <h4 class="font-extrabold text-xs text-slate-900 dark:text-white">${item.landmark}</h4>
@@ -715,10 +753,33 @@
                             <p class="line-clamp-2">${item.comment}</p>
                             <span class="text-[9px] font-semibold text-emerald-500 block">${item.geminiVerdict || 'Verified Waste'}</span>
                             <div class="flex items-center justify-between gap-1 pt-1">
-                                <span class="text-[9px] font-mono text-slate-400 block">${item.coords[0].toFixed(4)}, ${item.coords[1].toFixed(4)}</span>
-                                <a href="https://www.google.com/maps?q=${item.coords[0]},${item.coords[1]}" target="_blank" class="text-[9px] font-bold text-rose-600 dark:text-rose-400 underline">Maps ↗</a>
+                                <span class="text-[9px] font-mono text-slate-400 block">${item.coords ? `${item.coords[0].toFixed(4)}, ${item.coords[1].toFixed(4)}` : ''}</span>
+                                ${item.coords ? `<a href="https://www.google.com/maps?q=${item.coords[0]},${item.coords[1]}" target="_blank" class="text-[9px] font-bold text-rose-600 dark:text-rose-400 underline">Maps ↗</a>` : ''}
                             </div>
                         </div>
+                    </div>
+
+                    <!-- RESOLVED DELETION CONTROL -->
+                    <div class="pt-1.5 border-t border-slate-100 dark:border-rose-950/60">
+                        ${isMyReport ? (
+                            isResolved ? `
+                                <button onclick="deleteCitizenResolvedComplaint('${item.id}')" class="w-full py-2 px-3 bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-extrabold rounded-xl border border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-sm">
+                                    <span>🗑️</span>
+                                    <span>Delete Resolved Complaint From Ledger</span>
+                                </button>
+                            ` : `
+                                <div class="w-full py-1.5 bg-slate-100 dark:bg-[#120305] rounded-xl text-center border border-slate-200/60 dark:border-rose-950/40">
+                                    <span class="text-[10px] text-slate-400 font-bold flex items-center justify-center gap-1">
+                                        <span>🔒</span>
+                                        <span>Deletion Locked (Action available after municipal resolution)</span>
+                                    </span>
+                                </div>
+                            `
+                        ) : `
+                            <div class="text-[9px] text-slate-500 text-right pr-1">
+                                Reported by community member
+                            </div>
+                        `}
                     </div>
                 `;
                 list.appendChild(card);
