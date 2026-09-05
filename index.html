@@ -477,7 +477,7 @@
                     `,
                     className: '', 
                     iconSize: [32, 42], 
-                    iconAnchor: [16, 42] // Crucial: Locks sharp bottom needle tip to coordinate
+                    iconAnchor: [16, 42] // Locks sharp bottom needle tip to coordinate
                 });
 
                 targetPinMarker = L.marker(selectedCoords, { icon: pinIcon, draggable: true }).addTo(mapInstance);
@@ -488,7 +488,7 @@
                     const pos = e.target.getLatLng();
                     selectedCoords = [pos.lat, pos.lng];
                     updateCoordinatesDisplay(pos.lat, pos.lng);
-                    document.getElementById('geoStatusLabel').innerHTML = `📍 Pin dropped: <span class="text-rose-400 font-mono">${pos.lat.toFixed(6)}, ${pos.lng.toFixed(6)}</span>`;
+                    document.getElementById('geoStatusLabel').innerText = "📍 Pin dropped";
                 });
 
                 // Relocate needle tip directly to any tapped point on the map
@@ -496,7 +496,7 @@
                     selectedCoords = [e.latlng.lat, e.latlng.lng];
                     targetPinMarker.setLatLng(e.latlng);
                     updateCoordinatesDisplay(e.latlng.lat, e.latlng.lng);
-                    document.getElementById('geoStatusLabel').innerHTML = `📍 Pin placed at tapped location.`;
+                    document.getElementById('geoStatusLabel').innerText = "📍 Pin placed";
                 });
 
             } else {
@@ -504,18 +504,16 @@
             }
         }
 
+        // Streamlined acquire GPS without long popup notifications
         function acquireRealSatelliteGps() {
             if (!navigator.geolocation) return;
             const btnText = document.getElementById('gpsBtnText');
             if (btnText) btnText.innerText = "🛰️ Connecting...";
-            const label = document.getElementById('geoStatusLabel');
-            if (label) label.innerText = "🛰️ Locking satellite coordinates...";
 
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
                     const lat = pos.coords.latitude;
                     const lng = pos.coords.longitude;
-                    const accuracy = Math.round(pos.coords.accuracy);
 
                     selectedCoords = [lat, lng];
                     updateCoordinatesDisplay(lat, lng);
@@ -525,12 +523,14 @@
                         mapInstance.setView(selectedCoords, 18, { animate: true });
                     }
 
-                    if (btnText) btnText.innerText = "✓ Satellite GPS Locked";
-                    if (label) label.innerHTML = `✅ <strong class="text-emerald-500">Live GPS Locked!</strong> (±${accuracy}m)`;
+                    if (btnText) btnText.innerText = "✓ GPS Active";
+                    const label = document.getElementById('geoStatusLabel');
+                    if (label) label.innerText = "📍 Location locked";
                 },
                 (err) => { 
                     if (btnText) btnText.innerText = "🛰️ Retry GPS"; 
-                    if (label) label.innerText = "⚠️ GPS timeout. Tap on map to pin spot manually.";
+                    const label = document.getElementById('geoStatusLabel');
+                    if (label) label.innerText = "⚠️ Tap on map to pin spot manually";
                 },
                 { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
             );
@@ -551,7 +551,7 @@
                         targetPinMarker.setLatLng(selectedCoords);
                         mapInstance.setView(selectedCoords, 18, { animate: true });
                     }
-                    document.getElementById('geoStatusLabel').innerHTML = `📍 Found: <strong class="text-white">${query}</strong>`;
+                    document.getElementById('geoStatusLabel').innerText = "📍 Location found";
                 }
             } catch (e) {}
         }
@@ -817,7 +817,6 @@
                         </div>
                     </div>
 
-                    <!-- Bottom Action: Conditional Delete Button -->
                     <div class="pt-2 border-t border-slate-100 dark:border-rose-950/40 flex items-center justify-between">
                         ${isResolved ? `
                             <button onclick="deleteResolvedComplaint('${item.id}')" class="w-full py-2 bg-rose-950/40 hover:bg-rose-900 border border-rose-800 text-rose-300 font-extrabold text-[10px] rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-all">
