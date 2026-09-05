@@ -182,12 +182,12 @@
 
                         <div class="p-3 bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950/60 rounded-2xl text-center space-y-2">
                             <span class="text-[11px] font-extrabold text-[#9E1220] dark:text-rose-400 block" id="geoStatusLabel">
-                                📍 Move map or tap "Lock Satellite GPS" to pinpoint.
+                                📍 Ready. Tap "Lock Satellite GPS" or drag the red pin.
                             </span>
 
                             <div class="p-2 bg-rose-50/50 dark:bg-rose-950/30 rounded-xl border border-rose-200 dark:border-rose-900/60 flex items-center justify-between gap-2">
                                 <div class="text-left">
-                                    <span class="text-[9px] font-black uppercase tracking-wider text-slate-400 block">Target Spot Coordinates</span>
+                                    <span class="text-[9px] font-black uppercase tracking-wider text-slate-400 block">Locked Coordinates</span>
                                     <span id="currentCoordinatesText" class="text-xs font-mono font-black text-rose-700 dark:text-rose-300">
                                         19.884100, 74.478800
                                     </span>
@@ -324,7 +324,7 @@
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Authentic Beach Test Photos
+        // Authentic Beach Photos
         const REAL_BEACH_TRASH_IMAGE = "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=800&q=80";
         const REAL_CLEAN_BEACH_IMAGE = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80";
 
@@ -340,13 +340,13 @@
         let targetPinMarker = null;
         let selectedCoords = KOPARGAON_DEFAULT;
         let activeWatchId = null;
+        let isGpsLocked = false; // Prevents map zoom from altering user's location
 
         let currentUploadedPhotoUrl = "";
         let currentAiVerification = null;
         let citizenComplaints = [];
-        let activeGrievanceFilter = 'mine'; // Default: view only reports filed by this resident
+        let activeGrievanceFilter = 'mine';
 
-        // Formats epoch timestamp into readable string with exact date and time
         function formatDateTime(timestamp) {
             if (!timestamp) return "Date unavailable";
             const d = new Date(timestamp);
@@ -375,8 +375,24 @@
             document.getElementById('themeIcon').innerText = isDark ? "☀️" : "🌙";
         }
 
-        function zoomInMap() { if (mapInstance) mapInstance.zoomIn(); }
-        function zoomOutMap() { if (mapInstance) mapInstance.zoomOut(); }
+        // FIXED: Zoom functions now preserve coordinates and center around the pinned spot
+        function zoomInMap() { 
+            if (mapInstance) {
+                mapInstance.zoomIn();
+                if (isGpsLocked) {
+                    mapInstance.panTo(selectedCoords);
+                }
+            } 
+        }
+
+        function zoomOutMap() { 
+            if (mapInstance) {
+                mapInstance.zoomOut();
+                if (isGpsLocked) {
+                    mapInstance.panTo(selectedCoords);
+                }
+            } 
+        }
 
         function openCurrentInGoogleMaps() {
             window.open(`https://www.google.com/maps?q=${selectedCoords[0]},${selectedCoords[1]}`, '_blank');
@@ -408,7 +424,6 @@
                 acquireRealSatelliteGps();
             }, 200);
 
-            // Bind real-time complaints stream from Firebase
             db.ref('complaints').on('value', (snapshot) => {
                 const data = snapshot.val();
                 citizenComplaints = data ? Object.values(data).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)) : [];
@@ -423,38 +438,59 @@
             document.getElementById('authSection').classList.remove('hidden');
         }
 
+        // FIXED: Initialized with draggable marker and separated from zoom events
         function initMap() {
             if (!mapInstance) {
-                mapInstance = L.map('citizenReportMap', { zoomControl: false, scrollWheelZoom: true, touchZoom: true, dragging: true }).setView(selectedCoords, 17);
+                mapInstance = L.map('citizenReportMap', { 
+                    zoomControl: false, 
+                    scrollWheelZoom: true, 
+                    touchZoom: true, 
+                    dragging: true 
+                }).setView(selectedCoords, 17);
+
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapInstance);
 
                 const pinIcon = L.divIcon({
-                    html: `<div class="bg-rose-600 text-white p-1.5 rounded-full shadow-2xl border-2 border-white pulsing-gps-pin flex items-center justify-center">
+                    html: `<div class="bg-rose-600 text-white p-1.5 rounded-full shadow-2xl border-2 border-white pulsing-gps-pin flex items-center justify-center cursor-pointer">
                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path></svg>
                            </div>`,
                     className: '', iconSize: [34, 34], iconAnchor: [17, 34]
                 });
 
-                targetPinMarker = L.marker(selectedCoords, { icon: pinIcon }).addTo(mapInstance);
+                // Marker is draggable so citizens can fine-tune location without drifting on zoom
+                targetPinMarker = L.marker(selectedCoords, { icon: pinIcon, draggable: true }).addTo(mapInstance);
                 updateCoordinatesDisplay(selectedCoords[0], selectedCoords[1]);
 
-                mapInstance.on('move', () => {
-                    const center = mapInstance.getCenter();
-                    selectedCoords = [center.lat, center.lng];
-                    if (targetPinMarker) targetPinMarker.setLatLng(center);
-                    updateCoordinatesDisplay(center.lat, center.lng);
+                // When user manually drags the pin
+                targetPinMarker.on('dragend', (e) => {
+                    const pos = e.target.getLatLng();
+                    selectedCoords = [pos.lat, pos.lng];
+                    updateCoordinatesDisplay(pos.lat, pos.lng);
+                    isGpsLocked = false; // User manually chose a specific spot
+                    document.getElementById('geoStatusLabel').innerHTML = `📍 Spot custom pinned: <span class="text-rose-400 font-mono">${pos.lat.toFixed(5)}, ${pos.lng.toFixed(5)}</span>`;
+                });
+
+                // ONLY update location on deliberate map drag, NEVER on zoom
+                mapInstance.on('dragend', () => {
+                    if (!isGpsLocked) {
+                        const center = mapInstance.getCenter();
+                        selectedCoords = [center.lat, center.lng];
+                        if (targetPinMarker) targetPinMarker.setLatLng(center);
+                        updateCoordinatesDisplay(center.lat, center.lng);
+                    }
                 });
             } else {
                 mapInstance.invalidateSize();
             }
         }
 
+        // FIXED: Hard lock GPS coordinates to prevent movement on zoom
         function acquireRealSatelliteGps() {
             if (!navigator.geolocation) return;
             const btnText = document.getElementById('gpsBtnText');
-            if (btnText) btnText.innerText = "🛰️ Connecting to Satellites...";
+            if (btnText) btnText.innerText = "🛰️ Connecting to GPS...";
             const label = document.getElementById('geoStatusLabel');
-            if (label) label.innerText = "🛰️ Polling GPS satellite hardware...";
+            if (label) label.innerText = "🛰️ Querying device satellite hardware...";
 
             if (activeWatchId !== null) navigator.geolocation.clearWatch(activeWatchId);
 
@@ -466,7 +502,9 @@
 
                     if (accuracy > 150) return;
 
+                    // Hard lock coordinates
                     selectedCoords = [lat, lng];
+                    isGpsLocked = true;
                     updateCoordinatesDisplay(lat, lng);
 
                     if (mapInstance) {
@@ -475,14 +513,17 @@
                     }
 
                     if (btnText) btnText.innerText = "✓ Satellite GPS Locked";
-                    if (label) label.innerHTML = `✅ <strong class="text-emerald-500">Satellite GPS Locked!</strong> (±${accuracy}m)`;
+                    if (label) label.innerHTML = `✅ <strong class="text-emerald-500">Live GPS Location Locked!</strong> (±${accuracy}m) <span class="text-slate-400 text-[10px] block font-normal">Zoom in/out safely — location pin is anchored.</span>`;
 
                     if (accuracy <= 30) {
                         navigator.geolocation.clearWatch(activeWatchId);
                         activeWatchId = null;
                     }
                 },
-                () => { if (btnText) btnText.innerText = "🛰️ Retry GPS"; },
+                () => { 
+                    if (btnText) btnText.innerText = "🛰️ Retry GPS"; 
+                    if (label) label.innerText = "⚠️ GPS timeout. Move pin manually.";
+                },
                 { enableHighAccuracy: true, timeout: 25000, maximumAge: 0 }
             );
         }
@@ -497,9 +538,11 @@
                     const lat = parseFloat(data[0].lat);
                     const lon = parseFloat(data[0].lon);
                     selectedCoords = [lat, lon];
+                    isGpsLocked = false;
                     updateCoordinatesDisplay(lat, lon);
                     mapInstance.setView([lat, lon], 18, { animate: true });
                     if (targetPinMarker) targetPinMarker.setLatLng(selectedCoords);
+                    document.getElementById('geoStatusLabel').innerHTML = `📍 Found: <strong class="text-white">${query}</strong>`;
                 }
             } catch (e) {}
         }
@@ -591,7 +634,6 @@
             submitBtn.className = "w-full bg-gradient-to-r from-[#9E1220] to-[#540810] text-white font-black py-3.5 px-4 rounded-full shadow-lg text-xs uppercase tracking-wider active:scale-95 transition-all";
         }
 
-        // SUBMIT TO FIREBASE WITH TIMESTAMP
         function submitCitizenReport() {
             if (!currentUploadedPhotoUrl) {
                 showToast("📸 Photo of garbage is required!", true);
@@ -638,7 +680,6 @@
                 });
         }
 
-        // DELETE ACTION: Allowed ONLY for Resolved complaints
         function deleteResolvedComplaint(complaintId) {
             const target = citizenComplaints.find(c => c.id === complaintId);
             if (!target) return;
@@ -659,7 +700,6 @@
             }
         }
 
-        // FILTER CONTROLLER ("MY REPORTS ONLY" vs "ALL REPORTS")
         function setComplaintFilter(mode) {
             activeGrievanceFilter = mode;
             const btnMine = document.getElementById('filterMyReportsBtn');
@@ -676,7 +716,6 @@
             renderCitizenComplaints();
         }
 
-        // RENDER GRIEVANCES LIST WITH DYNAMIC CONDITIONAL DELETE BUTTON
         function renderCitizenComplaints() {
             const list = document.getElementById('citizenGrievancesList');
             const myBadge = document.getElementById('myReportsCountBadge');
@@ -732,7 +771,6 @@
                                 <span class="text-[10px] font-black font-mono text-slate-400">${item.id}</span>
                                 ${isMyReport ? '<span class="text-[8px] font-black bg-rose-900/60 text-rose-200 px-1.5 py-0.2 rounded">Filed by You</span>' : ''}
                             </div>
-                            <!-- Exact Filed Time -->
                             <span class="text-[9px] font-bold text-rose-600 dark:text-rose-400 block mt-0.5">
                                 🕒 Filed: ${filedDateString}
                             </span>
@@ -770,7 +808,6 @@
                         </div>
                     </div>
 
-                    <!-- Bottom Action: Conditional Delete Button -->
                     <div class="pt-2 border-t border-slate-100 dark:border-rose-950/40 flex items-center justify-between">
                         ${isResolved ? `
                             <button onclick="deleteResolvedComplaint('${item.id}')" class="w-full py-2 bg-rose-950/40 hover:bg-rose-900 border border-rose-800 text-rose-300 font-extrabold text-[10px] rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-all">
