@@ -137,7 +137,7 @@
                         <input type="tel" id="citizenInputPhone" value="9876543210" pattern="[0-9]{10}" required class="w-full mt-1 px-4 py-2.5 text-xs font-bold rounded-2xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 focus:outline-none focus:ring-2 focus:ring-rose-500">
                     </div>
                     <div>
-                        <label class="text-[10px] font-black uppercase text-slate-400">City Name</label>
+                        <label class="text-[10px] font-black uppercase text-slate-400">Municipality / City</label>
                         <input type="text" id="citizenInputCity" value="City" required class="w-full mt-1 px-4 py-2.5 text-xs font-bold rounded-2xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 focus:outline-none focus:ring-2 focus:ring-rose-500">
                     </div>
                     <button type="submit" class="w-full bg-gradient-to-r from-[#9E1220] to-[#540810] text-white font-extrabold py-3.5 rounded-2xl shadow-lg text-xs uppercase tracking-wider active:scale-95 transition-all">
@@ -191,7 +191,7 @@
                         </div>
 
                         <div class="flex gap-2">
-                            <input type="text" id="landmarkSearchInput" placeholder="Search City street or colony..." class="flex-1 px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 focus:outline-none focus:ring-1 focus:ring-rose-500">
+                            <input type="text" id="landmarkSearchInput" placeholder="Search street, area or landmark..." class="flex-1 px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 focus:outline-none focus:ring-1 focus:ring-rose-500">
                             <button type="button" onclick="searchCityStreet()" class="px-3 py-2 bg-[#9E1220] text-white text-xs font-bold rounded-xl active:scale-95 transition-all">
                                 🔍 Find
                             </button>
@@ -356,7 +356,14 @@
 
         const CITY_DEFAULT = [19.8841, 74.4788];
         
-        let currentCitizen = JSON.parse(localStorage.getItem('ecoclean_logged_citizen') || 'null') || { 
+        // Purge old Kopargaon session if found in storage
+        let savedSession = JSON.parse(localStorage.getItem('ecoclean_logged_citizen') || 'null');
+        if (savedSession && (savedSession.city === 'Kopargaon' || savedSession.name.includes('Kopargaon'))) {
+            savedSession.city = 'City';
+            localStorage.setItem('ecoclean_logged_citizen', JSON.stringify(savedSession));
+        }
+
+        let currentCitizen = savedSession || { 
             name: "Saiom Resident", 
             phone: "9876543210", 
             city: "City" 
@@ -370,6 +377,12 @@
         let currentAiVerification = null;
         let citizenComplaints = [];
         let activeGrievanceFilter = 'mine';
+
+        // Helper that cleans old database entries still containing "Kopargaon"
+        function sanitizeText(txt) {
+            if (!txt) return "";
+            return txt.replace(/kopargaon/gi, "City");
+        }
 
         function formatDateTime(timestamp) {
             if (!timestamp) return "Date unavailable";
@@ -399,7 +412,6 @@
             document.getElementById('themeIcon').innerText = isDark ? "☀️" : "🌙";
         }
 
-        // Pure Zoom: Anchors remain fixed at selectedCoords
         function zoomInMap() { 
             if (mapInstance) mapInstance.zoomIn(); 
         }
@@ -421,9 +433,9 @@
             e.preventDefault();
             const name = document.getElementById('citizenInputName').value.trim();
             const phone = document.getElementById('citizenInputPhone').value.trim();
-            const city = document.getElementById('citizenInputCity').value.trim();
+            const city = document.getElementById('citizenInputCity').value.trim() || 'City';
 
-            if (!name || !phone || !city) return;
+            if (!name || !phone) return;
             currentCitizen = { name, phone, city };
             localStorage.setItem('ecoclean_logged_citizen', JSON.stringify(currentCitizen));
 
@@ -451,7 +463,6 @@
             document.getElementById('authSection').classList.remove('hidden');
         }
 
-        // PHYSICAL NEEDLE ANCHOR IMPLEMENTATION: Pin stays strictly anchored on zoom
         function initMap() {
             if (!mapInstance) {
                 mapInstance = L.map('citizenReportMap', { 
@@ -463,7 +474,6 @@
 
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapInstance);
 
-                // Exact teardrop needle with iconAnchor matching the bottom center needle tip [16, 42]
                 const pinIcon = L.divIcon({
                     html: `
                         <div class="pin-marker-container">
@@ -477,13 +487,12 @@
                     `,
                     className: '', 
                     iconSize: [32, 42], 
-                    iconAnchor: [16, 42] // Locks sharp bottom needle tip to coordinate
+                    iconAnchor: [16, 42]
                 });
 
                 targetPinMarker = L.marker(selectedCoords, { icon: pinIcon, draggable: true }).addTo(mapInstance);
                 updateCoordinatesDisplay(selectedCoords[0], selectedCoords[1]);
 
-                // Update coordinates ONLY when user explicitly drags the pin
                 targetPinMarker.on('dragend', (e) => {
                     const pos = e.target.getLatLng();
                     selectedCoords = [pos.lat, pos.lng];
@@ -491,7 +500,6 @@
                     document.getElementById('geoStatusLabel').innerText = "📍 Pin dropped";
                 });
 
-                // Relocate needle tip directly to any tapped point on the map
                 mapInstance.on('click', (e) => {
                     selectedCoords = [e.latlng.lat, e.latlng.lng];
                     targetPinMarker.setLatLng(e.latlng);
@@ -504,7 +512,6 @@
             }
         }
 
-        // Streamlined acquire GPS without long popup notifications
         function acquireRealSatelliteGps() {
             if (!navigator.geolocation) return;
             const btnText = document.getElementById('gpsBtnText');
@@ -540,7 +547,7 @@
             const query = document.getElementById('landmarkSearchInput').value.trim();
             if (!query) return;
             try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ', Maharashtra')}`);
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
                 const data = await res.json();
                 if (data && data.length > 0) {
                     const lat = parseFloat(data[0].lat);
@@ -653,7 +660,7 @@
                 return;
             }
 
-            const comments = document.getElementById('reportComments').value.trim() || "Waste overflow reported at spot.";
+            const comments = sanitizeText(document.getElementById('reportComments').value.trim()) || "Waste overflow reported at spot.";
             const reportId = `CITY-${Math.floor(1000 + Math.random() * 9000)}`;
             const now = Date.now();
 
@@ -661,7 +668,7 @@
                 id: reportId,
                 citizenName: currentCitizen.name,
                 citizenPhone: currentCitizen.phone,
-                landmark: `${currentCitizen.city} Spot (${selectedCoords[0].toFixed(4)}, ${selectedCoords[1].toFixed(4)})`,
+                landmark: `City Spot (${selectedCoords[0].toFixed(4)}, ${selectedCoords[1].toFixed(4)})`,
                 coords: selectedCoords,
                 comment: comments,
                 beforeImage: currentUploadedPhotoUrl,
@@ -772,6 +779,7 @@
                 const isResolved = (item.status === 'Resolved');
                 const filedDateString = item.filedAtFormatted || (item.timestamp ? formatDateTime(item.timestamp) : item.time || "Recently");
                 const resolvedDateString = item.resolvedAt ? formatDateTime(item.resolvedAt) : null;
+                const cleanLandmark = sanitizeText(item.landmark);
 
                 card.innerHTML = `
                     <div class="flex items-start justify-between gap-2 border-b border-slate-100 dark:border-rose-950/40 pb-2">
@@ -787,7 +795,7 @@
                         <span class="text-[9px] font-black px-2.5 py-0.5 rounded-full border border-current ${statusColor}">${item.status}</span>
                     </div>
 
-                    <h4 class="font-extrabold text-xs text-slate-900 dark:text-white">${item.landmark}</h4>
+                    <h4 class="font-extrabold text-xs text-slate-900 dark:text-white">${cleanLandmark}</h4>
 
                     <div class="flex gap-2.5">
                         <div class="space-y-1">
@@ -801,7 +809,7 @@
                             </div>
                         ` : ''}
                         <div class="text-xs text-slate-600 dark:text-slate-300 flex-1 pl-1 space-y-1">
-                            <p class="line-clamp-2">${item.comment}</p>
+                            <p class="line-clamp-2">${sanitizeText(item.comment)}</p>
                             <span class="text-[9px] font-semibold text-emerald-500 block">${item.geminiVerdict || 'Verified Solid Waste'}</span>
                             
                             ${resolvedDateString ? `
