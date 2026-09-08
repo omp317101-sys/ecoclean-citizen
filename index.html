@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EcoClean City - Citizen Sanitation Portal</title>
+    <title>EcoClean City - Citizen Portal</title>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -13,13 +13,14 @@
             theme: {
                 extend: {
                     colors: {
-                        crimson: {
-                            50: '#FDF2F3',
-                            100: '#FBE6E8',
-                            500: '#D32F2F',
-                            700: '#9E1220',
-                            800: '#750B16',
-                            900: '#540810'
+                        ecoGreen: {
+                            50: '#F2FAF4',
+                            100: '#E1F5E6',
+                            500: '#2E7D32',
+                            600: '#1B5E20',
+                            700: '#154A19',
+                            800: '#0E3612',
+                            900: '#08230B'
                         }
                     },
                     fontFamily: {
@@ -46,7 +47,7 @@
     <style>
         html, body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #0A0B0E;
+            background-color: #06170A;
             color: #1E293B;
             height: 100%;
         }
@@ -57,7 +58,13 @@
             z-index: 1;
         }
 
-        /* Fixed Teardrop Pin Anatomy (Locks Needle Tip to Geographic Point) */
+        .hero-bg {
+            background-image: linear-gradient(to bottom, rgba(6, 23, 10, 0.82), rgba(8, 35, 11, 0.94)), 
+                              url('https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=1200&q=80');
+            background-size: cover;
+            background-position: center;
+        }
+
         .pin-marker-container {
             width: 32px;
             height: 42px;
@@ -70,7 +77,7 @@
         .pin-head {
             width: 32px;
             height: 32px;
-            background: #D32F2F;
+            background: #1B5E20;
             border: 2.5px solid #ffffff;
             border-radius: 50%;
             display: flex;
@@ -86,9 +93,18 @@
             height: 0;
             border-left: 6px solid transparent;
             border-right: 6px solid transparent;
-            border-top: 10px solid #D32F2F;
+            border-top: 10px solid #1B5E20;
             margin-top: -3px;
             z-index: 1;
+        }
+
+        .bin-critical-pulse {
+            animation: pulse-ring 1.5s infinite cubic-bezier(0.66, 0, 0, 1);
+        }
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.85); transform: scale(0.96); }
+            70% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); transform: scale(1.05); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); transform: scale(0.96); }
         }
 
         @keyframes laserScan {
@@ -101,65 +117,81 @@
         }
     </style>
 </head>
-<body class="h-full bg-[#0F0204] text-slate-800 dark:text-slate-100 antialiased selection:bg-rose-600 selection:text-white flex justify-center">
+<body class="h-full bg-[#06170A] text-slate-800 dark:text-slate-100 antialiased selection:bg-emerald-600 selection:text-white flex justify-center">
 
     <!-- Toast Notification -->
     <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 hidden max-w-xs w-full p-3.5 rounded-2xl shadow-2xl text-xs font-bold text-center border transition-all pointer-events-none"></div>
 
-    <div id="appContainer" class="w-full max-w-md h-full min-h-screen bg-white dark:bg-[#140306] shadow-2xl relative flex flex-col overflow-x-hidden border-x border-slate-200 dark:border-rose-950/40">
+    <div id="appContainer" class="w-full max-w-md h-full min-h-screen bg-white dark:bg-[#0A1D0E] shadow-2xl relative flex flex-col overflow-x-hidden border-x border-slate-200 dark:border-emerald-950/40">
 
         <!-- ================= AUTH VIEW ================= -->
-        <main id="authSection" class="flex-1 flex flex-col justify-between bg-gradient-to-b from-[#8B1220] via-[#5C0A13] to-[#2E0308] text-white p-6">
-            <div class="pt-8 text-center space-y-2">
-                <div class="w-16 h-16 mx-auto rounded-3xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-3xl shadow-xl">
-                    ♻️
+        <main id="authSection" class="flex-1 flex flex-col justify-between hero-bg text-white p-6 relative">
+            <div class="pt-6 text-center space-y-3 relative z-10">
+                <div class="w-24 h-24 mx-auto rounded-full bg-white p-1 shadow-2xl border-2 border-emerald-400/50 flex items-center justify-center overflow-hidden">
+                    <img src="logo.png" onerror="this.onerror=null; this.src='https://api.iconify.design/fluent-emoji:wastebasket.svg';" alt="EcoClean City Logo" class="w-full h-full object-contain">
                 </div>
-                <h1 class="text-2xl font-black tracking-tight">EcoClean City</h1>
-                <p class="text-xs text-rose-200/80 font-medium">Citizen Sanitation Portal (AI Verified)</p>
+
+                <div>
+                    <h1 class="text-2xl font-extrabold tracking-tight text-white">
+                        EcoClean City
+                    </h1>
+                    <p class="text-[11px] text-emerald-200/90 tracking-wider uppercase font-bold mt-0.5">
+                        Cleaner Spaces • Brighter Tomorrows
+                    </p>
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-[10px] text-emerald-300 font-semibold mt-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Citizen Waste Monitoring Grid
+                    </div>
+                </div>
             </div>
 
-            <div class="bg-white dark:bg-[#1A0407] text-slate-800 dark:text-slate-100 rounded-3xl p-6 shadow-2xl border border-white/10 my-auto space-y-4">
-                <div class="flex items-center justify-between border-b pb-3 border-slate-100 dark:border-rose-950/50">
+            <!-- Citizen Login Card -->
+            <div class="bg-[#0b2410]/85 backdrop-blur-xl text-slate-100 rounded-3xl p-6 shadow-2xl border border-emerald-500/25 my-auto space-y-4 relative z-10">
+                <div class="flex items-center justify-between border-b pb-3 border-emerald-900/60">
                     <div>
-                        <h2 class="text-sm font-black text-slate-900 dark:text-white">Resident Sign In</h2>
-                        <p class="text-[11px] text-slate-400">Report & manage your grievances history</p>
+                        <h2 class="text-sm font-black text-white">Citizen Portal</h2>
+                        <p class="text-[11px] text-emerald-300/80">Report garbage & monitor municipal smart bins</p>
                     </div>
-                    <span class="text-[10px] bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 font-extrabold px-2.5 py-1 rounded-full">Live Cloud</span>
+                    <span class="text-[10px] bg-emerald-500/20 text-emerald-300 font-extrabold px-2.5 py-1 rounded-full border border-emerald-500/30">Live Grid</span>
                 </div>
 
                 <form onsubmit="handleCitizenLogin(event)" class="space-y-3 pt-1">
                     <div>
-                        <label class="text-[10px] font-black uppercase text-slate-400">Full Name / Citizen ID</label>
-                        <input type="text" id="citizenInputName" value="Saiom Resident" required class="w-full mt-1 px-4 py-2.5 text-xs font-bold rounded-2xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 focus:outline-none focus:ring-2 focus:ring-rose-500">
+                        <label class="text-[10px] font-black uppercase text-emerald-300/80">Full Name</label>
+                        <input type="text" id="citizenInputName" value="Citizen User" required class="w-full mt-1 px-4 py-2.5 text-xs font-bold rounded-2xl bg-black/40 border border-emerald-900/80 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                     <div>
-                        <label class="text-[10px] font-black uppercase text-slate-400">Phone Number (Tracks your history)</label>
-                        <input type="tel" id="citizenInputPhone" value="9876543210" pattern="[0-9]{10}" required class="w-full mt-1 px-4 py-2.5 text-xs font-bold rounded-2xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 focus:outline-none focus:ring-2 focus:ring-rose-500">
+                        <label class="text-[10px] font-black uppercase text-emerald-300/80">Phone Number (Tracks your complaints)</label>
+                        <input type="tel" id="citizenInputPhone" value="9876543210" pattern="[0-9]{10}" required class="w-full mt-1 px-4 py-2.5 text-xs font-bold rounded-2xl bg-black/40 border border-emerald-900/80 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                     <div>
-                        <label class="text-[10px] font-black uppercase text-slate-400">Municipality / City</label>
-                        <input type="text" id="citizenInputCity" value="City" required class="w-full mt-1 px-4 py-2.5 text-xs font-bold rounded-2xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 focus:outline-none focus:ring-2 focus:ring-rose-500">
+                        <label class="text-[10px] font-black uppercase text-emerald-300/80">City / Location</label>
+                        <input type="text" id="citizenInputCity" value="Main City Center" required class="w-full mt-1 px-4 py-2.5 text-xs font-bold rounded-2xl bg-black/40 border border-emerald-900/80 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
-                    <button type="submit" class="w-full bg-gradient-to-r from-[#9E1220] to-[#540810] text-white font-extrabold py-3.5 rounded-2xl shadow-lg text-xs uppercase tracking-wider active:scale-95 transition-all">
+                    <button type="submit" class="w-full bg-gradient-to-r from-emerald-600 to-ecoGreen-600 hover:from-emerald-500 text-white font-black py-3.5 rounded-2xl shadow-xl text-xs uppercase tracking-wider active:scale-95 transition-all border border-emerald-400/30">
                         Enter Citizen Desk
                     </button>
                 </form>
             </div>
 
-            <div class="text-center text-[11px] text-rose-200/60 font-semibold py-3">
-                City Municipal Corporation (CMC)
+            <div class="text-center text-[10px] text-emerald-200/70 font-semibold py-2 relative z-10">
+                EcoClean City Municipal Corporation • Smart IoT Sanitation
             </div>
         </main>
 
         <!-- ================= MAIN APP VIEW ================= -->
         <div id="mainSection" class="hidden flex-1 flex flex-col h-full overflow-hidden">
-            
-            <header class="bg-gradient-to-r from-[#8B1220] via-[#5C0A13] to-[#2E0308] text-white px-5 py-3.5 flex items-center justify-between sticky top-0 z-40 shadow-md">
+            <header class="bg-gradient-to-r from-[#08230B] via-[#154A19] to-[#08230B] text-white px-5 py-3.5 flex items-center justify-between sticky top-0 z-40 shadow-lg border-b border-emerald-500/20">
                 <div class="flex items-center gap-2.5">
-                    <span class="text-xl">♻️</span>
+                    <div class="w-9 h-9 rounded-full bg-white p-0.5 border border-emerald-400/40 flex items-center justify-center overflow-hidden">
+                        <img src="logo.png" onerror="this.onerror=null; this.src='https://api.iconify.design/fluent-emoji:wastebasket.svg';" class="w-full h-full object-contain">
+                    </div>
                     <div>
-                        <h1 class="font-extrabold text-sm leading-tight">EcoClean Citizen</h1>
-                        <p class="text-[9px] text-rose-200/80 uppercase font-bold tracking-wider" id="headerCitizenName">Saiom Resident • City</p>
+                        <h1 class="font-extrabold text-sm leading-tight flex items-center gap-1.5">
+                            EcoClean City
+                            <span class="text-[8px] bg-emerald-400/20 text-emerald-300 px-1.5 py-0.2 rounded border border-emerald-400/30">Citizen Grid</span>
+                        </h1>
+                        <p class="text-[9px] text-emerald-300/80 uppercase font-bold tracking-wider" id="headerCitizenName">Citizen User</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -173,15 +205,13 @@
             </header>
 
             <main class="flex-1 overflow-y-auto p-4 space-y-4 pb-24">
-
                 <!-- TAB 1: REPORT WASTE FORM -->
                 <div id="tabContentReport" class="space-y-4">
-                    
-                    <!-- Step 1: Location & Map -->
-                    <div class="bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-3xl p-4 shadow-sm space-y-3">
+                    <!-- Step 1: Location & Map with Live Dustbin Tracking -->
+                    <div class="bg-white dark:bg-[#0D2411] border border-slate-200 dark:border-emerald-950/80 rounded-3xl p-4 shadow-sm space-y-3">
                         <div class="flex items-center justify-between">
                             <h3 class="text-xs font-black uppercase text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                                <span class="w-5 h-5 rounded-lg bg-[#9E1220] text-white flex items-center justify-center text-[10px]">1</span>
+                                <span class="w-5 h-5 rounded-lg bg-emerald-700 text-white flex items-center justify-center text-[10px]">1</span>
                                 Pinpoint Garbage Spot
                             </h3>
                             <button type="button" onclick="acquireRealSatelliteGps()" class="text-[10px] bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-extrabold px-3 py-1.5 rounded-full border border-emerald-500/30 flex items-center gap-1.5 shadow-sm active:scale-95 transition-all">
@@ -190,35 +220,45 @@
                             </button>
                         </div>
 
+                        <!-- Live Dustbin Legend -->
+                        <div class="flex items-center justify-between text-[9px] font-bold px-2 py-1.5 bg-slate-50 dark:bg-[#08180B] rounded-xl border border-slate-200 dark:border-emerald-950">
+                            <span class="text-slate-400 uppercase tracking-wider">Dustbin Fill Levels:</span>
+                            <div class="flex items-center gap-2">
+                                <span class="flex items-center gap-1 text-emerald-500"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> &lt;50%</span>
+                                <span class="flex items-center gap-1 text-amber-500"><span class="w-2 h-2 rounded-full bg-amber-500"></span> 50-79%</span>
+                                <span class="flex items-center gap-1 text-rose-500"><span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span> &ge;80%</span>
+                            </div>
+                        </div>
+
                         <div class="flex gap-2">
-                            <input type="text" id="landmarkSearchInput" placeholder="Search street, area or landmark..." class="flex-1 px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 focus:outline-none focus:ring-1 focus:ring-rose-500">
-                            <button type="button" onclick="searchCityStreet()" class="px-3 py-2 bg-[#9E1220] text-white text-xs font-bold rounded-xl active:scale-95 transition-all">
+                            <input type="text" id="landmarkSearchInput" placeholder="Search street, area, or landmark..." class="flex-1 px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-[#08180B] border border-slate-200 dark:border-emerald-950 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                            <button type="button" onclick="searchCityStreet()" class="px-3 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl active:scale-95 transition-all">
                                 🔍 Find
                             </button>
                         </div>
 
-                        <div class="h-60 w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-rose-950 relative shadow-inner">
+                        <div class="h-60 w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-emerald-950 relative shadow-inner">
                             <div id="citizenReportMap" class="w-full h-full"></div>
 
                             <div class="absolute bottom-3 right-3 z-[1000] flex flex-col gap-1.5 shadow-xl">
-                                <button type="button" onclick="zoomInMap()" class="w-8 h-8 rounded-xl bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-white font-black text-base flex items-center justify-center border border-slate-200 dark:border-rose-950 active:scale-90 transition-transform">+</button>
-                                <button type="button" onclick="zoomOutMap()" class="w-8 h-8 rounded-xl bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-white font-black text-base flex items-center justify-center border border-slate-200 dark:border-rose-950 active:scale-90 transition-transform">−</button>
+                                <button type="button" onclick="zoomInMap()" class="w-8 h-8 rounded-xl bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-white font-black text-base flex items-center justify-center border border-slate-200 dark:border-emerald-950 active:scale-90 transition-transform">+</button>
+                                <button type="button" onclick="zoomOutMap()" class="w-8 h-8 rounded-xl bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-white font-black text-base flex items-center justify-center border border-slate-200 dark:border-emerald-950 active:scale-90 transition-transform">−</button>
                             </div>
                         </div>
 
-                        <div class="p-3 bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950/60 rounded-2xl text-center space-y-2">
-                            <span class="text-[11px] font-extrabold text-[#9E1220] dark:text-rose-400 block" id="geoStatusLabel">
-                                📍 Ready. Tap "Lock Satellite GPS", tap map, or drag red pin.
+                        <div class="p-3 bg-slate-50 dark:bg-[#08180B] border border-slate-200 dark:border-emerald-950 rounded-2xl text-center space-y-2">
+                            <span class="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-400 block" id="geoStatusLabel">
+                                📍 Ready. Tap "Lock Satellite GPS", tap map, or drag pin.
                             </span>
 
-                            <div class="p-2 bg-rose-50/50 dark:bg-rose-950/30 rounded-xl border border-rose-200 dark:border-rose-900/60 flex items-center justify-between gap-2">
+                            <div class="p-2 bg-emerald-50/50 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-900/60 flex items-center justify-between gap-2">
                                 <div class="text-left">
                                     <span class="text-[9px] font-black uppercase tracking-wider text-slate-400 block">Locked Coordinates</span>
-                                    <span id="currentCoordinatesText" class="text-xs font-mono font-black text-rose-700 dark:text-rose-300">
-                                        19.884100, 74.478800
+                                    <span id="currentCoordinatesText" class="text-xs font-mono font-black text-emerald-700 dark:text-emerald-300">
+                                        19.891500, 74.478900
                                     </span>
                                 </div>
-                                <button type="button" onclick="openCurrentInGoogleMaps()" class="px-2.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg text-[10px] font-extrabold shadow flex items-center gap-1 active:scale-95 transition-all whitespace-nowrap">
+                                <button type="button" onclick="openCurrentInGoogleMaps()" class="px-2.5 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg text-[10px] font-extrabold shadow flex items-center gap-1 active:scale-95 transition-all whitespace-nowrap">
                                     <span>🗺️ View Maps</span>
                                     <span>↗</span>
                                 </button>
@@ -227,33 +267,33 @@
                     </div>
 
                     <!-- Step 2: Photo Evidence & AI Inspector -->
-                    <div class="bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-3xl p-4 shadow-sm space-y-3">
+                    <div class="bg-white dark:bg-[#0D2411] border border-slate-200 dark:border-emerald-950/80 rounded-3xl p-4 shadow-sm space-y-3">
                         <div class="flex items-center justify-between">
                             <h3 class="text-xs font-black uppercase text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                                <span class="w-5 h-5 rounded-lg bg-[#9E1220] text-white flex items-center justify-center text-[10px]">2</span>
+                                <span class="w-5 h-5 rounded-lg bg-emerald-700 text-white flex items-center justify-center text-[10px]">2</span>
                                 Photo Evidence of Garbage
                             </h3>
-                            <span class="text-[9px] font-black text-emerald-700 bg-emerald-100 dark:bg-emerald-950 dark:text-emerald-300 px-2 py-0.5 rounded-full">
+                            <span class="text-[9px] font-black text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-500/30">
                                 ⚡ Gemini AI Vision Inspector
                             </span>
                         </div>
 
                         <label class="block cursor-pointer">
-                            <div id="dropzoneEmpty" class="border-2 border-dashed border-slate-300 dark:border-rose-950 rounded-2xl p-4 text-center bg-slate-50 dark:bg-[#120305] hover:border-rose-600 transition-colors">
+                            <div id="dropzoneEmpty" class="border-2 border-dashed border-slate-300 dark:border-emerald-950 rounded-2xl p-4 text-center bg-slate-50 dark:bg-[#08180B] hover:border-emerald-500 transition-colors">
                                 <span class="text-3xl block mb-1">📸</span>
                                 <span class="text-xs font-bold text-slate-700 dark:text-slate-200 block">Tap to Open Camera or Upload Spot Photo</span>
-                                <span class="text-[10px] text-slate-400">AI verifies garbage before allowing complaint</span>
+                                <span class="text-[10px] text-slate-400">AI audits photo for waste before dispatching crew</span>
                             </div>
                             <input type="file" id="photoFileInput" accept="image/*" capture="environment" onchange="onPhotoSelected(event)" class="hidden">
                         </label>
 
-                        <div id="previewWrapper" class="hidden relative rounded-2xl overflow-hidden border border-slate-200 dark:border-rose-950 shadow-md">
+                        <div id="previewWrapper" class="hidden relative rounded-2xl overflow-hidden border border-slate-200 dark:border-emerald-950 shadow-md">
                             <img id="previewImg" src="" alt="Spot Photo" class="w-full h-48 object-cover">
                             
                             <div id="scannerOverlay" class="hidden absolute inset-0 bg-black/60 flex flex-col justify-between p-3 pointer-events-none">
-                                <span class="text-[9px] font-mono text-emerald-400 font-bold">[ GEMINI AI VISION AUDIT RUNNING ]</span>
+                                <span class="text-[9px] font-mono text-emerald-400 font-bold">[ ECOCLEAN AI VISION AUDIT ]</span>
                                 <div class="w-full h-0.5 bg-emerald-400 ai-laser"></div>
-                                <span class="text-[10px] font-mono text-emerald-300 text-center animate-pulse">Inspecting photo for plastics & refuse...</span>
+                                <span class="text-[10px] font-mono text-emerald-300 text-center animate-pulse">Auditing photo for plastics & municipal refuse...</span>
                             </div>
 
                             <button type="button" onclick="clearSelectedPhoto()" class="absolute top-2 right-2 bg-black/70 text-white w-7 h-7 rounded-full text-xs font-bold">✕</button>
@@ -268,35 +308,33 @@
                             <p id="aiVerdictDescription" class="text-[11px]"></p>
                         </div>
 
-                        <!-- Beach Area Presets -->
+                        <!-- Presets -->
                         <div class="grid grid-cols-2 gap-2 pt-1">
-                            <button type="button" onclick="loadSamplePhoto(true)" class="py-2.5 px-2 text-[10px] font-bold rounded-xl border border-rose-500 bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-100 flex items-center justify-center gap-1 active:scale-95 transition-all">
-                                <span>🏖️</span> Beach Trash (Pass AI)
+                            <button type="button" onclick="loadSamplePhoto(true)" class="py-2.5 px-2 text-[10px] font-bold rounded-xl border border-emerald-500/50 bg-emerald-950/30 text-emerald-200 flex items-center justify-center gap-1 active:scale-95 transition-all">
+                                <span>🗑️</span> Waste (Pass AI)
                             </button>
-                            <button type="button" onclick="loadSamplePhoto(false)" class="py-2.5 px-2 text-[10px] font-bold rounded-xl border border-slate-200 dark:border-rose-950 text-slate-600 dark:text-slate-300 flex items-center justify-center gap-1 active:scale-95 transition-all">
-                                <span>🌊</span> Clean Beach (Reject & Block)
+                            <button type="button" onclick="loadSamplePhoto(false)" class="py-2.5 px-2 text-[10px] font-bold rounded-xl border border-slate-200 dark:border-emerald-950 text-slate-600 dark:text-slate-300 flex items-center justify-center gap-1 active:scale-95 transition-all">
+                                <span>✨</span> Clean Area (Reject)
                             </button>
                         </div>
                     </div>
 
-                    <!-- Step 3: Landmark Note & Submit Button -->
-                    <div class="bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-3xl p-4 shadow-sm space-y-3">
-                        <textarea id="reportComments" rows="2" placeholder="Specific landmark, beach spot, or garbage notes..." class="w-full p-3 text-xs rounded-2xl bg-slate-50 dark:bg-[#120305] border border-slate-200 dark:border-rose-950 focus:outline-none focus:ring-1 focus:ring-rose-500"></textarea>
+                    <!-- Step 3: Location Note & Submit Button -->
+                    <div class="bg-white dark:bg-[#0D2411] border border-slate-200 dark:border-emerald-950/80 rounded-3xl p-4 shadow-sm space-y-3">
+                        <textarea id="reportComments" rows="2" placeholder="Specific street name, chowk, landmark, or waste notes..." class="w-full p-3 text-xs rounded-2xl bg-slate-50 dark:bg-[#08180B] border border-slate-200 dark:border-emerald-950 focus:outline-none focus:ring-1 focus:ring-emerald-500"></textarea>
                         
-                        <button type="button" id="submitReportBtn" onclick="submitCitizenReport()" class="w-full bg-gradient-to-r from-[#9E1220] to-[#540810] text-white font-black py-3.5 px-4 rounded-full shadow-lg text-xs uppercase tracking-wider active:scale-95 transition-all">
-                            Submit Grievance to Municipal Cloud
+                        <button type="button" id="submitReportBtn" onclick="submitCitizenReport()" class="w-full bg-gradient-to-r from-emerald-600 to-ecoGreen-600 hover:from-emerald-500 text-white font-black py-3.5 px-4 rounded-full shadow-lg text-xs uppercase tracking-wider active:scale-95 transition-all">
+                            Submit Complaint to Municipal Command
                         </button>
                     </div>
                 </div>
 
-                <!-- TAB 2: GRIEVANCES & TRACKER -->
+                <!-- TAB 2: COMPLAINTS TRACKER -->
                 <div id="tabContentTracker" class="hidden space-y-3">
-                    
-                    <!-- Citizen Personal Stats Header -->
-                    <div class="bg-gradient-to-r from-rose-950/40 to-slate-900 p-3 rounded-2xl border border-rose-900/40 flex items-center justify-between">
+                    <div class="bg-gradient-to-r from-emerald-950/50 to-slate-900 p-3 rounded-2xl border border-emerald-900/40 flex items-center justify-between">
                         <div>
-                            <span class="text-[9px] font-bold text-slate-400 block uppercase">Resident Complaint Ledger</span>
-                            <h3 class="text-xs font-black text-white" id="trackerCitizenNameDisplay">Saiom Resident</h3>
+                            <span class="text-[9px] font-bold text-slate-400 block uppercase">Citizen Complaint Ledger</span>
+                            <h3 class="text-xs font-black text-white" id="trackerCitizenNameDisplay">Citizen User</h3>
                         </div>
                         <div class="flex items-center gap-2">
                             <span id="userPersonalResolvedBadge" class="text-[10px] font-extrabold bg-emerald-950 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full">
@@ -305,11 +343,11 @@
                         </div>
                     </div>
 
-                    <!-- Filter Bar: "My Reports Only" vs "All City Reports" -->
-                    <div class="bg-slate-100 dark:bg-[#1A0407] p-1 rounded-2xl border border-slate-200 dark:border-rose-950/60 flex text-xs font-extrabold gap-1">
-                        <button id="filterMyReportsBtn" onclick="setComplaintFilter('mine')" class="flex-1 py-1.5 rounded-xl bg-[#9E1220] text-white shadow-sm transition-all flex items-center justify-center gap-1">
+                    <!-- Filter Bar -->
+                    <div class="bg-slate-100 dark:bg-[#0D2411] p-1 rounded-2xl border border-slate-200 dark:border-emerald-950/60 flex text-xs font-extrabold gap-1">
+                        <button id="filterMyReportsBtn" onclick="setComplaintFilter('mine')" class="flex-1 py-1.5 rounded-xl bg-emerald-700 text-white shadow-sm transition-all flex items-center justify-center gap-1">
                             <span>👤</span>
-                            <span>My Reports Only</span>
+                            <span>My Complaints</span>
                             <span id="myReportsCountBadge" class="text-[9px] bg-black/40 px-1.5 py-0.2 rounded-full">0</span>
                         </button>
                         <button id="filterAllReportsBtn" onclick="setComplaintFilter('all')" class="flex-1 py-1.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1">
@@ -324,12 +362,12 @@
             </main>
 
             <!-- Bottom Navigation Bar -->
-            <nav class="absolute bottom-0 left-0 right-0 bg-white/95 dark:bg-[#120305]/95 backdrop-blur-md border-t border-slate-200 dark:border-rose-950/60 px-6 py-2.5 flex justify-around z-40">
-                <button id="navReportBtn" onclick="switchCitizenTab('report')" class="flex flex-col items-center gap-0.5 text-[#9E1220] dark:text-rose-400 font-extrabold text-[10px]">
+            <nav class="absolute bottom-0 left-0 right-0 bg-white/95 dark:bg-[#08180B]/95 backdrop-blur-md border-t border-slate-200 dark:border-emerald-950/60 px-6 py-2.5 flex justify-around z-40">
+                <button id="navReportBtn" onclick="switchCitizenTab('report')" class="flex flex-col items-center gap-0.5 text-emerald-600 dark:text-emerald-400 font-extrabold text-[10px]">
                     <span class="text-lg">📢</span> <span>Report</span>
                 </button>
                 <button id="navTrackerBtn" onclick="switchCitizenTab('tracker')" class="flex flex-col items-center gap-0.5 text-slate-400 font-extrabold text-[10px]">
-                    <span class="text-lg">📋</span> <span>My Grievances</span>
+                    <span class="text-lg">📋</span> <span>My Complaints</span>
                 </button>
             </nav>
         </div>
@@ -338,51 +376,39 @@
     <!-- JAVASCRIPT ENGINE & FIREBASE -->
     <script>
         const firebaseConfig = {
-            apiKey: "AIzaSyDm3z435fT5gnmbAj7Bj9Zz_UE5zWWDiEk",
+            apiKey: "AIzaSyDmm0D5e4jtjMb470bjb6_pqe__uGt6Xkc",
             authDomain: "ecoclean-35b65.firebaseapp.com",
             databaseURL: "https://ecoclean-35b65-default-rtdb.firebaseio.com",
             projectId: "ecoclean-35b65",
             storageBucket: "ecoclean-35b65.firebasestorage.app",
-            messagingSenderId: "72983522187",
-            appId: "1:72983522187:web:fa3f1a8cafd3dc333b9d8e"
+            messagingSenderId: "93996665345",
+            appId: "1:93996665345:web:a4819f70f2ae2ba9fece00"
         };
 
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Authentic Beach Photos
-        const REAL_BEACH_TRASH_IMAGE = "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=800&q=80";
-        const REAL_CLEAN_BEACH_IMAGE = "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80";
+        const REAL_TRASH_IMAGE = "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=800&q=80";
+        const REAL_CLEAN_IMAGE = "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=800&q=80";
 
-        const CITY_DEFAULT = [19.8841, 74.4788];
+        const CITY_DEFAULT = [19.8915, 74.4789];
         
-        // Purge old Kopargaon session if found in storage
-        let savedSession = JSON.parse(localStorage.getItem('ecoclean_logged_citizen') || 'null');
-        if (savedSession && (savedSession.city === 'Kopargaon' || savedSession.name.includes('Kopargaon'))) {
-            savedSession.city = 'City';
-            localStorage.setItem('ecoclean_logged_citizen', JSON.stringify(savedSession));
-        }
-
+        let savedSession = JSON.parse(localStorage.getItem('ecoclean_city_citizen') || 'null');
         let currentCitizen = savedSession || { 
-            name: "Saiom Resident", 
+            name: "Citizen User", 
             phone: "9876543210", 
-            city: "City" 
+            city: "Main City Center" 
         };
 
         let mapInstance = null;
         let targetPinMarker = null;
+        let dustbinMapMarkers = {};
         let selectedCoords = CITY_DEFAULT;
 
         let currentUploadedPhotoUrl = "";
         let currentAiVerification = null;
         let citizenComplaints = [];
         let activeGrievanceFilter = 'mine';
-
-        // Helper that cleans old database entries still containing "Kopargaon"
-        function sanitizeText(txt) {
-            if (!txt) return "";
-            return txt.replace(/kopargaon/gi, "City");
-        }
 
         function formatDateTime(timestamp) {
             if (!timestamp) return "Date unavailable";
@@ -433,11 +459,11 @@
             e.preventDefault();
             const name = document.getElementById('citizenInputName').value.trim();
             const phone = document.getElementById('citizenInputPhone').value.trim();
-            const city = document.getElementById('citizenInputCity').value.trim() || 'City';
+            const city = document.getElementById('citizenInputCity').value.trim() || 'Main City Center';
 
             if (!name || !phone) return;
             currentCitizen = { name, phone, city };
-            localStorage.setItem('ecoclean_logged_citizen', JSON.stringify(currentCitizen));
+            localStorage.setItem('ecoclean_city_citizen', JSON.stringify(currentCitizen));
 
             document.getElementById('headerCitizenName').innerText = `${name} • ${city}`;
             document.getElementById('trackerCitizenNameDisplay').innerText = `${name} (${phone})`;
@@ -450,15 +476,22 @@
                 acquireRealSatelliteGps();
             }, 200);
 
+            // Listen to live complaints
             db.ref('complaints').on('value', (snapshot) => {
                 const data = snapshot.val();
                 citizenComplaints = data ? Object.values(data).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)) : [];
                 renderCitizenComplaints();
             });
+
+            // Listen to live smart bins
+            db.ref('dustbins').on('value', (snapshot) => {
+                const data = snapshot.val();
+                renderDustbinTrackingOnMap(data);
+            });
         }
 
         function handleCitizenLogout() {
-            localStorage.removeItem('ecoclean_logged_citizen');
+            localStorage.removeItem('ecoclean_city_citizen');
             document.getElementById('mainSection').classList.add('hidden');
             document.getElementById('authSection').classList.remove('hidden');
         }
@@ -470,7 +503,7 @@
                     scrollWheelZoom: true, 
                     touchZoom: true, 
                     dragging: true 
-                }).setView(selectedCoords, 17);
+                }).setView(selectedCoords, 15);
 
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapInstance);
 
@@ -512,6 +545,88 @@
             }
         }
 
+        function renderDustbinTrackingOnMap(dustbinData) {
+            if (!mapInstance || !dustbinData) return;
+
+            Object.keys(dustbinData).forEach((binId) => {
+                const bin = dustbinData[binId];
+                let lat = bin.lat || (bin.coords && bin.coords[0]);
+                let lng = bin.lng || (bin.coords && bin.coords[1]);
+                if (!lat || !lng) return;
+
+                const fill = parseInt(bin.fillLevel) || 0;
+                const isCritical = fill >= 80;
+                const isModerate = fill >= 50 && fill < 80;
+
+                let badgeColor = "#10b981";
+                let statusLabel = "Available Space";
+                if (isCritical) {
+                    badgeColor = "#ef4444";
+                    statusLabel = "Full / Overflow";
+                } else if (isModerate) {
+                    badgeColor = "#f59e0b";
+                    statusLabel = "Moderate Level";
+                }
+
+                if (dustbinMapMarkers[binId]) {
+                    mapInstance.removeLayer(dustbinMapMarkers[binId]);
+                }
+
+                const binHtml = `
+                    <div class="relative flex flex-col items-center">
+                        <div class="w-8 h-8 rounded-xl ${isCritical ? 'bin-critical-pulse bg-rose-600' : (isModerate ? 'bg-amber-500' : 'bg-emerald-600')} border-2 border-white text-white flex items-center justify-center text-xs font-black shadow-lg cursor-pointer">
+                            🗑️
+                        </div>
+                        <span class="text-[9px] font-black font-mono text-white px-1.5 py-0.2 rounded-full mt-0.5 shadow ${isCritical ? 'bg-rose-700' : (isModerate ? 'bg-amber-600' : 'bg-emerald-700')}">
+                            ${fill}%
+                        </span>
+                    </div>
+                `;
+
+                const binIcon = L.divIcon({
+                    html: binHtml,
+                    className: '',
+                    iconSize: [34, 46],
+                    iconAnchor: [17, 23]
+                });
+
+                const marker = L.marker([lat, lng], { icon: binIcon }).addTo(mapInstance);
+
+                marker.bindPopup(`
+                    <div class="p-2.5 max-w-[210px] font-sans text-slate-900 space-y-1.5">
+                        <div class="flex items-center justify-between border-b pb-1">
+                            <span class="font-mono font-bold text-[10px] text-slate-500">${binId}</span>
+                            <span class="text-[9px] font-black px-2 py-0.5 rounded-full text-white" style="background-color: ${badgeColor};">
+                                ${statusLabel}
+                            </span>
+                        </div>
+                        <h4 class="font-extrabold text-xs text-slate-900 leading-tight">${bin.name || 'Smart Bin'}</h4>
+                        
+                        <div class="space-y-0.5 pt-1">
+                            <div class="flex justify-between text-[10px] font-bold text-slate-600">
+                                <span>Live Capacity</span>
+                                <span style="color: ${badgeColor}">${fill}% Full</span>
+                            </div>
+                            <div class="w-full bg-slate-200 h-2 rounded-full overflow-hidden">
+                                <div class="h-full transition-all duration-500" style="width: ${fill}%; background-color: ${badgeColor}"></div>
+                            </div>
+                        </div>
+
+                        <div class="text-[10px] text-slate-600 space-y-0.5 pt-1 border-t">
+                            <p>🌡️ Temp: <b>${bin.temperature || '--'} °C</b></p>
+                            <p>💨 Odour: <b>${bin.odourStatus || 'Normal'}</b></p>
+                        </div>
+
+                        <a href="https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}" target="_blank" class="block text-center mt-1.5 py-1 bg-emerald-700 hover:bg-emerald-600 text-white rounded text-[10px] font-extrabold shadow">
+                            🧭 Directions to Bin
+                        </a>
+                    </div>
+                `);
+
+                dustbinMapMarkers[binId] = marker;
+            });
+        }
+
         function acquireRealSatelliteGps() {
             if (!navigator.geolocation) return;
             const btnText = document.getElementById('gpsBtnText');
@@ -527,7 +642,7 @@
 
                     if (mapInstance && targetPinMarker) {
                         targetPinMarker.setLatLng(selectedCoords);
-                        mapInstance.setView(selectedCoords, 18, { animate: true });
+                        mapInstance.setView(selectedCoords, 16, { animate: true });
                     }
 
                     if (btnText) btnText.innerText = "✓ GPS Active";
@@ -556,7 +671,7 @@
                     updateCoordinatesDisplay(lat, lon);
                     if (mapInstance && targetPinMarker) {
                         targetPinMarker.setLatLng(selectedCoords);
-                        mapInstance.setView(selectedCoords, 18, { animate: true });
+                        mapInstance.setView(selectedCoords, 16, { animate: true });
                     }
                     document.getElementById('geoStatusLabel').innerText = "📍 Location found";
                 }
@@ -576,20 +691,20 @@
 
         function loadSamplePhoto(isWaste) {
             if (isWaste) {
-                currentUploadedPhotoUrl = REAL_BEACH_TRASH_IMAGE;
-                runSimulatedAIScan(true, "Plastic bottles, marine debris, and discarded clutter detected on shore.");
+                currentUploadedPhotoUrl = REAL_TRASH_IMAGE;
+                runSimulatedAIScan(true, "Plastics, organic waste & packaging clutter detected on site.");
             } else {
-                currentUploadedPhotoUrl = REAL_CLEAN_BEACH_IMAGE;
-                runSimulatedAIScan(false, "Clean sandy beach detected! No municipal refuse or plastic litter found.");
+                currentUploadedPhotoUrl = REAL_CLEAN_IMAGE;
+                runSimulatedAIScan(false, "Clean city street detected! Zero municipal waste found.");
             }
         }
 
         function analyzeImageWithAI(photoSrc, hint = "") {
-            const isCleanHint = hint.includes("clean") || hint.includes("sand") || hint.includes("sky") || hint.includes("water");
+            const isCleanHint = hint.includes("clean") || hint.includes("park") || hint.includes("sky") || hint.includes("road_clean");
             const isTrash = !isCleanHint;
             const verdictMsg = isTrash 
-                ? "Discarded waste, plastic packaging, and refuse verified by vision inspector." 
-                : "Clean area detected with zero visible waste.";
+                ? "Discarded waste, plastics, and debris confirmed by AI vision audit." 
+                : "Clean location detected with zero visible waste.";
             runSimulatedAIScan(isTrash, verdictMsg);
         }
 
@@ -614,13 +729,13 @@
                 if (isGenuineWaste) {
                     currentAiVerification = { isValid: true, verdict: "98% Verified Waste (Gemini AI)" };
                     card.className = "rounded-2xl p-3 border bg-emerald-500/10 border-emerald-500/30 text-emerald-950 dark:text-emerald-100 space-y-1";
-                    title.innerText = "✓ Gemini Verified: Waste & Plastic Litter Detected";
+                    title.innerText = "✓ Gemini Verified: Solid Waste Detected";
                     badge.innerText = "98% Real Waste";
                     badge.className = "text-[10px] font-black px-2 py-0.5 rounded-full border border-emerald-500/30 bg-emerald-100 dark:bg-emerald-900 text-emerald-800 dark:text-emerald-200";
                     desc.innerText = descriptionText;
                     
                     submitBtn.disabled = false;
-                    submitBtn.className = "w-full bg-gradient-to-r from-[#9E1220] to-[#540810] text-white font-black py-3.5 px-4 rounded-full shadow-lg text-xs uppercase tracking-wider active:scale-95 transition-all cursor-pointer";
+                    submitBtn.className = "w-full bg-gradient-to-r from-emerald-600 to-ecoGreen-600 hover:from-emerald-500 text-white font-black py-3.5 px-4 rounded-full shadow-lg text-xs uppercase tracking-wider active:scale-95 transition-all cursor-pointer";
                     showToast("🤖 Verified: Solid Waste Detected");
                 } else {
                     currentAiVerification = { isValid: false, verdict: "Rejected (Clean Area)" };
@@ -647,7 +762,7 @@
             
             const submitBtn = document.getElementById('submitReportBtn');
             submitBtn.disabled = false;
-            submitBtn.className = "w-full bg-gradient-to-r from-[#9E1220] to-[#540810] text-white font-black py-3.5 px-4 rounded-full shadow-lg text-xs uppercase tracking-wider active:scale-95 transition-all";
+            submitBtn.className = "w-full bg-gradient-to-r from-emerald-600 to-ecoGreen-600 hover:from-emerald-500 text-white font-black py-3.5 px-4 rounded-full shadow-lg text-xs uppercase tracking-wider active:scale-95 transition-all";
         }
 
         function submitCitizenReport() {
@@ -660,15 +775,15 @@
                 return;
             }
 
-            const comments = sanitizeText(document.getElementById('reportComments').value.trim()) || "Waste overflow reported at spot.";
-            const reportId = `CITY-${Math.floor(1000 + Math.random() * 9000)}`;
+            const comments = document.getElementById('reportComments').value.trim() || "Waste overflow reported at spot.";
+            const reportId = `EC-${Math.floor(1000 + Math.random() * 9000)}`;
             const now = Date.now();
 
             const newReport = {
                 id: reportId,
                 citizenName: currentCitizen.name,
                 citizenPhone: currentCitizen.phone,
-                landmark: `City Spot (${selectedCoords[0].toFixed(4)}, ${selectedCoords[1].toFixed(4)})`,
+                landmark: `Waste Spot (${selectedCoords[0].toFixed(4)}, ${selectedCoords[1].toFixed(4)})`,
                 coords: selectedCoords,
                 comment: comments,
                 beforeImage: currentUploadedPhotoUrl,
@@ -681,11 +796,11 @@
                 time: "Just now"
             };
 
-            showToast("🛰️ Broadcasting verified grievance to cloud...");
+            showToast("🛰️ Syncing complaint to EcoClean Cloud...");
 
             db.ref('complaints/' + reportId).set(newReport)
                 .then(() => {
-                    showToast("✅ Grievance saved to your personal history!");
+                    showToast("✅ Complaint registered in your ledger!");
                     clearSelectedPhoto();
                     document.getElementById('reportComments').value = "";
                     setComplaintFilter('mine');
@@ -722,10 +837,10 @@
             const btnAll = document.getElementById('filterAllReportsBtn');
 
             if (mode === 'mine') {
-                btnMine.className = "flex-1 py-1.5 rounded-xl bg-[#9E1220] text-white shadow-sm transition-all flex items-center justify-center gap-1";
+                btnMine.className = "flex-1 py-1.5 rounded-xl bg-emerald-700 text-white shadow-sm transition-all flex items-center justify-center gap-1";
                 btnAll.className = "flex-1 py-1.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1";
             } else {
-                btnAll.className = "flex-1 py-1.5 rounded-xl bg-[#9E1220] text-white shadow-sm transition-all flex items-center justify-center gap-1";
+                btnAll.className = "flex-1 py-1.5 rounded-xl bg-emerald-700 text-white shadow-sm transition-all flex items-center justify-center gap-1";
                 btnMine.className = "flex-1 py-1.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1";
             }
 
@@ -754,14 +869,14 @@
             if (targetList.length === 0) {
                 if (activeGrievanceFilter === 'mine') {
                     list.innerHTML = `
-                        <div class="bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-3xl p-8 text-center space-y-2">
+                        <div class="bg-white dark:bg-[#0D2411] border border-slate-200 dark:border-emerald-950 rounded-3xl p-8 text-center space-y-2">
                             <span class="text-3xl block">📋</span>
                             <h4 class="text-xs font-bold text-slate-200">You haven't filed any complaints yet!</h4>
                             <p class="text-[10px] text-slate-500">Go to the Report tab to snap a photo and file your first grievance.</p>
                         </div>
                     `;
                 } else {
-                    list.innerHTML = `<div class="text-center py-10 text-xs text-slate-400">No grievances reported across City yet.</div>`;
+                    list.innerHTML = `<div class="text-center py-10 text-xs text-slate-400">No complaints reported yet.</div>`;
                 }
                 return;
             }
@@ -769,7 +884,7 @@
             list.innerHTML = "";
             targetList.forEach(item => {
                 const card = document.createElement('div');
-                card.className = "bg-white dark:bg-[#1A0407] border border-slate-200 dark:border-rose-950/60 rounded-3xl p-4 shadow-sm space-y-3";
+                card.className = "bg-white dark:bg-[#0D2411] border border-slate-200 dark:border-emerald-950 rounded-3xl p-4 shadow-sm space-y-3";
 
                 let statusColor = "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300";
                 if (item.status === 'Dispatched') statusColor = "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300";
@@ -779,28 +894,27 @@
                 const isResolved = (item.status === 'Resolved');
                 const filedDateString = item.filedAtFormatted || (item.timestamp ? formatDateTime(item.timestamp) : item.time || "Recently");
                 const resolvedDateString = item.resolvedAt ? formatDateTime(item.resolvedAt) : null;
-                const cleanLandmark = sanitizeText(item.landmark);
 
                 card.innerHTML = `
-                    <div class="flex items-start justify-between gap-2 border-b border-slate-100 dark:border-rose-950/40 pb-2">
+                    <div class="flex items-start justify-between gap-2 border-b border-slate-100 dark:border-emerald-950 pb-2">
                         <div>
                             <div class="flex items-center gap-1.5">
                                 <span class="text-[10px] font-black font-mono text-slate-400">${item.id}</span>
-                                ${isMyReport ? '<span class="text-[8px] font-black bg-rose-900/60 text-rose-200 px-1.5 py-0.2 rounded">Filed by You</span>' : ''}
+                                ${isMyReport ? '<span class="text-[8px] font-black bg-emerald-900/60 text-emerald-200 px-1.5 py-0.2 rounded">Filed by You</span>' : ''}
                             </div>
-                            <span class="text-[9px] font-bold text-rose-600 dark:text-rose-400 block mt-0.5">
+                            <span class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 block mt-0.5">
                                 🕒 Filed: ${filedDateString}
                             </span>
                         </div>
                         <span class="text-[9px] font-black px-2.5 py-0.5 rounded-full border border-current ${statusColor}">${item.status}</span>
                     </div>
 
-                    <h4 class="font-extrabold text-xs text-slate-900 dark:text-white">${cleanLandmark}</h4>
+                    <h4 class="font-extrabold text-xs text-slate-900 dark:text-white">${item.landmark}</h4>
 
                     <div class="flex gap-2.5">
                         <div class="space-y-1">
                             <span class="text-[8px] font-bold uppercase text-slate-400 block">Before</span>
-                            <img src="${item.beforeImage}" class="w-16 h-16 rounded-xl object-cover border border-slate-200 dark:border-rose-950">
+                            <img src="${item.beforeImage}" class="w-16 h-16 rounded-xl object-cover border border-slate-200 dark:border-emerald-950">
                         </div>
                         ${item.afterImage ? `
                             <div class="space-y-1">
@@ -809,7 +923,7 @@
                             </div>
                         ` : ''}
                         <div class="text-xs text-slate-600 dark:text-slate-300 flex-1 pl-1 space-y-1">
-                            <p class="line-clamp-2">${sanitizeText(item.comment)}</p>
+                            <p class="line-clamp-2">${item.comment}</p>
                             <span class="text-[9px] font-semibold text-emerald-500 block">${item.geminiVerdict || 'Verified Solid Waste'}</span>
                             
                             ${resolvedDateString ? `
@@ -820,21 +934,21 @@
 
                             <div class="flex items-center justify-between gap-1 pt-1">
                                 <span class="text-[9px] font-mono text-slate-400 block">${item.coords[0].toFixed(4)}, ${item.coords[1].toFixed(4)}</span>
-                                <a href="https://www.google.com/maps?q=${item.coords[0]},${item.coords[1]}" target="_blank" class="text-[9px] font-bold text-rose-600 dark:text-rose-400 underline">Maps ↗</a>
+                                <a href="https://www.google.com/maps?q=${item.coords[0]},${item.coords[1]}" target="_blank" class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 underline">Maps ↗</a>
                             </div>
                         </div>
                     </div>
 
-                    <div class="pt-2 border-t border-slate-100 dark:border-rose-950/40 flex items-center justify-between">
+                    <div class="pt-2 border-t border-slate-100 dark:border-emerald-950 flex items-center justify-between">
                         ${isResolved ? `
-                            <button onclick="deleteResolvedComplaint('${item.id}')" class="w-full py-2 bg-rose-950/40 hover:bg-rose-900 border border-rose-800 text-rose-300 font-extrabold text-[10px] rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-all">
+                            <button onclick="deleteResolvedComplaint('${item.id}')" class="w-full py-2 bg-emerald-950/40 hover:bg-emerald-900 border border-emerald-800 text-emerald-300 font-extrabold text-[10px] rounded-xl flex items-center justify-center gap-1.5 active:scale-95 transition-all">
                                 <span>🗑️</span>
                                 <span>Delete from History (Resolved)</span>
                             </button>
                         ` : `
                             <div class="w-full py-1.5 bg-slate-100 dark:bg-slate-900/60 rounded-xl text-center text-[9px] font-bold text-slate-400 flex items-center justify-center gap-1">
                                 <span>🔒</span>
-                                <span>Grievance In Progress — Deletion locked until resolved</span>
+                                <span>Complaint In Progress — Deletion locked until resolved</span>
                             </div>
                         `}
                     </div>
@@ -852,13 +966,13 @@
             if (tab === 'report') {
                 tabReport.classList.remove('hidden');
                 tabTracker.classList.add('hidden');
-                btnReport.className = "flex flex-col items-center gap-0.5 text-[#9E1220] dark:text-rose-400 font-extrabold text-[10px]";
+                btnReport.className = "flex flex-col items-center gap-0.5 text-emerald-600 dark:text-emerald-400 font-extrabold text-[10px]";
                 btnTracker.className = "flex flex-col items-center gap-0.5 text-slate-400 font-extrabold text-[10px]";
                 setTimeout(() => mapInstance && mapInstance.invalidateSize(), 200);
             } else {
                 tabReport.classList.add('hidden');
                 tabTracker.classList.remove('hidden');
-                btnTracker.className = "flex flex-col items-center gap-0.5 text-[#9E1220] dark:text-rose-400 font-extrabold text-[10px]";
+                btnTracker.className = "flex flex-col items-center gap-0.5 text-emerald-600 dark:text-emerald-400 font-extrabold text-[10px]";
                 btnReport.className = "flex flex-col items-center gap-0.5 text-slate-400 font-extrabold text-[10px]";
                 renderCitizenComplaints();
             }
