@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EcoClean City - Citizen Portal</title>
+    <title>EcoClean Kopargaon - Citizen Portal</title>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -128,19 +128,19 @@
         <main id="authSection" class="flex-1 flex flex-col justify-between hero-bg text-white p-6 relative">
             <div class="pt-6 text-center space-y-3 relative z-10">
                 <div class="w-24 h-24 mx-auto rounded-full bg-white p-1 shadow-2xl border-2 border-emerald-400/50 flex items-center justify-center overflow-hidden">
-                    <img src="logo.png" onerror="this.onerror=null; this.src='https://api.iconify.design/fluent-emoji:wastebasket.svg';" alt="EcoClean City Logo" class="w-full h-full object-contain">
+                    <img src="logo.png" onerror="this.onerror=null; this.src='https://api.iconify.design/fluent-emoji:wastebasket.svg';" alt="EcoClean Kopargaon Logo" class="w-full h-full object-contain">
                 </div>
 
                 <div>
                     <h1 class="text-2xl font-extrabold tracking-tight text-white">
-                        EcoClean City
+                        EcoClean Kopargaon
                     </h1>
                     <p class="text-[11px] text-emerald-200/90 tracking-wider uppercase font-bold mt-0.5">
                         Cleaner Spaces • Brighter Tomorrows
                     </p>
                     <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-[10px] text-emerald-300 font-semibold mt-2">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        Citizen Waste Monitoring Grid
+                        Kopargaon Civic Sanitation Grid
                     </div>
                 </div>
             </div>
@@ -150,9 +150,9 @@
                 <div class="flex items-center justify-between border-b pb-3 border-emerald-900/60">
                     <div>
                         <h2 class="text-sm font-black text-white">Citizen Portal</h2>
-                        <p class="text-[11px] text-emerald-300/80">Report garbage & monitor municipal smart bins</p>
+                        <p class="text-[11px] text-emerald-300/80">Report garbage & monitor Kopargaon smart bins</p>
                     </div>
-                    <span class="text-[10px] bg-emerald-500/20 text-emerald-300 font-extrabold px-2.5 py-1 rounded-full border border-emerald-500/30">Live Grid</span>
+                    <span class="text-[10px] bg-emerald-500/20 text-emerald-300 font-extrabold px-2.5 py-1 rounded-full border border-emerald-500/30">Kopargaon Live</span>
                 </div>
 
                 <form onsubmit="handleCitizenLogin(event)" class="space-y-3 pt-1">
@@ -165,17 +165,17 @@
                         <input type="tel" id="citizenInputPhone" value="9876543210" pattern="[0-9]{10}" required class="w-full mt-1 px-4 py-2.5 text-xs font-bold rounded-2xl bg-black/40 border border-emerald-900/80 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                     <div>
-                        <label class="text-[10px] font-black uppercase text-emerald-300/80">City / Location</label>
-                        <input type="text" id="citizenInputCity" value="Main City Center" required class="w-full mt-1 px-4 py-2.5 text-xs font-bold rounded-2xl bg-black/40 border border-emerald-900/80 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <label class="text-[10px] font-black uppercase text-emerald-300/80">Town / Area</label>
+                        <input type="text" id="citizenInputCity" value="Kopargaon (Shivaji Chowk)" required class="w-full mt-1 px-4 py-2.5 text-xs font-bold rounded-2xl bg-black/40 border border-emerald-900/80 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                     <button type="submit" class="w-full bg-gradient-to-r from-emerald-600 to-ecoGreen-600 hover:from-emerald-500 text-white font-black py-3.5 rounded-2xl shadow-xl text-xs uppercase tracking-wider active:scale-95 transition-all border border-emerald-400/30">
-                        Enter Citizen Desk
+                        Enter Kopargaon Citizen Desk
                     </button>
                 </form>
             </div>
 
             <div class="text-center text-[10px] text-emerald-200/70 font-semibold py-2 relative z-10">
-                EcoClean City Municipal Corporation • Smart IoT Sanitation
+                Kopargaon Municipal Council • Smart Sanitation Operations
             </div>
         </main>
 
@@ -188,10 +188,10 @@
                     </div>
                     <div>
                         <h1 class="font-extrabold text-sm leading-tight flex items-center gap-1.5">
-                            EcoClean City
-                            <span class="text-[8px] bg-emerald-400/20 text-emerald-300 px-1.5 py-0.2 rounded border border-emerald-400/30">Citizen Grid</span>
+                            EcoClean Kopargaon
+                            <span class="text-[8px] bg-emerald-400/20 text-emerald-300 px-1.5 py-0.2 rounded border border-emerald-400/30">Live Grid</span>
                         </h1>
-                        <p class="text-[9px] text-emerald-300/80 uppercase font-bold tracking-wider" id="headerCitizenName">Citizen User</p>
+                        <p class="text-[9px] text-emerald-300/80 uppercase font-bold tracking-wider" id="headerCitizenName">Citizen User • Kopargaon</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -207,12 +207,12 @@
             <main class="flex-1 overflow-y-auto p-4 space-y-4 pb-24">
                 <!-- TAB 1: REPORT WASTE FORM -->
                 <div id="tabContentReport" class="space-y-4">
-                    <!-- Step 1: Location & Map with Live Dustbin Tracking -->
+                    <!-- Step 1: Location & Kopargaon Map with Live Dustbin Tracking -->
                     <div class="bg-white dark:bg-[#0D2411] border border-slate-200 dark:border-emerald-950/80 rounded-3xl p-4 shadow-sm space-y-3">
                         <div class="flex items-center justify-between">
                             <h3 class="text-xs font-black uppercase text-slate-800 dark:text-slate-200 flex items-center gap-2">
                                 <span class="w-5 h-5 rounded-lg bg-emerald-700 text-white flex items-center justify-center text-[10px]">1</span>
-                                Pinpoint Garbage Spot
+                                Pinpoint Spot on Kopargaon Map
                             </h3>
                             <button type="button" onclick="acquireRealSatelliteGps()" class="text-[10px] bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-extrabold px-3 py-1.5 rounded-full border border-emerald-500/30 flex items-center gap-1.5 shadow-sm active:scale-95 transition-all">
                                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
@@ -222,7 +222,7 @@
 
                         <!-- Live Dustbin Legend -->
                         <div class="flex items-center justify-between text-[9px] font-bold px-2 py-1.5 bg-slate-50 dark:bg-[#08180B] rounded-xl border border-slate-200 dark:border-emerald-950">
-                            <span class="text-slate-400 uppercase tracking-wider">Dustbin Fill Levels:</span>
+                            <span class="text-slate-400 uppercase tracking-wider">Kopargaon Smart Bins:</span>
                             <div class="flex items-center gap-2">
                                 <span class="flex items-center gap-1 text-emerald-500"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> &lt;50%</span>
                                 <span class="flex items-center gap-1 text-amber-500"><span class="w-2 h-2 rounded-full bg-amber-500"></span> 50-79%</span>
@@ -231,7 +231,7 @@
                         </div>
 
                         <div class="flex gap-2">
-                            <input type="text" id="landmarkSearchInput" placeholder="Search street, area, or landmark..." class="flex-1 px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-[#08180B] border border-slate-200 dark:border-emerald-950 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                            <input type="text" id="landmarkSearchInput" placeholder="Search Kopargaon chowk, ward, or road..." class="flex-1 px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-[#08180B] border border-slate-200 dark:border-emerald-950 focus:outline-none focus:ring-1 focus:ring-emerald-500">
                             <button type="button" onclick="searchCityStreet()" class="px-3 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl active:scale-95 transition-all">
                                 🔍 Find
                             </button>
@@ -248,7 +248,7 @@
 
                         <div class="p-3 bg-slate-50 dark:bg-[#08180B] border border-slate-200 dark:border-emerald-950 rounded-2xl text-center space-y-2">
                             <span class="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-400 block" id="geoStatusLabel">
-                                📍 Ready. Tap "Lock Satellite GPS", tap map, or drag pin.
+                                📍 Ready. Centered on Kopargaon. Tap map or drag pin.
                             </span>
 
                             <div class="p-2 bg-emerald-50/50 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-900/60 flex items-center justify-between gap-2">
@@ -281,7 +281,7 @@
                         <label class="block cursor-pointer">
                             <div id="dropzoneEmpty" class="border-2 border-dashed border-slate-300 dark:border-emerald-950 rounded-2xl p-4 text-center bg-slate-50 dark:bg-[#08180B] hover:border-emerald-500 transition-colors">
                                 <span class="text-3xl block mb-1">📸</span>
-                                <span class="text-xs font-bold text-slate-700 dark:text-slate-200 block">Tap to Open Camera or Upload Spot Photo</span>
+                                <span class="text-xs font-bold text-slate-700 dark:text-slate-200 block">Tap to Snap Photo or Upload Evidence</span>
                                 <span class="text-[10px] text-slate-400">AI audits photo for waste before dispatching crew</span>
                             </div>
                             <input type="file" id="photoFileInput" accept="image/*" capture="environment" onchange="onPhotoSelected(event)" class="hidden">
@@ -291,9 +291,9 @@
                             <img id="previewImg" src="" alt="Spot Photo" class="w-full h-48 object-cover">
                             
                             <div id="scannerOverlay" class="hidden absolute inset-0 bg-black/60 flex flex-col justify-between p-3 pointer-events-none">
-                                <span class="text-[9px] font-mono text-emerald-400 font-bold">[ ECOCLEAN AI VISION AUDIT ]</span>
+                                <span class="text-[9px] font-mono text-emerald-400 font-bold">[ ECOCLEAN KOPARGAON AI AUDIT ]</span>
                                 <div class="w-full h-0.5 bg-emerald-400 ai-laser"></div>
-                                <span class="text-[10px] font-mono text-emerald-300 text-center animate-pulse">Auditing photo for plastics & municipal refuse...</span>
+                                <span class="text-[10px] font-mono text-emerald-300 text-center animate-pulse">Auditing photo for municipal waste & refuse...</span>
                             </div>
 
                             <button type="button" onclick="clearSelectedPhoto()" class="absolute top-2 right-2 bg-black/70 text-white w-7 h-7 rounded-full text-xs font-bold">✕</button>
@@ -321,10 +321,10 @@
 
                     <!-- Step 3: Location Note & Submit Button -->
                     <div class="bg-white dark:bg-[#0D2411] border border-slate-200 dark:border-emerald-950/80 rounded-3xl p-4 shadow-sm space-y-3">
-                        <textarea id="reportComments" rows="2" placeholder="Specific street name, chowk, landmark, or waste notes..." class="w-full p-3 text-xs rounded-2xl bg-slate-50 dark:bg-[#08180B] border border-slate-200 dark:border-emerald-950 focus:outline-none focus:ring-1 focus:ring-emerald-500"></textarea>
+                        <textarea id="reportComments" rows="2" placeholder="Specific Kopargaon street, landmark, or waste notes..." class="w-full p-3 text-xs rounded-2xl bg-slate-50 dark:bg-[#08180B] border border-slate-200 dark:border-emerald-950 focus:outline-none focus:ring-1 focus:ring-emerald-500"></textarea>
                         
                         <button type="button" id="submitReportBtn" onclick="submitCitizenReport()" class="w-full bg-gradient-to-r from-emerald-600 to-ecoGreen-600 hover:from-emerald-500 text-white font-black py-3.5 px-4 rounded-full shadow-lg text-xs uppercase tracking-wider active:scale-95 transition-all">
-                            Submit Complaint to Municipal Command
+                            Submit Complaint to Kopargaon Municipal Command
                         </button>
                     </div>
                 </div>
@@ -333,7 +333,7 @@
                 <div id="tabContentTracker" class="hidden space-y-3">
                     <div class="bg-gradient-to-r from-emerald-950/50 to-slate-900 p-3 rounded-2xl border border-emerald-900/40 flex items-center justify-between">
                         <div>
-                            <span class="text-[9px] font-bold text-slate-400 block uppercase">Citizen Complaint Ledger</span>
+                            <span class="text-[9px] font-bold text-slate-400 block uppercase">Kopargaon Resident Complaint Ledger</span>
                             <h3 class="text-xs font-black text-white" id="trackerCitizenNameDisplay">Citizen User</h3>
                         </div>
                         <div class="flex items-center gap-2">
@@ -352,7 +352,7 @@
                         </button>
                         <button id="filterAllReportsBtn" onclick="setComplaintFilter('all')" class="flex-1 py-1.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1">
                             <span>🌐</span>
-                            <span>All City Reports</span>
+                            <span>All Kopargaon Reports</span>
                             <span id="allReportsCountBadge" class="text-[9px] bg-black/20 px-1.5 py-0.2 rounded-full">0</span>
                         </button>
                     </div>
@@ -391,19 +391,20 @@
         const REAL_TRASH_IMAGE = "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=800&q=80";
         const REAL_CLEAN_IMAGE = "https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=800&q=80";
 
-        const CITY_DEFAULT = [19.8915, 74.4789];
+        // Kopargaon City Coordinates (Center: Shivaji Chowk / Nagar Road)
+        const KOPARGAON_CENTER = [19.8915, 74.4789];
         
-        let savedSession = JSON.parse(localStorage.getItem('ecoclean_city_citizen') || 'null');
+        let savedSession = JSON.parse(localStorage.getItem('ecoclean_kopargaon_citizen') || 'null');
         let currentCitizen = savedSession || { 
             name: "Citizen User", 
             phone: "9876543210", 
-            city: "Main City Center" 
+            city: "Kopargaon" 
         };
 
         let mapInstance = null;
         let targetPinMarker = null;
         let dustbinMapMarkers = {};
-        let selectedCoords = CITY_DEFAULT;
+        let selectedCoords = KOPARGAON_CENTER;
 
         let currentUploadedPhotoUrl = "";
         let currentAiVerification = null;
@@ -459,11 +460,11 @@
             e.preventDefault();
             const name = document.getElementById('citizenInputName').value.trim();
             const phone = document.getElementById('citizenInputPhone').value.trim();
-            const city = document.getElementById('citizenInputCity').value.trim() || 'Main City Center';
+            const city = document.getElementById('citizenInputCity').value.trim() || 'Kopargaon';
 
             if (!name || !phone) return;
             currentCitizen = { name, phone, city };
-            localStorage.setItem('ecoclean_city_citizen', JSON.stringify(currentCitizen));
+            localStorage.setItem('ecoclean_kopargaon_citizen', JSON.stringify(currentCitizen));
 
             document.getElementById('headerCitizenName').innerText = `${name} • ${city}`;
             document.getElementById('trackerCitizenNameDisplay').innerText = `${name} (${phone})`;
@@ -476,14 +477,13 @@
                 acquireRealSatelliteGps();
             }, 200);
 
-            // Listen to live complaints
+            // Real-time synchronization
             db.ref('complaints').on('value', (snapshot) => {
                 const data = snapshot.val();
                 citizenComplaints = data ? Object.values(data).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)) : [];
                 renderCitizenComplaints();
             });
 
-            // Listen to live smart bins
             db.ref('dustbins').on('value', (snapshot) => {
                 const data = snapshot.val();
                 renderDustbinTrackingOnMap(data);
@@ -491,7 +491,7 @@
         }
 
         function handleCitizenLogout() {
-            localStorage.removeItem('ecoclean_city_citizen');
+            localStorage.removeItem('ecoclean_kopargaon_citizen');
             document.getElementById('mainSection').classList.add('hidden');
             document.getElementById('authSection').classList.remove('hidden');
         }
@@ -503,7 +503,7 @@
                     scrollWheelZoom: true, 
                     touchZoom: true, 
                     dragging: true 
-                }).setView(selectedCoords, 15);
+                }).setView(KOPARGAON_CENTER, 15);
 
                 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(mapInstance);
 
@@ -523,8 +523,8 @@
                     iconAnchor: [16, 42]
                 });
 
-                targetPinMarker = L.marker(selectedCoords, { icon: pinIcon, draggable: true }).addTo(mapInstance);
-                updateCoordinatesDisplay(selectedCoords[0], selectedCoords[1]);
+                targetPinMarker = L.marker(KOPARGAON_CENTER, { icon: pinIcon, draggable: true }).addTo(mapInstance);
+                updateCoordinatesDisplay(KOPARGAON_CENTER[0], KOPARGAON_CENTER[1]);
 
                 targetPinMarker.on('dragend', (e) => {
                     const pos = e.target.getLatLng();
@@ -662,7 +662,7 @@
             const query = document.getElementById('landmarkSearchInput').value.trim();
             if (!query) return;
             try {
-                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query + ', Kopargaon')}`);
                 const data = await res.json();
                 if (data && data.length > 0) {
                     const lat = parseFloat(data[0].lat);
@@ -673,7 +673,7 @@
                         targetPinMarker.setLatLng(selectedCoords);
                         mapInstance.setView(selectedCoords, 16, { animate: true });
                     }
-                    document.getElementById('geoStatusLabel').innerText = "📍 Location found";
+                    document.getElementById('geoStatusLabel').innerText = "📍 Location found in Kopargaon";
                 }
             } catch (e) {}
         }
@@ -695,7 +695,7 @@
                 runSimulatedAIScan(true, "Plastics, organic waste & packaging clutter detected on site.");
             } else {
                 currentUploadedPhotoUrl = REAL_CLEAN_IMAGE;
-                runSimulatedAIScan(false, "Clean city street detected! Zero municipal waste found.");
+                runSimulatedAIScan(false, "Clean Kopargaon street detected! Zero municipal waste found.");
             }
         }
 
@@ -775,15 +775,15 @@
                 return;
             }
 
-            const comments = document.getElementById('reportComments').value.trim() || "Waste overflow reported at spot.";
-            const reportId = `EC-${Math.floor(1000 + Math.random() * 9000)}`;
+            const comments = document.getElementById('reportComments').value.trim() || "Waste spot reported in Kopargaon.";
+            const reportId = `KP-${Math.floor(1000 + Math.random() * 9000)}`;
             const now = Date.now();
 
             const newReport = {
                 id: reportId,
                 citizenName: currentCitizen.name,
                 citizenPhone: currentCitizen.phone,
-                landmark: `Waste Spot (${selectedCoords[0].toFixed(4)}, ${selectedCoords[1].toFixed(4)})`,
+                landmark: `Kopargaon Spot (${selectedCoords[0].toFixed(4)}, ${selectedCoords[1].toFixed(4)})`,
                 coords: selectedCoords,
                 comment: comments,
                 beforeImage: currentUploadedPhotoUrl,
@@ -796,11 +796,11 @@
                 time: "Just now"
             };
 
-            showToast("🛰️ Syncing complaint to EcoClean Cloud...");
+            showToast("🛰️ Syncing complaint to EcoClean Kopargaon Cloud...");
 
             db.ref('complaints/' + reportId).set(newReport)
                 .then(() => {
-                    showToast("✅ Complaint registered in your ledger!");
+                    showToast("✅ Complaint registered in your Kopargaon ledger!");
                     clearSelectedPhoto();
                     document.getElementById('reportComments').value = "";
                     setComplaintFilter('mine');
@@ -871,12 +871,12 @@
                     list.innerHTML = `
                         <div class="bg-white dark:bg-[#0D2411] border border-slate-200 dark:border-emerald-950 rounded-3xl p-8 text-center space-y-2">
                             <span class="text-3xl block">📋</span>
-                            <h4 class="text-xs font-bold text-slate-200">You haven't filed any complaints yet!</h4>
+                            <h4 class="text-xs font-bold text-slate-200">You haven't filed any complaints in Kopargaon yet!</h4>
                             <p class="text-[10px] text-slate-500">Go to the Report tab to snap a photo and file your first grievance.</p>
                         </div>
                     `;
                 } else {
-                    list.innerHTML = `<div class="text-center py-10 text-xs text-slate-400">No complaints reported yet.</div>`;
+                    list.innerHTML = `<div class="text-center py-10 text-xs text-slate-400">No complaints reported yet in Kopargaon.</div>`;
                 }
                 return;
             }
