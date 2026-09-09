@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EcoClean Kopargaon - Citizen Portal</title>
+    <title>Eco Clean City - Kopargaon Citizen Portal</title>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -58,10 +58,10 @@
             z-index: 1;
         }
 
-        /* Opening Background: Person Taking Photo of Waste */
+        /* Opening Background: Person Taking Photo of Waste on Smartphone */
         .hero-bg {
-            background-image: linear-gradient(to bottom, rgba(6, 23, 10, 0.82), rgba(8, 35, 11, 0.94)), 
-                              url('https://images.unsplash.com/photo-1526951521990-620dc14c214b?auto=format&fit=crop&w=1200&q=80');
+            background-image: linear-gradient(to bottom, rgba(6, 23, 10, 0.85), rgba(8, 35, 11, 0.94)), 
+                              url('https://images.unsplash.com/photo-1611288870280-4a34b7782361?auto=format&fit=crop&w=1200&q=80');
             background-size: cover;
             background-position: center;
         }
@@ -129,15 +129,15 @@
         <main id="authSection" class="flex-1 flex flex-col justify-between hero-bg text-white p-6 relative">
             <div class="pt-6 text-center space-y-3 relative z-10">
                 <div class="w-24 h-24 mx-auto rounded-full bg-white p-1 shadow-2xl border-2 border-emerald-400/50 flex items-center justify-center overflow-hidden">
-                    <img src="logo.png" onerror="this.onerror=null; this.src='https://api.iconify.design/fluent-emoji:wastebasket.svg';" alt="EcoClean Kopargaon Logo" class="w-full h-full object-contain">
+                    <img src="logo.png" onerror="this.onerror=null; this.src='https://api.iconify.design/fluent-emoji:wastebasket.svg';" alt="Eco Clean City Logo" class="w-full h-full object-contain">
                 </div>
 
                 <div>
                     <h1 class="text-2xl font-extrabold tracking-tight text-white">
-                        EcoClean Kopargaon
+                        Eco Clean City
                     </h1>
                     <p class="text-[11px] text-emerald-200/90 tracking-wider uppercase font-bold mt-0.5">
-                        Cleaner Spaces • Brighter Tomorrows
+                        Kopargaon Municipal Unit • Cleaner Spaces
                     </p>
                     <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-[10px] text-emerald-300 font-semibold mt-2">
                         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -170,13 +170,13 @@
                         <input type="text" id="citizenInputCity" value="Kopargaon (Shivaji Chowk)" required class="w-full mt-1 px-4 py-2.5 text-xs font-bold rounded-2xl bg-black/40 border border-emerald-900/80 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
                     </div>
                     <button type="submit" class="w-full bg-gradient-to-r from-emerald-600 to-ecoGreen-600 hover:from-emerald-500 text-white font-black py-3.5 rounded-2xl shadow-xl text-xs uppercase tracking-wider active:scale-95 transition-all border border-emerald-400/30">
-                        Enter Kopargaon Citizen Desk
+                        Enter Eco Clean City Desk
                     </button>
                 </form>
             </div>
 
             <div class="text-center text-[10px] text-emerald-200/70 font-semibold py-2 relative z-10">
-                Kopargaon Municipal Council • Smart Sanitation Operations
+                Eco Clean City • Kopargaon Municipal Council
             </div>
         </main>
 
@@ -189,8 +189,8 @@
                     </div>
                     <div>
                         <h1 class="font-extrabold text-sm leading-tight flex items-center gap-1.5">
-                            EcoClean Kopargaon
-                            <span class="text-[8px] bg-emerald-400/20 text-emerald-300 px-1.5 py-0.2 rounded border border-emerald-400/30">Live Grid</span>
+                            Eco Clean City
+                            <span class="text-[8px] bg-emerald-400/20 text-emerald-300 px-1.5 py-0.2 rounded border border-emerald-400/30">Kopargaon</span>
                         </h1>
                         <p class="text-[9px] text-emerald-300/80 uppercase font-bold tracking-wider" id="headerCitizenName">Citizen User • Kopargaon</p>
                     </div>
@@ -292,7 +292,7 @@
                             <img id="previewImg" src="" alt="Spot Photo" class="w-full h-48 object-cover">
                             
                             <div id="scannerOverlay" class="hidden absolute inset-0 bg-black/60 flex flex-col justify-between p-3 pointer-events-none">
-                                <span class="text-[9px] font-mono text-emerald-400 font-bold">[ ECOCLEAN KOPARGAON AI AUDIT ]</span>
+                                <span class="text-[9px] font-mono text-emerald-400 font-bold">[ ECO CLEAN CITY AI AUDIT ]</span>
                                 <div class="w-full h-0.5 bg-emerald-400 ai-laser"></div>
                                 <span class="text-[10px] font-mono text-emerald-300 text-center animate-pulse">Auditing photo for municipal waste & refuse...</span>
                             </div>
@@ -395,7 +395,7 @@
         // Kopargaon City Coordinates (Center: Shivaji Chowk / Nagar Road)
         const KOPARGAON_CENTER = [19.8915, 74.4789];
         
-        let savedSession = JSON.parse(localStorage.getItem('ecoclean_kopargaon_citizen') || 'null');
+        let savedSession = JSON.parse(localStorage.getItem('eco_clean_city_citizen') || 'null');
         let currentCitizen = savedSession || { 
             name: "Citizen User", 
             phone: "9876543210", 
@@ -465,7 +465,7 @@
 
             if (!name || !phone) return;
             currentCitizen = { name, phone, city };
-            localStorage.setItem('ecoclean_kopargaon_citizen', JSON.stringify(currentCitizen));
+            localStorage.setItem('eco_clean_city_citizen', JSON.stringify(currentCitizen));
 
             document.getElementById('headerCitizenName').innerText = `${name} • ${city}`;
             document.getElementById('trackerCitizenNameDisplay').innerText = `${name} (${phone})`;
@@ -492,7 +492,7 @@
         }
 
         function handleCitizenLogout() {
-            localStorage.removeItem('ecoclean_kopargaon_citizen');
+            localStorage.removeItem('eco_clean_city_citizen');
             document.getElementById('mainSection').classList.add('hidden');
             document.getElementById('authSection').classList.remove('hidden');
         }
@@ -777,7 +777,7 @@
             }
 
             const comments = document.getElementById('reportComments').value.trim() || "Waste spot reported in Kopargaon.";
-            const reportId = `KP-${Math.floor(1000 + Math.random() * 9000)}`;
+            const reportId = `ECC-${Math.floor(1000 + Math.random() * 9000)}`;
             const now = Date.now();
 
             const newReport = {
@@ -797,7 +797,7 @@
                 time: "Just now"
             };
 
-            showToast("🛰️ Syncing complaint to EcoClean Kopargaon Cloud...");
+            showToast("🛰️ Syncing complaint to Eco Clean City Cloud...");
 
             db.ref('complaints/' + reportId).set(newReport)
                 .then(() => {
