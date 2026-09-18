@@ -150,7 +150,7 @@
                 <div class="flex items-center justify-between border-b pb-3 border-emerald-900/60">
                     <div>
                         <h2 class="text-sm font-black text-white">Citizen Portal</h2>
-                        <p class="text-[11px] text-emerald-300/80">Report municipal garbage & view clean spots</p>
+                        <p class="text-[11px] text-emerald-300/80">Report municipal garbage & track cleanups</p>
                     </div>
                     <span class="text-[10px] bg-emerald-500/20 text-emerald-300 font-extrabold px-2.5 py-1 rounded-full border border-emerald-500/30">City Live</span>
                 </div>
@@ -251,7 +251,7 @@
                                 <div class="text-left">
                                     <span class="text-[9px] font-black uppercase tracking-wider text-slate-400 block">Report Location Status</span>
                                     <span class="text-xs font-bold text-emerald-700 dark:text-emerald-300">
-                                        📍 Map Pin Locked
+                                        📍 Pinned on City Map
                                     </span>
                                 </div>
                                 <button type="button" onclick="openCurrentInGoogleMaps()" class="px-2.5 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg text-[10px] font-extrabold shadow flex items-center gap-1 active:scale-95 transition-all whitespace-nowrap">
@@ -404,6 +404,21 @@
         let currentAiVerification = null;
         let citizenComplaints = [];
         let activeGrievanceFilter = 'mine';
+
+        // Strip any residual lat/long numbers, parentheses, or phone numbers from database strings
+        function stripCoordsAndPhones(str) {
+            if (!str) return '';
+            let cleaned = String(str)
+                .replace(/\(?\s*-?\d{1,3}\.\d+[\s,]+-?\d{1,3}\.\d+\s*\)?/gi, '') // (lat, lng)
+                .replace(/\b\d{2}\.\d{3,}\b/gi, '') // standalone decimals
+                .replace(/\b[6-9]\d{9}\b/gi, '') // 10-digit mobile numbers
+                .replace(/\b\d{10}\b/gi, '')
+                .replace(/\(\s*\)/g, '')
+                .replace(/Spot\s*\(\s*\)/gi, 'City Spot')
+                .replace(/\s{2,}/g, ' ')
+                .trim();
+            return cleaned || 'City Sanitation Spot';
+        }
 
         function formatDateTime(timestamp) {
             if (!timestamp) return "Date unavailable";
@@ -584,7 +599,7 @@
                                 ${statusLabel}
                             </span>
                         </div>
-                        <h4 class="font-extrabold text-xs text-slate-900 leading-tight">${bin.name || 'Smart Bin'}</h4>
+                        <h4 class="font-extrabold text-xs text-slate-900 leading-tight">${stripCoordsAndPhones(bin.name || 'Smart Bin')}</h4>
                         
                         <div class="space-y-0.5 pt-1">
                             <div class="flex justify-between text-[10px] font-bold text-slate-600">
@@ -757,6 +772,8 @@
                 return;
             }
 
+            const searchInput = document.getElementById('landmarkSearchInput').value.trim();
+            const landmarkLabel = searchInput || "City Sanitation Spot";
             const comments = document.getElementById('reportComments').value.trim() || "Waste spot reported in City.";
             const reportId = `KP-${Math.floor(1000 + Math.random() * 9000)}`;
             const now = Date.now();
@@ -764,7 +781,7 @@
             const newReport = {
                 id: reportId,
                 citizenName: currentCitizen.name,
-                landmark: `City Spot Report`,
+                landmark: landmarkLabel,
                 coords: selectedCoords,
                 comment: comments,
                 beforeImage: currentUploadedPhotoUrl,
@@ -834,8 +851,11 @@
             const allBadge = document.getElementById('allReportsCountBadge');
             const resolvedBadge = document.getElementById('userPersonalResolvedBadge');
 
+            const currentNameLower = (currentCitizen.name || "").toLowerCase().trim();
+
             const myPersonalReports = citizenComplaints.filter(item => {
-                return item.citizenName && item.citizenName.toLowerCase() === currentCitizen.name.toLowerCase();
+                const reporterName = (item.citizenName || "").toLowerCase().trim();
+                return reporterName === currentNameLower;
             });
 
             const myResolvedCount = myPersonalReports.filter(item => item.status === 'Resolved').length;
@@ -870,7 +890,7 @@
                 if (item.status === 'Dispatched') statusColor = "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300";
                 if (item.status === 'Resolved') statusColor = "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-extrabold";
 
-                const isMyReport = (item.citizenName && item.citizenName.toLowerCase() === currentCitizen.name.toLowerCase());
+                const isMyReport = ((item.citizenName || "").toLowerCase().trim() === currentNameLower);
                 const isResolved = (item.status === 'Resolved');
                 const filedDateString = item.filedAtFormatted || (item.timestamp ? formatDateTime(item.timestamp) : item.time || "Recently");
                 const resolvedDateString = item.resolvedAt ? formatDateTime(item.resolvedAt) : null;
@@ -878,12 +898,17 @@
                 const latVal = item.coords ? (item.coords[0] || CITY_CENTER[0]) : CITY_CENTER[0];
                 const lngVal = item.coords ? (item.coords[1] || CITY_CENTER[1]) : CITY_CENTER[1];
 
+                // Dynamically sanitize landmark and comment strings from any coordinates or phone numbers
+                const safeLandmark = stripCoordsAndPhones(item.landmark);
+                const safeComment = stripCoordsAndPhones(item.comment);
+                const safeCitizenName = stripCoordsAndPhones(item.citizenName || "Resident");
+
                 card.innerHTML = `
                     <div class="flex items-start justify-between gap-2 border-b border-slate-100 dark:border-emerald-950 pb-2">
                         <div>
                             <div class="flex items-center gap-1.5">
                                 <span class="text-[10px] font-black font-mono text-slate-400">${item.id}</span>
-                                ${isMyReport ? '<span class="text-[8px] font-black bg-emerald-900/60 text-emerald-200 px-1.5 py-0.2 rounded">Filed by You</span>' : ''}
+                                ${isMyReport ? '<span class="text-[8px] font-black bg-emerald-900/60 text-emerald-200 px-1.5 py-0.2 rounded">Filed by You</span>' : `<span class="text-[8px] font-bold text-slate-400">Resident: ${safeCitizenName}</span>`}
                             </div>
                             <span class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 block mt-0.5">
                                 🕒 Filed: ${filedDateString}
@@ -892,7 +917,7 @@
                         <span class="text-[9px] font-black px-2.5 py-0.5 rounded-full border border-current ${statusColor}">${item.status}</span>
                     </div>
 
-                    <h4 class="font-extrabold text-xs text-slate-900 dark:text-white">${item.landmark}</h4>
+                    <h4 class="font-extrabold text-xs text-slate-900 dark:text-white">${safeLandmark}</h4>
 
                     <div class="flex gap-2.5">
                         <div class="space-y-1">
@@ -906,7 +931,7 @@
                             </div>
                         ` : ''}
                         <div class="text-xs text-slate-600 dark:text-slate-300 flex-1 pl-1 space-y-1">
-                            <p class="line-clamp-2">${item.comment}</p>
+                            <p class="line-clamp-2">${safeComment}</p>
                             <span class="text-[9px] font-semibold text-emerald-500 block">${item.geminiVerdict || 'Verified Solid Waste'}</span>
                             
                             ${resolvedDateString ? `
