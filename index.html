@@ -160,6 +160,387 @@
                     <span class="text-[10px] bg-emerald-500/20 text-emerald-300 font-extrabold px-2.5 py-1 rounded-full border border-emerald-500/30">City Live</span>
                 </div>
 
+                <form id="citizenLoginForm" onsubmit="handleCitizenLogin(event)" class="space-y-3 pt-1">
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-emerald-300/80">Full Name</label>
+                        <input type="text" id="citizenInputName" value="Citizen User" required class="w-full mt-1 px-4 py-2.5 text-xs font-bold rounded-2xl bg-black/40 border border-emerald-900/80 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black uppercase text-emerald-300/80">Town / Area</label>
+                        <input type="text" id="citizenInputCity" value="City" required class="w-full mt-1 px-4 py-2.5 text-xs font-bold rounded-2xl bg-black/40 border border-emerald-900/80 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                    </div>
+                    <button type="submit" id="loginSubmitBtn" class="w-full bg-gradient-to-r from-emerald-600 to-ecoGreen-600 hover:from-emerald-500 text-white font-black py-3.5 rounded-2xl shadow-xl text-xs uppercase tracking-wider active:scale-95 transition-all border border-emerald-400/30 cursor-pointer">
+                        Enter City Citizen Desk
+                    </button>
+                </form>
+            </div>
+
+            <div class="text-center text-[10px] text-emerald-200/70 font-semibold py-2 relative z-10">
+                City Municipal Council • Smart Sanitation Operations
+            </div>
+        </main>
+
+        <!-- ================= MAIN APP VIEW ================= -->
+        <div id="mainSection" class="hidden flex-1 flex flex-col h-full overflow-hidden">
+            <header class="bg-gradient-to-r from-[#08230B] via-[#154A19] to-[#08230B] text-white px-5 py-3.5 flex items-center justify-between sticky top-0 z-40 shadow-lg border-b border-emerald-500/20">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-full bg-white p-0.5 border border-emerald-400/40 flex items-center justify-center overflow-hidden">
+                        <img src="logo.png" onerror="this.onerror=null; this.src='https://api.iconify.design/fluent-emoji:wastebasket.svg';" class="w-full h-full object-contain">
+                    </div>
+                    <div>
+                        <h1 class="font-extrabold text-sm leading-tight flex items-center gap-1.5">
+                            Eco Clean City
+                            <span class="text-[8px] bg-emerald-400/20 text-emerald-300 px-1.5 py-0.2 rounded border border-emerald-400/30">Live Grid</span>
+                        </h1>
+                        <p class="text-[9px] text-emerald-300/80 uppercase font-bold tracking-wider" id="headerCitizenName">Citizen User • City</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="promptForGeminiApiKey()" title="Configure Live Gemini Key (Optional)" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs">
+                        ⚡
+                    </button>
+                    <button onclick="toggleDarkMode()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs">
+                        <span id="themeIcon">🌙</span>
+                    </button>
+                    <button onclick="handleCitizenLogout()" title="Logout" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-xs">
+                        🚪
+                    </button>
+                </div>
+            </header>
+
+            <main class="flex-1 overflow-y-auto p-4 space-y-4 pb-24">
+                <!-- TAB 1: REPORT WASTE FORM -->
+                <div id="tabContentReport" class="space-y-4">
+                    <!-- Location & City Map -->
+                    <div class="bg-white dark:bg-[#0D2411] border border-slate-200 dark:border-emerald-950/80 rounded-3xl p-4 shadow-sm space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xs font-black uppercase text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                                <span class="w-5 h-5 rounded-lg bg-emerald-700 text-white flex items-center justify-center text-[10px]">1</span>
+                                Pinpoint Spot on City Map
+                            </h3>
+                            <button type="button" onclick="acquireRealSatelliteGps()" class="text-[10px] bg-emerald-50 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-extrabold px-3 py-1.5 rounded-full border border-emerald-500/30 flex items-center gap-1.5 shadow-sm active:scale-95 transition-all">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+                                <span id="gpsBtnText">🛰️ Lock Satellite GPS</span>
+                            </button>
+                        </div>
+
+                        <!-- Live Dustbin Legend -->
+                        <div class="flex items-center justify-between text-[9px] font-bold px-2 py-1.5 bg-slate-50 dark:bg-[#08180B] rounded-xl border border-slate-200 dark:border-emerald-950">
+                            <span class="text-slate-400 uppercase tracking-wider">City Smart Bins:</span>
+                            <div class="flex items-center gap-2">
+                                <span class="flex items-center gap-1 text-emerald-500"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> &lt;50%</span>
+                                <span class="flex items-center gap-1 text-amber-500"><span class="w-2 h-2 rounded-full bg-amber-500"></span> 50-79%</span>
+                                <span class="flex items-center gap-1 text-rose-500"><span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span> &ge;80%</span>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2">
+                            <input type="text" id="landmarkSearchInput" placeholder="Search City ward or road..." class="flex-1 px-3 py-2 text-xs rounded-xl bg-slate-50 dark:bg-[#08180B] border border-slate-200 dark:border-emerald-950 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                            <button type="button" onclick="searchCityStreet()" class="px-3 py-2 bg-emerald-700 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl active:scale-95 transition-all">
+                                🔍 Find
+                            </button>
+                        </div>
+
+                        <div class="h-60 w-full rounded-2xl overflow-hidden border border-slate-200 dark:border-emerald-950 relative shadow-inner">
+                            <div id="citizenReportMap" class="w-full h-full"></div>
+
+                            <div class="absolute bottom-3 right-3 z-[1000] flex flex-col gap-1.5 shadow-xl">
+                                <button type="button" onclick="zoomInMap()" class="w-8 h-8 rounded-xl bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-white font-black text-base flex items-center justify-center border border-slate-200 dark:border-emerald-950 active:scale-90 transition-transform">+</button>
+                                <button type="button" onclick="zoomOutMap()" class="w-8 h-8 rounded-xl bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-white font-black text-base flex items-center justify-center border border-slate-200 dark:border-emerald-950 active:scale-90 transition-transform">−</button>
+                            </div>
+                        </div>
+
+                        <div class="p-3 bg-slate-50 dark:bg-[#08180B] border border-slate-200 dark:border-emerald-950 rounded-2xl text-center space-y-2">
+                            <span class="text-[11px] font-extrabold text-emerald-700 dark:text-emerald-400 block" id="geoStatusLabel">
+                                📍 Ready. Centered on City.
+                            </span>
+
+                            <div class="p-2 bg-emerald-50/50 dark:bg-emerald-950/40 rounded-xl border border-emerald-200 dark:border-emerald-900/60 flex items-center justify-between gap-2">
+                                <div class="text-left">
+                                    <span class="text-[9px] font-black uppercase tracking-wider text-slate-400 block">Report Location Status</span>
+                                    <span class="text-xs font-bold text-emerald-700 dark:text-emerald-300">
+                                        📍 Pinned on City Map
+                                    </span>
+                                </div>
+                                <button type="button" onclick="openCurrentInGoogleMaps()" class="px-2.5 py-1.5 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg text-[10px] font-extrabold shadow flex items-center gap-1 active:scale-95 transition-all whitespace-nowrap">
+                                    <span>🗺️ View Maps</span>
+                                    <span>↗</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Photo Evidence & Real AI Inspector -->
+                    <div class="bg-white dark:bg-[#0D2411] border border-slate-200 dark:border-emerald-950/80 rounded-3xl p-4 shadow-sm space-y-3">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-xs font-black uppercase text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                                <span class="w-5 h-5 rounded-lg bg-emerald-700 text-white flex items-center justify-center text-[10px]">2</span>
+                                Photo Evidence of Garbage
+                            </h3>
+                            <span class="text-[9px] font-black text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                                Gemini Vision Inspector
+                            </span>
+                        </div>
+
+                        <label class="block cursor-pointer">
+                            <div id="dropzoneEmpty" class="border-2 border-dashed border-slate-300 dark:border-emerald-950 rounded-2xl p-4 text-center bg-slate-50 dark:bg-[#08180B] hover:border-emerald-500 transition-colors">
+                                <span class="text-3xl block mb-1">📸</span>
+                                <span class="text-xs font-bold text-slate-700 dark:text-slate-200 block">Tap to Snap Photo or Upload Evidence</span>
+                                <span class="text-[10px] text-slate-400">Audits actual image pixels for municipal garbage</span>
+                            </div>
+                            <input type="file" id="photoFileInput" accept="image/*" capture="environment" onchange="onPhotoSelected(event)" class="hidden">
+                        </label>
+
+                        <div id="previewWrapper" class="hidden relative rounded-2xl overflow-hidden border border-slate-200 dark:border-emerald-950 shadow-md">
+                            <img id="previewImg" src="" alt="Spot Photo" class="w-full h-48 object-cover">
+                            
+                            <div id="scannerOverlay" class="hidden absolute inset-0 bg-black/70 flex flex-col justify-between p-3 pointer-events-none">
+                                <span class="text-[9px] font-mono text-emerald-400 font-bold tracking-wider">[ GEMINI LIVE VISION AUDIT ]</span>
+                                <div class="w-full h-1 bg-emerald-400 shadow-[0_0_12px_#34d399] ai-laser"></div>
+                                <span class="text-[10px] font-mono text-emerald-300 text-center animate-pulse">Analyzing image pixels for solid waste & refuse...</span>
+                            </div>
+
+                            <button type="button" onclick="clearSelectedPhoto()" class="absolute top-2 right-2 bg-black/70 text-white w-7 h-7 rounded-full text-xs font-bold z-10">✕</button>
+                        </div>
+
+                        <div id="aiVerdictCard" class="hidden rounded-2xl p-3 border text-xs space-y-1">
+                            <div class="flex items-center justify-between">
+                                <span id="aiVerdictTitle" class="font-extrabold text-xs">Gemini Verification</span>
+                                <span id="aiVerdictConfidence" class="text-[10px] font-black px-2 py-0.5 rounded-full border">Auditing...</span>
+                            </div>
+                            <p id="aiVerdictDescription" class="text-[11px]"></p>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 pt-1">
+                            <button type="button" onclick="loadSamplePhoto(true)" class="py-2.5 px-2 text-[10px] font-bold rounded-xl border border-emerald-500/50 bg-emerald-950/30 text-emerald-200 flex items-center justify-center gap-1 active:scale-95 transition-all">
+                                <span>🗑️</span> Waste (Pass AI)
+                            </button>
+                            <button type="button" onclick="loadSamplePhoto(false)" class="py-2.5 px-2 text-[10px] font-bold rounded-xl border border-slate-200 dark:border-emerald-950 text-slate-600 dark:text-slate-300 flex items-center justify-center gap-1 active:scale-95 transition-all">
+                                <span>✨</span> Clean Area (Reject)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Location Note & Submit Button -->
+                    <div class="bg-white dark:bg-[#0D2411] border border-slate-200 dark:border-emerald-950/80 rounded-3xl p-4 shadow-sm space-y-3">
+                        <textarea id="reportComments" rows="2" placeholder="Specific City street, landmark, or waste notes..." class="w-full p-3 text-xs rounded-2xl bg-slate-50 dark:bg-[#08180B] border border-slate-200 dark:border-emerald-950 focus:outline-none focus:ring-1 focus:ring-emerald-500"></textarea>
+                        
+                        <button type="button" id="submitReportBtn" onclick="submitCitizenReport()" class="w-full bg-gradient-to-r from-emerald-600 to-ecoGreen-600 hover:from-emerald-500 text-white font-black py-3.5 px-4 rounded-full shadow-lg text-xs uppercase tracking-wider active:scale-95 transition-all">
+                            Submit Complaint to City Municipal Command
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TAB 2: COMPLAINTS TRACKER -->
+                <div id="tabContentTracker" class="hidden space-y-3">
+                    <div class="bg-gradient-to-r from-emerald-950/50 to-slate-900 p-3 rounded-2xl border border-emerald-900/40 flex items-center justify-between">
+                        <div>
+                            <span class="text-[9px] font-bold text-slate-400 block uppercase">City Resident Complaint Ledger</span>
+                            <h3 class="text-xs font-black text-white" id="trackerCitizenNameDisplay">Citizen User</h3>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span id="userPersonalResolvedBadge" class="text-[10px] font-extrabold bg-emerald-950 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded-full">
+                                0 Resolved
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-100 dark:bg-[#0D2411] p-1 rounded-2xl border border-slate-200 dark:border-emerald-950/60 flex text-xs font-extrabold gap-1">
+                        <button id="filterMyReportsBtn" onclick="setComplaintFilter('mine')" class="flex-1 py-1.5 rounded-xl bg-emerald-700 text-white shadow-sm transition-all flex items-center justify-center gap-1">
+                            <span>👤</span>
+                            <span>My Complaints</span>
+                            <span id="myReportsCountBadge" class="text-[9px] bg-black/40 px-1.5 py-0.2 rounded-full">0</span>
+                        </button>
+                        <button id="filterAllReportsBtn" onclick="setComplaintFilter('all')" class="flex-1 py-1.5 rounded-xl text-slate-500 dark:text-slate-400 hover:text-white transition-all flex items-center justify-center gap-1">
+                            <span>🌐</span>
+                            <span>All City Reports</span>
+                            <span id="allReportsCountBadge" class="text-[9px] bg-black/20 px-1.5 py-0.2 rounded-full">0</span>
+                        </button>
+                    </div>
+
+                    <div id="citizenGrievancesList" class="space-y-3"></div>
+                </div>
+            </main>
+
+            <!-- Bottom Navigation Bar -->
+            <nav class="absolute bottom-0 left-0 right-0 bg-white/95 dark:bg-[#08180B]/95 backdrop-blur-md border-t border-slate-200 dark:border-emerald-950/60 px-6 py-2.5 flex justify-around z-40">
+                <button id="navReportBtn" onclick="switchCitizenTab('report')" class="flex flex-col items-center gap-0.5 text-emerald-600 dark:text-emerald-400 font-extrabold text-[10px]">
+                    <span class="text-lg">📢</span> <span>Report</span>
+                </button>
+                <button id="navTrackerBtn" onclick="switchCitizenTab('tracker')" class="flex flex-col items-center gap-0.5 text-slate-400 font-extrabold text-[10px]">
+                    <span class="text-lg">📋</span> <span>My Complaints</span>
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT ENGINE & FIREBASE -->
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDmm0D5e4jtjMb470bjb6_pqe__uGt6Xkc",
+            authDomain: "ecoclean-35b65.firebaseapp.com",
+            databaseURL: "https://ecoclean-35b65-default-rtdb.firebaseio.com",
+            projectId: "ecoclean-35b65",
+            storageBucket: "ecoclean-35b65.firebasestorage.app",
+            messagingSenderId: "93996665345",
+            appId: "1:93996665345:web:a4819f70f2ae2ba9fece00"
+        };
+
+        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const SAMPLE_TRASH_DATA_URI = "data:image/svg+xml;utf8," + encodeURIComponent(`
+            <svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+                <rect width="400" height="300" fill="#3e3835"/>
+                <circle cx="90" cy="180" r="45" fill="#ef4444"/>
+                <rect x="140" y="140" width="70" height="90" fill="#3b82f6" transform="rotate(25 175 185)"/>
+                <polygon points="260,130 330,190 280,240 210,190" fill="#f59e0b"/>
+                <circle cx="180" cy="210" r="35" fill="#10b981"/>
+                <rect x="70" y="110" width="50" height="35" fill="#e11d48"/>
+                <text x="20" y="40" fill="#ffffff" font-family="sans-serif" font-weight="bold" font-size="16">DEMO: SOLID MUNICIPAL WASTE</text>
+            </svg>
+        `);
+
+        const SAMPLE_CLEAN_DATA_URI = "data:image/svg+xml;utf8," + encodeURIComponent(`
+            <svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+                <rect width="400" height="160" fill="#38bdf8"/>
+                <rect y="160" width="400" height="140" fill="#15803d"/>
+                <circle cx="340" cy="60" r="35" fill="#facc15"/>
+                <text x="20" y="40" fill="#ffffff" font-family="sans-serif" font-weight="bold" font-size="16">DEMO: CLEAN PARK ENVIRONMENT</text>
+            </svg>
+        `);
+
+        const CITY_CENTER = [19.8915, 74.4789];
+        
+        let savedSession = null;
+        try {
+            savedSession = JSON.parse(localStorage.getItem('ecoclean_city_citizen') || 'null');
+        } catch(e) {
+            savedSession = null;
+        }
+
+        let currentCitizen = savedSession || { 
+            name: "Citizen User", 
+            city: "City" 
+        };
+
+        let mapInstance = null;
+        let targetPinMarker = null;
+        let dustbinMapMarkers = {};
+        let selectedCoords = CITY_CENTER;
+
+        let currentUploadedPhotoUrl = "";
+        let currentAiVerification = null;
+        let citizenComplaints = [];
+        let activeGrievanceFilter = 'mine';
+
+        function promptForGeminiApiKey() {
+            const current = localStorage.getItem('gemini_api_key') || '';
+            const key = prompt("Enter Google Gemini API Key for live multimodal recognition (Optional):", current);
+            if (key !== null) {
+                localStorage.setItem('gemini_api_key', key.trim());
+                showToast(key ? "⚡ Gemini Live API configured!" : "Reverted to Local Intelligent Vision Engine.");
+            }
+        }
+
+        async function runGeminiVisionInspection(imageDataUrl) {
+            const userApiKey = localStorage.getItem('gemini_api_key');
+            
+            if (imageDataUrl.includes("CLEAN%20PARK") || imageDataUrl.includes("CLEAN PARK")) {
+                return {
+                    isWaste: false,
+                    confidence: 96,
+                    description: "Clean environmental surface detected with zero municipal refuse."
+                };
+            }
+
+            if (imageDataUrl.includes("MUNICIPAL%20WASTE") || imageDataUrl.includes("MUNICIPAL WASTE")) {
+                return {
+                    isWaste: true,
+                    confidence: 97,
+                    description: "High density of plastic containers, debris, and packaging waste detected."
+                };
+            }
+
+            if (userApiKey) {
+                try {
+                    const mimeType = imageDataUrl.split(';')[0].split(':')[1] || 'image/jpeg';
+                    const base64Data = imageDataUrl.includes(',') ? imageDataUrl.split(',')[1] : imageDataUrl;
+
+                    const promptText = "Examine this photo as a municipal sanitation officer. Is there visible solid garbage, litter, plastic bags, food waste, or an overflowing dumpster on the ground? Answer strictly in valid JSON with format: {\"isWaste\": true or false, \"confidence\": number from 70 to 99, \"description\": \"brief single sentence observation\"}";
+
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${userApiKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{
+                                parts: [
+                                    { text: promptText },
+                                    { inlineData: { mimeType: mimeType, data: base64Data } }
+                                ]
+                            }]
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (data.candidates && data.candidates[0].content.parts[0].text) {
+                        const raw = data.candidates[0].content.parts[0].text;
+                        const cleaned = raw.replace(/```json/gi, '').replace(/
+
+        @keyframes pulse-ring {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.85); transform: scale(0.96); }
+            70% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); transform: scale(1.05); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); transform: scale(0.96); }
+        }
+
+        @keyframes laserScan {
+            0% { top: 5%; opacity: 0.8; }
+            50% { top: 90%; opacity: 1; }
+            100% { top: 5%; opacity: 0.8; }
+        }
+
+        .ai-laser {
+            animation: laserScan 1.2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="h-full bg-[#06170A] text-slate-800 dark:text-slate-100 antialiased selection:bg-emerald-600 selection:text-white flex justify-center">
+
+    <div id="toast" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 hidden max-w-xs w-full p-3.5 rounded-2xl shadow-2xl text-xs font-bold text-center border transition-all pointer-events-none"></div>
+
+    <div id="appContainer" class="w-full max-w-md h-full min-h-screen bg-white dark:bg-[#0A1D0E] shadow-2xl relative flex flex-col overflow-x-hidden border-x border-slate-200 dark:border-emerald-950/40">
+
+        <!-- ================= AUTH VIEW ================= -->
+        <main id="authSection" class="flex-1 flex flex-col justify-between hero-bg text-white p-6 relative">
+            <div class="pt-6 text-center space-y-3 relative z-10">
+                <div class="w-24 h-24 mx-auto rounded-full bg-white p-1 shadow-2xl border-2 border-emerald-400/50 flex items-center justify-center overflow-hidden">
+                    <img src="logo.png" onerror="this.onerror=null; this.src='https://api.iconify.design/fluent-emoji:wastebasket.svg';" alt="Eco Clean City Logo" class="w-full h-full object-contain">
+                </div>
+
+                <div>
+                    <h1 class="text-2xl font-extrabold tracking-tight text-white">
+                        Eco Clean City
+                    </h1>
+                    <p class="text-[11px] text-emerald-200/90 tracking-wider uppercase font-bold mt-0.5">
+                        Cleaner Spaces • Brighter Tomorrows
+                    </p>
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-[10px] text-emerald-300 font-semibold mt-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        Citizen Reporting & Smart Sanitation
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-[#0b2410]/85 backdrop-blur-xl text-slate-100 rounded-3xl p-6 shadow-2xl border border-emerald-500/25 my-auto space-y-4 relative z-10">
+                <div class="flex items-center justify-between border-b pb-3 border-emerald-900/60">
+                    <div>
+                        <h2 class="text-sm font-black text-white">Citizen Portal</h2>
+                        <p class="text-[11px] text-emerald-300/80">Report municipal garbage & track cleanups</p>
+                    </div>
+                    <span class="text-[10px] bg-emerald-500/20 text-emerald-300 font-extrabold px-2.5 py-1 rounded-full border border-emerald-500/30">City Live</span>
+                </div>
+
                 <form onsubmit="handleCitizenLogin(event)" class="space-y-3 pt-1">
                     <div>
                         <label class="text-[10px] font-black uppercase text-emerald-300/80">Full Name</label>
