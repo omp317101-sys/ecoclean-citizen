@@ -50,6 +50,8 @@
             background-color: #06170A;
             color: #1E293B;
             height: 100%;
+            margin: 0;
+            padding: 0;
         }
         .leaflet-container {
             width: 100%;
@@ -126,51 +128,80 @@
 
         <!-- ================= AUTH VIEW ================= -->
         <main id="authSection" class="flex-1 flex flex-col justify-between hero-bg text-white p-6 relative">
-            <div class="pt-6 text-center space-y-3 relative z-10">
-                <div class="w-24 h-24 mx-auto rounded-full bg-white p-1 shadow-2xl border-2 border-emerald-400/50 flex items-center justify-center overflow-hidden">
+            <div class="pt-4 text-center space-y-2 relative z-10">
+                <div class="w-20 h-20 mx-auto rounded-full bg-white p-1 shadow-2xl border-2 border-emerald-400/50 flex items-center justify-center overflow-hidden">
                     <img src="logo.png" onerror="this.onerror=null; this.src='https://api.iconify.design/fluent-emoji:wastebasket.svg';" alt="Eco Clean City Logo" class="w-full h-full object-contain">
                 </div>
 
                 <div>
-                    <h1 class="text-2xl font-extrabold tracking-tight text-white">
+                    <h1 class="text-xl font-extrabold tracking-tight text-white">
                         Eco Clean City
                     </h1>
-                    <p class="text-[11px] text-emerald-200/90 tracking-wider uppercase font-bold mt-0.5">
+                    <p class="text-[10px] text-emerald-200/90 tracking-wider uppercase font-bold mt-0.5">
                         Cleaner Spaces • Brighter Tomorrows
                     </p>
-                    <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-[10px] text-emerald-300 font-semibold mt-2">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <div class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-[9px] text-emerald-300 font-semibold mt-1">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                         Citizen Reporting & Smart Sanitation
                     </div>
                 </div>
             </div>
 
-            <!-- Citizen Login Card -->
-            <div class="bg-[#0b2410]/85 backdrop-blur-xl text-slate-100 rounded-3xl p-6 shadow-2xl border border-emerald-500/25 my-auto space-y-4 relative z-10">
-                <div class="flex items-center justify-between border-b pb-3 border-emerald-900/60">
-                    <div>
-                        <h2 class="text-sm font-black text-white">Citizen Portal</h2>
-                        <p class="text-[11px] text-emerald-300/80">Report municipal garbage & track cleanups</p>
-                    </div>
-                    <span class="text-[10px] bg-emerald-500/20 text-emerald-300 font-extrabold px-2.5 py-1 rounded-full border border-emerald-500/30">City Live</span>
+            <!-- Citizen Login & Registration Card -->
+            <div class="bg-[#0b2410]/90 backdrop-blur-xl text-slate-100 rounded-3xl p-5 shadow-2xl border border-emerald-500/25 my-auto space-y-3.5 relative z-10">
+                
+                <!-- Auth Mode Tabs (Sign In / Register) -->
+                <div class="flex items-center p-1 bg-black/40 rounded-2xl border border-emerald-900/80 text-xs font-bold">
+                    <button type="button" id="tabSignInBtn" onclick="setAuthMode('signin')" class="flex-1 py-1.5 rounded-xl bg-emerald-700 text-white shadow transition-all">
+                        Sign In
+                    </button>
+                    <button type="button" id="tabRegisterBtn" onclick="setAuthMode('register')" class="flex-1 py-1.5 rounded-xl text-slate-400 hover:text-white transition-all">
+                        New Account
+                    </button>
                 </div>
 
-                <form onsubmit="handleCitizenLogin(event)" class="space-y-3 pt-1">
-                    <div>
+                <div class="border-b pb-2 border-emerald-900/60">
+                    <h2 class="text-xs font-black text-white" id="authFormTitle">Citizen Sign In</h2>
+                    <p class="text-[10px] text-emerald-300/80" id="authFormSub">Enter your registered mobile number</p>
+                </div>
+
+                <!-- Unified Form -->
+                <form onsubmit="handleCitizenAuth(event)" class="space-y-2.5">
+                    
+                    <!-- Full Name (Only for Registration) -->
+                    <div id="authFieldFullName" class="hidden">
                         <label class="text-[10px] font-black uppercase text-emerald-300/80">Full Name</label>
-                        <input type="text" id="citizenInputName" value="Citizen User" required class="w-full mt-1 px-4 py-2.5 text-xs font-bold rounded-2xl bg-black/40 border border-emerald-900/80 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <input type="text" id="citizenInputName" placeholder="e.g. Om Pawar" class="w-full mt-1 px-3.5 py-2 text-xs font-bold rounded-xl bg-black/50 border border-emerald-900/80 text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
                     </div>
+
+                    <!-- Mobile Number (Always Required) -->
                     <div>
-                        <label class="text-[10px] font-black uppercase text-emerald-300/80">Town / Area</label>
-                        <input type="text" id="citizenInputCity" value="City" required class="w-full mt-1 px-4 py-2.5 text-xs font-bold rounded-2xl bg-black/40 border border-emerald-900/80 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                        <label class="text-[10px] font-black uppercase text-emerald-300/80">Mobile Number (10 Digits)</label>
+                        <div class="flex gap-1.5 mt-1">
+                            <span class="px-2.5 py-2 text-xs font-black rounded-xl bg-black/60 border border-emerald-900/80 text-emerald-400 flex items-center justify-center">+91</span>
+                            <input type="tel" id="citizenInputMobile" maxlength="10" placeholder="e.g. 9876543210" required class="flex-1 px-3.5 py-2 text-xs font-bold rounded-xl bg-black/50 border border-emerald-900/80 text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                        </div>
                     </div>
-                    <button type="submit" class="w-full bg-gradient-to-r from-emerald-600 to-ecoGreen-600 hover:from-emerald-500 text-white font-black py-3.5 rounded-2xl shadow-xl text-xs uppercase tracking-wider active:scale-95 transition-all border border-emerald-400/30">
-                        Enter City Citizen Desk
+
+                    <!-- City / Area Name (Only for Registration) -->
+                    <div id="authFieldCity" class="hidden">
+                        <label class="text-[10px] font-black uppercase text-emerald-300/80">City / Ward / Town</label>
+                        <input type="text" id="citizenInputCity" placeholder="e.g. Kopargaon" class="w-full mt-1 px-3.5 py-2 text-xs font-bold rounded-xl bg-black/50 border border-emerald-900/80 text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+                    </div>
+
+                    <button type="submit" id="authSubmitBtn" class="w-full mt-1 bg-gradient-to-r from-emerald-600 to-ecoGreen-600 hover:from-emerald-500 text-white font-black py-3 rounded-2xl shadow-xl text-xs uppercase tracking-wider active:scale-95 transition-all border border-emerald-400/30 cursor-pointer">
+                        Access Citizen Desk
                     </button>
                 </form>
+
+                <div class="text-center pt-1">
+                    <button type="button" onclick="toggleAuthMode()" id="authSwitchPrompt" class="text-[10px] font-bold text-emerald-300 hover:underline">
+                        Don't have an account? Create a New Account
+                    </button>
+                </div>
             </div>
 
-            <div class="text-center text-[10px] text-emerald-200/70 font-semibold py-2 relative z-10">
+            <div class="text-center text-[9px] text-emerald-200/70 font-semibold py-1 relative z-10">
                 City Municipal Council • Smart Sanitation Operations
             </div>
         </main>
@@ -389,11 +420,9 @@
 
         const CITY_CENTER = [19.8915, 74.4789];
         
+        let currentAuthMode = 'signin'; // 'signin' or 'register'
         let savedSession = JSON.parse(localStorage.getItem('ecoclean_city_citizen') || 'null');
-        let currentCitizen = savedSession || { 
-            name: "Citizen User", 
-            city: "City" 
-        };
+        let currentCitizen = savedSession || null;
 
         let mapInstance = null;
         let targetPinMarker = null;
@@ -405,14 +434,158 @@
         let citizenComplaints = [];
         let activeGrievanceFilter = 'mine';
 
-        // Strip coordinates, phone numbers, and Shivaji Chowk from database strings
+        // Auto login if session already exists
+        window.addEventListener('DOMContentLoaded', () => {
+            if (currentCitizen && currentCitizen.mobile) {
+                launchAppSession(currentCitizen);
+            }
+        });
+
+        function setAuthMode(mode) {
+            currentAuthMode = mode;
+            const btnSignIn = document.getElementById('tabSignInBtn');
+            const btnRegister = document.getElementById('tabRegisterBtn');
+            const nameField = document.getElementById('authFieldFullName');
+            const cityField = document.getElementById('authFieldCity');
+            const title = document.getElementById('authFormTitle');
+            const sub = document.getElementById('authFormSub');
+            const submitBtn = document.getElementById('authSubmitBtn');
+            const switchPrompt = document.getElementById('authSwitchPrompt');
+
+            if (mode === 'signin') {
+                btnSignIn.className = "flex-1 py-1.5 rounded-xl bg-emerald-700 text-white shadow transition-all";
+                btnRegister.className = "flex-1 py-1.5 rounded-xl text-slate-400 hover:text-white transition-all";
+                nameField.classList.add('hidden');
+                cityField.classList.add('hidden');
+                document.getElementById('citizenInputName').required = false;
+                document.getElementById('citizenInputCity').required = false;
+                title.innerText = "Citizen Sign In";
+                sub.innerText = "Enter your registered 10-digit mobile number";
+                submitBtn.innerText = "Access Citizen Desk";
+                switchPrompt.innerText = "Don't have an account? Create a New Account";
+            } else {
+                btnRegister.className = "flex-1 py-1.5 rounded-xl bg-emerald-700 text-white shadow transition-all";
+                btnSignIn.className = "flex-1 py-1.5 rounded-xl text-slate-400 hover:text-white transition-all";
+                nameField.classList.remove('hidden');
+                cityField.classList.remove('hidden');
+                document.getElementById('citizenInputName').required = true;
+                document.getElementById('citizenInputCity').required = true;
+                title.innerText = "Create New Account";
+                sub.innerText = "Register your identity on the Municipal Grid";
+                submitBtn.innerText = "Create & Enter Citizen Desk";
+                switchPrompt.innerText = "Already registered? Sign In with Mobile Number";
+            }
+        }
+
+        function toggleAuthMode() {
+            setAuthMode(currentAuthMode === 'signin' ? 'register' : 'signin');
+        }
+
+        async function handleCitizenAuth(e) {
+            e.preventDefault();
+            const rawMobile = document.getElementById('citizenInputMobile').value.trim();
+            const cleanMobile = rawMobile.replace(/\D/g, '');
+
+            if (cleanMobile.length !== 10) {
+                showToast("Please enter a valid 10-digit Indian mobile number!", true);
+                return;
+            }
+
+            if (currentAuthMode === 'register') {
+                // New Account Creation
+                const name = document.getElementById('citizenInputName').value.trim();
+                const city = document.getElementById('citizenInputCity').value.trim() || 'City';
+
+                if (!name) {
+                    showToast("Please enter your full name!", true);
+                    return;
+                }
+
+                showToast("Registering citizen on Eco Clean City Cloud...");
+
+                const citizenRecord = {
+                    name: name,
+                    mobile: cleanMobile,
+                    city: city,
+                    createdAt: Date.now()
+                };
+
+                try {
+                    await db.ref('citizens/' + cleanMobile).set(citizenRecord);
+                    showToast("✅ Account created successfully!");
+                    launchAppSession(citizenRecord);
+                } catch (err) {
+                    showToast("Error creating account: " + err.message, true);
+                }
+
+            } else {
+                // Sign In using Mobile Number
+                showToast("Verifying registered mobile number...");
+                try {
+                    const snap = await db.ref('citizens/' + cleanMobile).once('value');
+                    if (snap.exists()) {
+                        const citizenData = snap.val();
+                        showToast(`Welcome back, ${citizenData.name}!`);
+                        launchAppSession(citizenData);
+                    } else {
+                        // User not found in DB, auto-route to registration with message
+                        showToast("Account not found. Please register your details!", true);
+                        setAuthMode('register');
+                        document.getElementById('citizenInputMobile').value = cleanMobile;
+                    }
+                } catch (err) {
+                    showToast("Authentication error: " + err.message, true);
+                }
+            }
+        }
+
+        function launchAppSession(citizen) {
+            currentCitizen = citizen;
+            localStorage.setItem('ecoclean_city_citizen', JSON.stringify(currentCitizen));
+
+            document.getElementById('headerCitizenName').innerText = `${citizen.name} • ${citizen.city || 'City'}`;
+            document.getElementById('trackerCitizenNameDisplay').innerText = `${citizen.name}`;
+
+            document.getElementById('authSection').classList.add('hidden');
+            document.getElementById('mainSection').classList.remove('hidden');
+
+            setTimeout(() => {
+                initMap();
+                acquireRealSatelliteGps();
+            }, 200);
+
+            // Real-time synchronization
+            db.ref('complaints').on('value', (snapshot) => {
+                const data = snapshot.val();
+                citizenComplaints = data ? Object.values(data).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)) : [];
+                renderCitizenComplaints();
+            });
+
+            db.ref('dustbins').on('value', (snapshot) => {
+                const data = snapshot.val();
+                renderDustbinTrackingOnMap(data);
+            });
+        }
+
+        function handleCitizenLogout() {
+            localStorage.removeItem('ecoclean_city_citizen');
+            currentCitizen = null;
+            document.getElementById('mainSection').classList.add('hidden');
+            document.getElementById('authSection').classList.remove('hidden');
+            setAuthMode('signin');
+            document.getElementById('citizenInputMobile').value = "";
+            document.getElementById('citizenInputName').value = "";
+            document.getElementById('citizenInputCity').value = "";
+            showToast("Logged out successfully");
+        }
+
         function stripCoordsAndPhones(str) {
             if (!str) return '';
             let cleaned = String(str)
-                .replace(/\(?\s*Shivaji\s*Chowk\s*\)?/gi, '') // remove Shivaji Chowk
-                .replace(/\(?\s*-?\d{1,3}\.\d+[\s,]+-?\d{1,3}\.\d+\s*\)?/gi, '') // (lat, lng)
-                .replace(/\b\d{2}\.\d{3,}\b/gi, '') // standalone decimals
-                .replace(/\b[6-9]\d{9}\b/gi, '') // 10-digit mobile numbers
+                .replace(/\(?\s*Shivaji\s*Chowk\s*\)?/gi, '')
+                .replace(/\(?\s*-?\d{1,3}\.\d+[\s,]+-?\d{1,3}\.\d+\s*\)?/gi, '')
+                .replace(/\b\d{2}\.\d{3,}\b/gi, '')
+                .replace(/\b[6-9]\d{9}\b/gi, '')
                 .replace(/\b\d{10}\b/gi, '')
                 .replace(/\(\s*\)/g, '')
                 .replace(/Spot\s*\(\s*\)/gi, 'City Spot')
@@ -459,44 +632,6 @@
 
         function openCurrentInGoogleMaps() {
             window.open(`https://www.google.com/maps?q=${selectedCoords[0]},${selectedCoords[1]}`, '_blank');
-        }
-
-        function handleCitizenLogin(e) {
-            e.preventDefault();
-            const name = document.getElementById('citizenInputName').value.trim();
-            const city = document.getElementById('citizenInputCity').value.trim() || 'City';
-
-            if (!name) return;
-            currentCitizen = { name, city };
-            localStorage.setItem('ecoclean_city_citizen', JSON.stringify(currentCitizen));
-
-            document.getElementById('headerCitizenName').innerText = `${name} • ${city}`;
-            document.getElementById('trackerCitizenNameDisplay').innerText = `${name}`;
-
-            document.getElementById('authSection').classList.add('hidden');
-            document.getElementById('mainSection').classList.remove('hidden');
-
-            setTimeout(() => {
-                initMap();
-                acquireRealSatelliteGps();
-            }, 200);
-
-            db.ref('complaints').on('value', (snapshot) => {
-                const data = snapshot.val();
-                citizenComplaints = data ? Object.values(data).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)) : [];
-                renderCitizenComplaints();
-            });
-
-            db.ref('dustbins').on('value', (snapshot) => {
-                const data = snapshot.val();
-                renderDustbinTrackingOnMap(data);
-            });
-        }
-
-        function handleCitizenLogout() {
-            localStorage.removeItem('ecoclean_city_citizen');
-            document.getElementById('mainSection').classList.add('hidden');
-            document.getElementById('authSection').classList.remove('hidden');
         }
 
         function initMap() {
@@ -782,6 +917,7 @@
             const newReport = {
                 id: reportId,
                 citizenName: currentCitizen.name,
+                citizenMobile: currentCitizen.mobile,
                 landmark: landmarkLabel,
                 coords: selectedCoords,
                 comment: comments,
@@ -852,9 +988,12 @@
             const allBadge = document.getElementById('allReportsCountBadge');
             const resolvedBadge = document.getElementById('userPersonalResolvedBadge');
 
-            const currentNameLower = (currentCitizen.name || "").toLowerCase().trim();
+            const currentPhone = currentCitizen ? (currentCitizen.mobile || "") : "";
+            const currentNameLower = currentCitizen ? (currentCitizen.name || "").toLowerCase().trim() : "";
 
+            // Matches either mobile number or citizen name for backward compatibility
             const myPersonalReports = citizenComplaints.filter(item => {
+                if (currentPhone && item.citizenMobile === currentPhone) return true;
                 const reporterName = (item.citizenName || "").toLowerCase().trim();
                 return reporterName === currentNameLower;
             });
@@ -891,7 +1030,9 @@
                 if (item.status === 'Dispatched') statusColor = "bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300";
                 if (item.status === 'Resolved') statusColor = "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-extrabold";
 
-                const isMyReport = ((item.citizenName || "").toLowerCase().trim() === currentNameLower);
+                const isMyReport = (currentPhone && item.citizenMobile === currentPhone) || 
+                                   ((item.citizenName || "").toLowerCase().trim() === currentNameLower);
+
                 const isResolved = (item.status === 'Resolved');
                 const filedDateString = item.filedAtFormatted || (item.timestamp ? formatDateTime(item.timestamp) : item.time || "Recently");
                 const resolvedDateString = item.resolvedAt ? formatDateTime(item.resolvedAt) : null;
