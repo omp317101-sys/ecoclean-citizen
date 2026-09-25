@@ -147,10 +147,42 @@
                 </div>
             </div>
 
-            <!-- Citizen Login & Registration Card -->
-            <div class="bg-[#0b2410]/90 backdrop-blur-xl text-slate-100 rounded-3xl p-5 shadow-2xl border border-emerald-500/25 my-auto space-y-3.5 relative z-10">
+            <!-- CARD 1: 1-CLICK QUICK LOGIN (SHOWN FOR EXISTING SAVED ACCOUNTS) -->
+            <div id="quickLoginCard" class="hidden bg-[#0b2410]/90 backdrop-blur-xl text-slate-100 rounded-3xl p-5 shadow-2xl border border-emerald-500/25 my-auto space-y-4 relative z-10">
+                <div class="flex items-center justify-between border-b pb-2 border-emerald-900/60">
+                    <div>
+                        <span class="text-[9px] font-black uppercase tracking-wider text-emerald-400 block">Existing Citizen Found</span>
+                        <h2 class="text-sm font-black text-white">Welcome Back!</h2>
+                    </div>
+                    <span class="text-[10px] bg-emerald-500/20 text-emerald-300 font-extrabold px-2.5 py-1 rounded-full border border-emerald-500/30">Verified</span>
+                </div>
+
+                <div class="p-3.5 bg-black/40 rounded-2xl border border-emerald-900/60 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-500 to-ecoGreen-700 flex items-center justify-center text-base font-black text-white shadow-md">
+                        👤
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-xs font-black text-white truncate" id="quickCardName">Citizen</h3>
+                        <p class="text-[10px] text-emerald-300 font-bold" id="quickCardDetails">City</p>
+                    </div>
+                </div>
+
+                <button type="button" onclick="continueExistingSession()" class="w-full bg-gradient-to-r from-emerald-600 to-ecoGreen-600 hover:from-emerald-500 text-white font-black py-3 rounded-2xl shadow-xl text-xs uppercase tracking-wider active:scale-95 transition-all border border-emerald-400/30 flex items-center justify-center gap-2 cursor-pointer">
+                    <span>Continue to Citizen Portal</span>
+                    <span>➔</span>
+                </button>
+
+                <div class="text-center pt-1 border-t border-emerald-900/50">
+                    <button type="button" onclick="showManualAuthForm()" class="text-[10px] font-bold text-slate-400 hover:text-emerald-300 transition-colors">
+                        Not you? Switch or Create New Account
+                    </button>
+                </div>
+            </div>
+
+            <!-- CARD 2: MANUAL LOGIN & REGISTRATION CARD -->
+            <div id="manualAuthCard" class="bg-[#0b2410]/90 backdrop-blur-xl text-slate-100 rounded-3xl p-5 shadow-2xl border border-emerald-500/25 my-auto space-y-3.5 relative z-10">
                 
-                <!-- Auth Mode Tabs (Sign In / Register) -->
+                <!-- Auth Mode Tabs -->
                 <div class="flex items-center p-1 bg-black/40 rounded-2xl border border-emerald-900/80 text-xs font-bold">
                     <button type="button" id="tabSignInBtn" onclick="setAuthMode('signin')" class="flex-1 py-1.5 rounded-xl bg-emerald-700 text-white shadow transition-all">
                         Sign In
@@ -165,16 +197,15 @@
                     <p class="text-[10px] text-emerald-300/80" id="authFormSub">Enter your registered mobile number</p>
                 </div>
 
-                <!-- Unified Form -->
                 <form onsubmit="handleCitizenAuth(event)" class="space-y-2.5">
                     
-                    <!-- Full Name (Only for Registration) -->
+                    <!-- Full Name (Registration only) -->
                     <div id="authFieldFullName" class="hidden">
                         <label class="text-[10px] font-black uppercase text-emerald-300/80">Full Name</label>
                         <input type="text" id="citizenInputName" placeholder="e.g. Om Pawar" class="w-full mt-1 px-3.5 py-2 text-xs font-bold rounded-xl bg-black/50 border border-emerald-900/80 text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
                     </div>
 
-                    <!-- Mobile Number (Always Required) -->
+                    <!-- Mobile Number -->
                     <div>
                         <label class="text-[10px] font-black uppercase text-emerald-300/80">Mobile Number (10 Digits)</label>
                         <div class="flex gap-1.5 mt-1">
@@ -183,7 +214,7 @@
                         </div>
                     </div>
 
-                    <!-- City / Area Name (Only for Registration) -->
+                    <!-- City / Area Name (Registration only) -->
                     <div id="authFieldCity" class="hidden">
                         <label class="text-[10px] font-black uppercase text-emerald-300/80">City / Ward / Town</label>
                         <input type="text" id="citizenInputCity" placeholder="e.g. Kopargaon" class="w-full mt-1 px-3.5 py-2 text-xs font-bold rounded-xl bg-black/50 border border-emerald-900/80 text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
@@ -420,7 +451,7 @@
 
         const CITY_CENTER = [19.8915, 74.4789];
         
-        let currentAuthMode = 'signin'; // 'signin' or 'register'
+        let currentAuthMode = 'signin';
         let savedSession = JSON.parse(localStorage.getItem('ecoclean_city_citizen') || 'null');
         let currentCitizen = savedSession || null;
 
@@ -434,12 +465,30 @@
         let citizenComplaints = [];
         let activeGrievanceFilter = 'mine';
 
-        // Auto login if session already exists
+        // Check if user is already saved on this phone/browser
         window.addEventListener('DOMContentLoaded', () => {
-            if (currentCitizen && currentCitizen.mobile) {
-                launchAppSession(currentCitizen);
+            if (currentCitizen && (currentCitizen.name || currentCitizen.mobile)) {
+                // Populate the 1-Click Login Card
+                document.getElementById('quickCardName').innerText = currentCitizen.name || 'Citizen User';
+                document.getElementById('quickCardDetails').innerText = `${currentCitizen.city || 'City'} • +91 ${currentCitizen.mobile || 'Registered'}`;
+                document.getElementById('quickLoginCard').classList.remove('hidden');
+                document.getElementById('manualAuthCard').classList.add('hidden');
+            } else {
+                showManualAuthForm();
             }
         });
+
+        function continueExistingSession() {
+            if (currentCitizen) {
+                launchAppSession(currentCitizen);
+            }
+        }
+
+        function showManualAuthForm() {
+            document.getElementById('quickLoginCard').classList.add('hidden');
+            document.getElementById('manualAuthCard').classList.remove('hidden');
+            setAuthMode('signin');
+        }
 
         function setAuthMode(mode) {
             currentAuthMode = mode;
@@ -492,7 +541,6 @@
             }
 
             if (currentAuthMode === 'register') {
-                // New Account Creation
                 const name = document.getElementById('citizenInputName').value.trim();
                 const city = document.getElementById('citizenInputCity').value.trim() || 'City';
 
@@ -519,7 +567,6 @@
                 }
 
             } else {
-                // Sign In using Mobile Number
                 showToast("Verifying registered mobile number...");
                 try {
                     const snap = await db.ref('citizens/' + cleanMobile).once('value');
@@ -528,7 +575,6 @@
                         showToast(`Welcome back, ${citizenData.name}!`);
                         launchAppSession(citizenData);
                     } else {
-                        // User not found in DB, auto-route to registration with message
                         showToast("Account not found. Please register your details!", true);
                         setAuthMode('register');
                         document.getElementById('citizenInputMobile').value = cleanMobile;
@@ -554,7 +600,6 @@
                 acquireRealSatelliteGps();
             }, 200);
 
-            // Real-time synchronization
             db.ref('complaints').on('value', (snapshot) => {
                 const data = snapshot.val();
                 citizenComplaints = data ? Object.values(data).sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0)) : [];
@@ -568,15 +613,19 @@
         }
 
         function handleCitizenLogout() {
-            localStorage.removeItem('ecoclean_city_citizen');
-            currentCitizen = null;
             document.getElementById('mainSection').classList.add('hidden');
             document.getElementById('authSection').classList.remove('hidden');
-            setAuthMode('signin');
-            document.getElementById('citizenInputMobile').value = "";
-            document.getElementById('citizenInputName').value = "";
-            document.getElementById('citizenInputCity').value = "";
-            showToast("Logged out successfully");
+            
+            // Re-show 1-click login if details exist in storage
+            if (currentCitizen) {
+                document.getElementById('quickCardName').innerText = currentCitizen.name || 'Citizen User';
+                document.getElementById('quickCardDetails').innerText = `${currentCitizen.city || 'City'} • +91 ${currentCitizen.mobile || 'Registered'}`;
+                document.getElementById('quickLoginCard').classList.remove('hidden');
+                document.getElementById('manualAuthCard').classList.add('hidden');
+            } else {
+                showManualAuthForm();
+            }
+            showToast("Logged out of active view.");
         }
 
         function stripCoordsAndPhones(str) {
@@ -917,7 +966,7 @@
             const newReport = {
                 id: reportId,
                 citizenName: currentCitizen.name,
-                citizenMobile: currentCitizen.mobile,
+                citizenMobile: currentCitizen.mobile || "",
                 landmark: landmarkLabel,
                 coords: selectedCoords,
                 comment: comments,
@@ -991,7 +1040,6 @@
             const currentPhone = currentCitizen ? (currentCitizen.mobile || "") : "";
             const currentNameLower = currentCitizen ? (currentCitizen.name || "").toLowerCase().trim() : "";
 
-            // Matches either mobile number or citizen name for backward compatibility
             const myPersonalReports = citizenComplaints.filter(item => {
                 if (currentPhone && item.citizenMobile === currentPhone) return true;
                 const reporterName = (item.citizenName || "").toLowerCase().trim();
