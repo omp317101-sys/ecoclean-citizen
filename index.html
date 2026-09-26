@@ -147,11 +147,11 @@
                 </div>
             </div>
 
-            <!-- CARD 1: 1-CLICK QUICK LOGIN (SHOWN FOR EXISTING SAVED ACCOUNTS) -->
+            <!-- CARD 1: QUICK 1-CLICK LOGIN (For Returning Users) -->
             <div id="quickLoginCard" class="hidden bg-[#0b2410]/90 backdrop-blur-xl text-slate-100 rounded-3xl p-5 shadow-2xl border border-emerald-500/25 my-auto space-y-4 relative z-10">
                 <div class="flex items-center justify-between border-b pb-2 border-emerald-900/60">
                     <div>
-                        <span class="text-[9px] font-black uppercase tracking-wider text-emerald-400 block">Existing Citizen Found</span>
+                        <span class="text-[9px] font-black uppercase tracking-wider text-emerald-400 block">Saved Citizen Account</span>
                         <h2 class="text-sm font-black text-white">Welcome Back!</h2>
                     </div>
                     <span class="text-[10px] bg-emerald-500/20 text-emerald-300 font-extrabold px-2.5 py-1 rounded-full border border-emerald-500/30">Verified</span>
@@ -179,10 +179,10 @@
                 </div>
             </div>
 
-            <!-- CARD 2: MANUAL LOGIN & REGISTRATION CARD -->
+            <!-- CARD 2: SIGN IN / NEW ACCOUNT FORM -->
             <div id="manualAuthCard" class="bg-[#0b2410]/90 backdrop-blur-xl text-slate-100 rounded-3xl p-5 shadow-2xl border border-emerald-500/25 my-auto space-y-3.5 relative z-10">
                 
-                <!-- Auth Mode Tabs -->
+                <!-- Tab Controls -->
                 <div class="flex items-center p-1 bg-black/40 rounded-2xl border border-emerald-900/80 text-xs font-bold">
                     <button type="button" id="tabSignInBtn" onclick="setAuthMode('signin')" class="flex-1 py-1.5 rounded-xl bg-emerald-700 text-white shadow transition-all">
                         Sign In
@@ -194,12 +194,11 @@
 
                 <div class="border-b pb-2 border-emerald-900/60">
                     <h2 class="text-xs font-black text-white" id="authFormTitle">Citizen Sign In</h2>
-                    <p class="text-[10px] text-emerald-300/80" id="authFormSub">Enter your registered mobile number</p>
+                    <p class="text-[10px] text-emerald-300/80" id="authFormSub">Enter your registered 10-digit mobile number</p>
                 </div>
 
                 <form onsubmit="handleCitizenAuth(event)" class="space-y-2.5">
-                    
-                    <!-- Full Name (Registration only) -->
+                    <!-- Full Name (Only for Registration) -->
                     <div id="authFieldFullName" class="hidden">
                         <label class="text-[10px] font-black uppercase text-emerald-300/80">Full Name</label>
                         <input type="text" id="citizenInputName" placeholder="e.g. Om Pawar" class="w-full mt-1 px-3.5 py-2 text-xs font-bold rounded-xl bg-black/50 border border-emerald-900/80 text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
@@ -214,7 +213,7 @@
                         </div>
                     </div>
 
-                    <!-- City / Area Name (Registration only) -->
+                    <!-- City / Area (Only for Registration) -->
                     <div id="authFieldCity" class="hidden">
                         <label class="text-[10px] font-black uppercase text-emerald-300/80">City / Ward / Town</label>
                         <input type="text" id="citizenInputCity" placeholder="e.g. Kopargaon" class="w-full mt-1 px-3.5 py-2 text-xs font-bold rounded-xl bg-black/50 border border-emerald-900/80 text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-emerald-500">
@@ -465,10 +464,9 @@
         let citizenComplaints = [];
         let activeGrievanceFilter = 'mine';
 
-        // Check if user is already saved on this phone/browser
+        // Auto-check for existing saved account on startup
         window.addEventListener('DOMContentLoaded', () => {
             if (currentCitizen && (currentCitizen.name || currentCitizen.mobile)) {
-                // Populate the 1-Click Login Card
                 document.getElementById('quickCardName').innerText = currentCitizen.name || 'Citizen User';
                 document.getElementById('quickCardDetails').innerText = `${currentCitizen.city || 'City'} • +91 ${currentCitizen.mobile || 'Registered'}`;
                 document.getElementById('quickLoginCard').classList.remove('hidden');
@@ -616,7 +614,6 @@
             document.getElementById('mainSection').classList.add('hidden');
             document.getElementById('authSection').classList.remove('hidden');
             
-            // Re-show 1-click login if details exist in storage
             if (currentCitizen) {
                 document.getElementById('quickCardName').innerText = currentCitizen.name || 'Citizen User';
                 document.getElementById('quickCardDetails').innerText = `${currentCitizen.city || 'City'} • +91 ${currentCitizen.mobile || 'Registered'}`;
@@ -631,7 +628,6 @@
         function stripCoordsAndPhones(str) {
             if (!str) return '';
             let cleaned = String(str)
-                .replace(/\(?\s*Shivaji\s*Chowk\s*\)?/gi, '')
                 .replace(/\(?\s*-?\d{1,3}\.\d+[\s,]+-?\d{1,3}\.\d+\s*\)?/gi, '')
                 .replace(/\b\d{2}\.\d{3,}\b/gi, '')
                 .replace(/\b[6-9]\d{9}\b/gi, '')
